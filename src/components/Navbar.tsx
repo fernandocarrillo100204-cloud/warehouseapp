@@ -1,0 +1,162 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React from "react";
+import { isRealFirebase, authService } from "../lib/firebase";
+import { Warehouse, LogOut, Database, Wifi, ShieldAlert, Boxes, History } from "lucide-react";
+import { Usuario } from "../types";
+
+interface NavbarProps {
+  user: Usuario;
+  activeTab: "dashboard" | "movimientos" | "historial";
+  setActiveTab: (tab: "dashboard" | "movimientos" | "historial") => void;
+  onLogout: () => void;
+}
+
+export default function Navbar({ user, activeTab, setActiveTab, onLogout }: NavbarProps) {
+  return (
+    <header className="bg-slate-900 text-white border-b border-slate-800 shadow-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          {/* Logo & Title */}
+          <div className="flex items-center space-x-3">
+            <div className="bg-emerald-500 p-2 rounded-lg text-slate-900 shadow-inner">
+              <Warehouse className="h-6 w-6" id="nav-logo" />
+            </div>
+            <div>
+              <span className="font-bold text-lg tracking-tight block sm:inline">StockMaster</span>
+              <span className="text-xs text-slate-400 block sm:inline sm:ml-2 border-t sm:border-t-0 sm:border-l border-slate-700 sm:pl-2">
+                MVP Multialmacén
+              </span>
+            </div>
+          </div>
+
+          {/* Navigation Items */}
+          <nav className="hidden md:flex space-x-1">
+            <button
+              onClick={() => setActiveTab("dashboard")}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "dashboard"
+                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Boxes className="h-4 w-4" />
+              <span>Dashboard de Stock</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("movimientos")}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "movimientos"
+                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <PlusCircleIcon className="h-4 w-4" />
+              <span>Registrar Movimiento</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("historial")}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "historial"
+                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <History className="h-4 w-4" />
+              <span>Historial de Auditoría</span>
+            </button>
+          </nav>
+
+          {/* User Profile & Connection Info */}
+          <div className="flex items-center space-x-4">
+            {/* Real / Emulator Status Badge */}
+            <div className="flex items-center">
+              {isRealFirebase ? (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
+                  <Wifi className="h-3 w-3 mr-1 animate-pulse" />
+                  Nube Real
+                </span>
+              ) : (
+                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-400 border border-amber-800" title="Corriendo en emulador local de localStorage">
+                  <Database className="h-3 w-3 mr-1" />
+                  Local Emulator
+                </span>
+              )}
+            </div>
+
+            {/* Profile Info */}
+            <div className="text-right hidden sm:block">
+              <p className="text-xs text-slate-400">Usuario activo</p>
+              <p className="text-sm font-semibold text-slate-200">{user.email}</p>
+            </div>
+
+            {/* Logout button */}
+            <button
+              onClick={onLogout}
+              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+              title="Cerrar sesión"
+            >
+              <LogOut className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobile navigation rail */}
+      <div className="md:hidden flex justify-around border-t border-slate-800 bg-slate-900 py-2">
+        <button
+          onClick={() => setActiveTab("dashboard")}
+          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+            activeTab === "dashboard" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <Boxes className="h-5 w-5" />
+          <span>Dashboard</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("movimientos")}
+          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+            activeTab === "movimientos" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <PlusCircleIcon className="h-5 w-5" />
+          <span>Movimiento</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("historial")}
+          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+            activeTab === "historial" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <History className="h-5 w-5" />
+          <span>Historial</span>
+        </button>
+      </div>
+    </header>
+  );
+}
+
+// Inline helper for PlusCircle which was imported incorrectly in some templates
+function PlusCircleIcon(props: React.SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 8v8" />
+      <path d="M8 12h8" />
+    </svg>
+  );
+}

@@ -1,0 +1,8 @@
+{
+  "name": "Inventario Multialmacén",
+  "description": "Control de inventario en tiempo real con soporte para múltiples almacenes, transferencias, ajustes y escaneo de códigos de barra.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

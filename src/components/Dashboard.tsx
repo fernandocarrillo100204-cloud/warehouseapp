@@ -1,0 +1,447 @@
+/**
+ * @license
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+import React, { useState, useEffect } from "react";
+import { firestoreService } from "../lib/firebase";
+import { Almacen, Producto, StockItem } from "../types";
+import { 
+  Search, 
+  Warehouse, 
+  AlertTriangle, 
+  CheckCircle, 
+  Layers, 
+  TrendingDown, 
+  TrendingUp, 
+  Filter, 
+  ArrowRightLeft,
+  Plus
+} from "lucide-react";
+import { motion } from "motion/react";
+
+interface DashboardProps {
+  almacenes: Almacen[];
+  productos: Producto[];
+  onNavigateToMovements: (sku?: string) => void;
+  onNavigateToHistory: (sku?: string) => void;
+}
+
+export default function Dashboard({ 
+  almacenes, 
+  productos, 
+  onNavigateToMovements, 
+  onNavigateToHistory 
+}: DashboardProps) {
+  const [stockList, setStockList] = useState<StockItem[]>([]);
+  const [search, setSearch] = useState("");
+  const [selectedAlmacen, setSelectedAlmacen] = useState<string>("all");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [stockStatusFilter, setStockStatusFilter] = useState<string>("all"); // 'all' | 'low' | 'out' | 'ok'
+  const [loading, setLoading] = useState(true);
+
+  // Load real-time stock
+  useEffect(() => {
+    setLoading(true);
+    const unsubscribe = firestoreService.getStockRealtime((data) => {
+      setStockList(data);
+      setLoading(false);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // Helper to get stock of a SKU in a specific warehouse
+  const getStockQty = (sku: string, almacenId: string): number => {
+    const record = stockList.find(s => s.sku === sku && s.almacen_id === almacenId);
+    return record ? record.cantidad : 0;
+  };
+
+  // Helper to get total stock across all warehouses
+  const getGlobalStockQty = (sku: string): number => {
+    return stockList
+      .filter(s => s.sku === sku)
+      .reduce((acc, curr) => acc + curr.cantidad, 0);
+  };
+
+  // Get distinct categories from products
+  const categorias = Array.from(new Set(productos.map(p => p.categoria)));
+
+  // Calculate stats based on filters
+  const totalStockGlobal = stockList.reduce((acc, curr) => acc + curr.cantidad, 0);
+  
+  // Calculate how many products are low on stock
+  const lowStockCount = productos.filter(p => {
+    const stockQty = selectedAlmacen === "all" 
+      ? getGlobalStockQty(p.sku) 
+      : getStockQty(p.sku, selectedAlmacen);
+    return stockQty <= p.stock_minimo && stockQty > 0;
+  }).length;
+
+  const outOfStockCount = productos.filter(p => {
+    const stockQty = selectedAlmacen === "all" 
+      ? getGlobalStockQty(p.sku) 
+      : getStockQty(p.sku, selectedAlmacen);
+    return stockQty === 0;
+  }).length;
+
+  // Filtered product listing
+  const filteredProductos = productos.filter(p => {
+    // 1. Search filter
+    const matchesSearch = 
+      p.sku.toLowerCase().includes(search.toLowerCase()) || 
+      p.nombre.toLowerCase().includes(search.toLowerCase()) ||
+      p.categoria.toLowerCase().includes(search.toLowerCase());
+
+    // 2. Category filter
+    const matchesCategory = categoryFilter === "all" || p.categoria === categoryFilter;
+
+    // 3. Stock status filter
+    const stockQty = selectedAlmacen === "all" 
+      ? getGlobalStockQty(p.sku) 
+      : getStockQty(p.sku, selectedAlmacen);
+    
+    let matchesStatus = true;
+    if (stockStatusFilter === "low") {
+      matchesStatus = stockQty <= p.stock_minimo && stockQty > 0;
+    } else if (stockStatusFilter === "out") {
+      matchesStatus = stockQty === 0;
+    } else if (stockStatusFilter === "ok") {
+      matchesStatus = stockQty > p.stock_minimo;
+    }
+
+    // 4. Warehouse filter - if a specific warehouse is chosen, optionally show only products that exist or have inventory or always show all with highlight. We show all but with filtered status
+    return matchesSearch && matchesCategory && matchesStatus;
+  });
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="dashboard-container">
+      {/* Title Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+        <div>
+          <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">Dashboard de Inventario</h1>
+          <p className="text-sm text-slate-400 mt-1">
+            Supervisión y auditoría en tiempo real de mercadería distribuida en sucursales.
+          </p>
+        </div>
+        <div className="mt-4 md:mt-0 flex items-center space-x-3">
+          <button
+            onClick={() => onNavigateToMovements()}
+            className="inline-flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2.5 rounded-xl shadow-md text-sm transition-all"
+          >
+            <Plus className="h-4 w-4" />
+            <span>Nuevo Movimiento</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Real-time KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {/* Total SKUs */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Total SKUs</span>
+            <div className="bg-slate-800 p-2 rounded-xl text-slate-300">
+              <Layers className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-2xl font-bold text-slate-100">{productos.length}</h3>
+            <p className="text-xs text-slate-500 mt-1">Productos únicos registrados</p>
+          </div>
+        </div>
+
+        {/* Global Stock Volume */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Stock Total</span>
+            <div className="bg-slate-800 p-2 rounded-xl text-emerald-400">
+              <TrendingUp className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-2xl font-bold text-slate-100">
+              {loading ? (
+                <span className="h-5 w-12 bg-slate-800 animate-pulse inline-block rounded" />
+              ) : (
+                totalStockGlobal.toLocaleString()
+              )}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">Unidades totales en red</p>
+          </div>
+        </div>
+
+        {/* Bajo Stock Alert */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Stock Crítico</span>
+            <div className="bg-amber-950/40 border border-amber-900 p-2 rounded-xl text-amber-400">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-2xl font-bold text-amber-400">
+              {loading ? (
+                <span className="h-5 w-12 bg-slate-800 animate-pulse inline-block rounded" />
+              ) : (
+                lowStockCount
+              )}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">SKUs por debajo de stock mínimo</p>
+          </div>
+        </div>
+
+        {/* Sin Stock */}
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">Agotado / Sin Stock</span>
+            <div className="bg-rose-950/40 border border-rose-900 p-2 rounded-xl text-rose-400">
+              <TrendingDown className="h-5 w-5" />
+            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-2xl font-bold text-rose-400">
+              {loading ? (
+                <span className="h-5 w-12 bg-slate-800 animate-pulse inline-block rounded" />
+              ) : (
+                outOfStockCount
+              )}
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">SKUs con cantidad en cero</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters Toolbar */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-6 shadow-sm">
+        <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider mb-4 flex items-center">
+          <Filter className="h-4 w-4 mr-2 text-slate-400" />
+          Filtros de búsqueda rápida
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          {/* Search SKU/Name */}
+          <div className="relative">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
+              <Search className="h-4 w-4 text-slate-500" />
+            </span>
+            <input
+              type="text"
+              placeholder="Buscar SKU, nombre o categoría..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600"
+            />
+          </div>
+
+          {/* Warehouse Selector (Requested: "un filtro para elegir el almacén") */}
+          <div>
+            <select
+              value={selectedAlmacen}
+              onChange={(e) => setSelectedAlmacen(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+            >
+              <option value="all">🏢 Todos los almacenes (Red Global)</option>
+              {almacenes.map(alm => (
+                <option key={alm.id} value={alm.id}>
+                  🏢 {alm.nombre} ({alm.ubicacion})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Category Filter */}
+          <div>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+            >
+              <option value="all">📦 Todas las categorías</option>
+              {categorias.map(cat => (
+                <option key={cat} value={cat}>
+                  📦 {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Stock Alert Status Filter */}
+          <div>
+            <select
+              value={stockStatusFilter}
+              onChange={(e) => setStockStatusFilter(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+            >
+              <option value="all">⚠️ Todos los estados de stock</option>
+              <option value="ok">✅ Stock Suficiente / Conforme</option>
+              <option value="low">⚠️ Stock Crítico (Por debajo del mínimo)</option>
+              <option value="out">🛑 Agotado (Sin stock)</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Grid table */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+        {loading ? (
+          <div className="py-20 text-center text-slate-400">
+            <span className="h-8 w-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block mb-3" />
+            <p>Conectando con Firestore en tiempo real...</p>
+          </div>
+        ) : filteredProductos.length === 0 ? (
+          <div className="py-16 text-center text-slate-500">
+            <Warehouse className="h-12 w-12 mx-auto text-slate-700 mb-3" />
+            <p className="text-base font-semibold text-slate-400">No se encontraron productos</p>
+            <p className="text-sm mt-1">Intente cambiar los filtros o el texto de búsqueda.</p>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse" id="stock-grid-table">
+              <thead>
+                <tr className="bg-slate-950 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
+                  <th className="py-4 px-6">SKU / Producto</th>
+                  <th className="py-4 px-6">Categoría</th>
+                  <th className="py-4 px-6 text-center">Mín. Requerido</th>
+                  
+                  {/* Warehouse specific columns */}
+                  {almacenes.map(alm => {
+                    const isHighlighted = selectedAlmacen === alm.id;
+                    return (
+                      <th 
+                        key={alm.id} 
+                        className={`py-4 px-6 text-center transition-all ${
+                          isHighlighted ? "bg-slate-800/40 text-emerald-400 font-bold" : ""
+                        }`}
+                      >
+                        {alm.nombre}
+                      </th>
+                    );
+                  })}
+
+                  <th className={`py-4 px-6 text-center font-bold ${selectedAlmacen === "all" ? "bg-slate-800/20 text-emerald-400" : "text-slate-300"}`}>
+                    Stock Global
+                  </th>
+                  <th className="py-4 px-6 text-center">Estado</th>
+                  <th className="py-4 px-6 text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
+                {filteredProductos.map((prod) => {
+                  const globalQty = getGlobalStockQty(prod.sku);
+                  
+                  // Selected scope quantity
+                  const activeQty = selectedAlmacen === "all" 
+                    ? globalQty 
+                    : getStockQty(prod.sku, selectedAlmacen);
+
+                  const isLow = activeQty <= prod.stock_minimo && activeQty > 0;
+                  const isOut = activeQty === 0;
+
+                  return (
+                    <tr key={prod.sku} className="hover:bg-slate-800/20 transition-colors">
+                      {/* Name / SKU */}
+                      <td className="py-4 px-6">
+                        <div className="font-semibold text-slate-200">{prod.nombre}</div>
+                        <div className="font-mono text-xs text-slate-500 mt-0.5">{prod.sku}</div>
+                      </td>
+
+                      {/* Category */}
+                      <td className="py-4 px-6">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+                          {prod.categoria}
+                        </span>
+                      </td>
+
+                      {/* Min stock */}
+                      <td className="py-4 px-6 text-center font-mono text-slate-400">
+                        {prod.stock_minimo} <span className="text-[10px]">{prod.unidad}</span>
+                      </td>
+
+                      {/* Warehouse stocks */}
+                      {almacenes.map(alm => {
+                        const qty = getStockQty(prod.sku, alm.id);
+                        const isColActive = selectedAlmacen === alm.id;
+                        
+                        let colorClass = "text-slate-300";
+                        if (qty === 0) colorClass = "text-rose-500/80 font-semibold";
+                        else if (qty <= prod.stock_minimo) colorClass = "text-amber-500 font-semibold";
+
+                        return (
+                          <td 
+                            key={alm.id} 
+                            className={`py-4 px-6 text-center font-mono transition-all ${
+                              isColActive ? "bg-slate-800/10 font-bold" : ""
+                            }`}
+                          >
+                            <span className={colorClass}>
+                              {qty}
+                            </span>
+                          </td>
+                        );
+                      })}
+
+                      {/* Global stock */}
+                      <td className={`py-4 px-6 text-center font-mono font-semibold ${
+                        selectedAlmacen === "all" ? "bg-slate-800/10" : ""
+                      }`}>
+                        <span className={globalQty === 0 ? "text-rose-500" : globalQty <= prod.stock_minimo ? "text-amber-500" : "text-emerald-400"}>
+                          {globalQty}
+                        </span>
+                        <span className="text-[10px] text-slate-500 ml-1">{prod.unidad}</span>
+                      </td>
+
+                      {/* Status indicator */}
+                      <td className="py-4 px-6 text-center">
+                        {isOut ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-rose-950/50 text-rose-400 border border-rose-900">
+                            Agotado
+                          </span>
+                        ) : isLow ? (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-amber-950/50 text-amber-400 border border-amber-900">
+                            Bajo Stock
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-900">
+                            Conforme
+                          </span>
+                        )}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="py-4 px-6 text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <button
+                            onClick={() => onNavigateToMovements(prod.sku)}
+                            className="p-1.5 hover:bg-slate-800 text-slate-400 hover:text-emerald-400 rounded-lg transition-colors"
+                            title="Registrar movimiento"
+                          >
+                            <ArrowRightLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => onNavigateToHistory(prod.sku)}
+                            className="text-xs text-slate-400 hover:text-white font-medium bg-slate-800 hover:bg-slate-700 px-2.5 py-1.5 rounded-lg border border-slate-700 transition-colors"
+                          >
+                            Ver Auditoría
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      {/* Footnote information */}
+      <div className="mt-4 flex items-center justify-between text-xs text-slate-500 px-2">
+        <p>Mostrando {filteredProductos.length} de {productos.length} productos registrados.</p>
+        <p className="flex items-center">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
+          Actualización en tiempo real vía Firebase Firestore activada.
+        </p>
+      </div>
+    </div>
+  );
+}
