@@ -5,13 +5,13 @@
 
 import React from "react";
 import { isRealFirebase, authService } from "../lib/firebase";
-import { Warehouse, LogOut, Database, Wifi, ShieldAlert, Boxes, History } from "lucide-react";
+import { Warehouse, LogOut, Database, Wifi, ShieldAlert, Boxes, History, Package } from "lucide-react";
 import { Usuario } from "../types";
 
 interface NavbarProps {
   user: Usuario;
-  activeTab: "dashboard" | "movimientos" | "historial";
-  setActiveTab: (tab: "dashboard" | "movimientos" | "historial") => void;
+  activeTab: "dashboard" | "almacenes" | "catalogo" | "movimientos" | "historial";
+  setActiveTab: (tab: "dashboard" | "almacenes" | "catalogo" | "movimientos" | "historial") => void;
   onLogout: () => void;
 }
 
@@ -45,6 +45,28 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
             >
               <Boxes className="h-4 w-4" />
               <span>Dashboard de Stock</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("almacenes")}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "almacenes"
+                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Warehouse className="h-4 w-4" />
+              <span>Almacenes</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("catalogo")}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "catalogo"
+                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <Package className="h-4 w-4" />
+              <span>Catálogo</span>
             </button>
             <button
               onClick={() => setActiveTab("movimientos")}
@@ -115,6 +137,24 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
         >
           <Boxes className="h-5 w-5" />
           <span>Dashboard</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("almacenes")}
+          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+            activeTab === "almacenes" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <Warehouse className="h-5 w-5" />
+          <span>Almacenes</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("catalogo")}
+          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+            activeTab === "catalogo" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <Package className="h-5 w-5" />
+          <span>Catálogo</span>
         </button>
         <button
           onClick={() => setActiveTab("movimientos")}

@@ -11,13 +11,15 @@ import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import MovimientoForm from "./components/MovimientoForm";
 import Historial from "./components/Historial";
+import GestionAlmacenes from "./components/GestionAlmacenes";
+import GestionProductos from "./components/GestionProductos";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function App() {
   const [user, setUser] = useState<Usuario | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "movimientos" | "historial">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "almacenes" | "catalogo" | "movimientos" | "historial">("dashboard");
   const [preselectedSku, setPreselectedSku] = useState("");
 
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
@@ -50,6 +52,20 @@ export default function App() {
       setLoadingData(false);
     }
   };
+
+  // Subscribe to real-time warehouses updates globally
+  useEffect(() => {
+    if (!user) return;
+    
+    // Subscribe to warehouses
+    const unsubscribeAlmacenes = firestoreService.getAlmacenesRealtime((almList) => {
+      setAlmacenes(almList);
+    });
+
+    return () => {
+      unsubscribeAlmacenes();
+    };
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -142,6 +158,32 @@ export default function App() {
                     onNavigateToMovements={handleNavigateToMovements}
                     onNavigateToHistory={handleNavigateToHistory}
                   />
+                </motion.div>
+              )}
+
+              {activeTab === "almacenes" && (
+                <motion.div
+                  key="almacenes"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                >
+                  <GestionAlmacenes 
+                    productos={productos}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === "catalogo" && (
+                <motion.div
+                  key="catalogo"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                >
+                  <GestionProductos />
                 </motion.div>
               )}
 

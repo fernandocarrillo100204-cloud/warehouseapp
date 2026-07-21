@@ -12,6 +12,7 @@ import {
   getDoc,
   setDoc,
   addDoc, 
+  deleteDoc,
   onSnapshot, 
   runTransaction, 
   query, 
@@ -180,10 +181,12 @@ seedData();
 // List of listeners for mock real-time updates
 const listeners: Record<string, ((data: any) => void)[]> = {
   stock: [],
-  movimientos: []
+  movimientos: [],
+  almacenes: [],
+  productos: []
 };
 
-const notifyListeners = (channel: "stock" | "movimientos", data: any) => {
+const notifyListeners = (channel: "stock" | "movimientos" | "almacenes" | "productos", data: any) => {
   listeners[channel].forEach(callback => callback(data));
 };
 
@@ -305,6 +308,70 @@ export const firestoreService = {
     }
   },
 
+  getAlmacenesRealtime: (onUpdate: (almacenes: Almacen[]) => void): (() => void) => {
+    if (isConfigured && realDb) {
+      return onSnapshot(collection(realDb, "almacenes"), (snap) => {
+        const list: Almacen[] = [];
+        snap.forEach(d => {
+          list.push({ id: d.id, ...d.data() } as Almacen);
+        });
+        onUpdate(list);
+      });
+    } else {
+      const update = () => {
+        const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+        onUpdate(list);
+      };
+      update();
+      listeners.almacenes.push(update);
+      return () => {
+        listeners.almacenes = listeners.almacenes.filter(cb => cb !== update);
+      };
+    }
+  },
+
+  addAlmacen: async (almacen: Omit<Almacen, "id">): Promise<string> => {
+    if (isConfigured && realDb) {
+      const docRef = await addDoc(collection(realDb, "almacenes"), almacen);
+      return docRef.id;
+    } else {
+      const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+      const newId = "alm_" + Math.random().toString(36).substr(2, 9);
+      const newItem: Almacen = { id: newId, ...almacen };
+      list.push(newItem);
+      setLocalStorageItem("almacenes", list);
+      notifyListeners("almacenes", list);
+      return newId;
+    }
+  },
+
+  updateAlmacen: async (id: string, data: Partial<Omit<Almacen, "id">>): Promise<void> => {
+    if (isConfigured && realDb) {
+      const docRef = doc(realDb, "almacenes", id);
+      await setDoc(docRef, data, { merge: true });
+    } else {
+      const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+      const index = list.findIndex(a => a.id === id);
+      if (index !== -1) {
+        list[index] = { ...list[index], ...data };
+        setLocalStorageItem("almacenes", list);
+        notifyListeners("almacenes", list);
+      }
+    }
+  },
+
+  deleteAlmacen: async (id: string): Promise<void> => {
+    if (isConfigured && realDb) {
+      const docRef = doc(realDb, "almacenes", id);
+      await deleteDoc(docRef);
+    } else {
+      const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+      const filtered = list.filter(a => a.id !== id);
+      setLocalStorageItem("almacenes", filtered);
+      notifyListeners("almacenes", filtered);
+    }
+  },
+
   getProductos: async (): Promise<Producto[]> => {
     if (isConfigured && realDb) {
       const snap = await getDocs(collection(realDb, "productos"));
@@ -315,6 +382,76 @@ export const firestoreService = {
       return list;
     } else {
       return getLocalStorageItem<Producto[]>("productos", []);
+    }
+  },
+
+  getProductosRealtime: (onUpdate: (productos: Producto[]) => void): (() => void) => {
+    if (isConfigured && realDb) {
+      return onSnapshot(collection(realDb, "productos"), (snap) => {
+        const list: Producto[] = [];
+        snap.forEach(d => {
+          list.push({ sku: d.id, ...d.data() } as Producto);
+        });
+        onUpdate(list);
+      });
+    } else {
+      const update = () => {
+        const list = getLocalStorageItem<Producto[]>("productos", []);
+        onUpdate(list);
+      };
+      update();
+      listeners.productos.push(update);
+      return () => {
+        listeners.productos = listeners.productos.filter(cb => cb !== update);
+      };
+    }
+  },
+
+  addProduct: async (producto: Producto): Promise<void> => {
+    if (isConfigured && realDb) {
+      const docRef = doc(realDb, "productos", producto.sku);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        throw new Error("El SKU ya existe en la base de datos.");
+      }
+      const { sku, ...data } = producto;
+      await setDoc(docRef, data);
+    } else {
+      const list = getLocalStorageItem<Producto[]>("productos", []);
+      const existing = list.find(p => p.sku.toLowerCase() === producto.sku.toLowerCase());
+      if (existing) {
+        throw new Error("El SKU ya existe.");
+      }
+      list.push(producto);
+      setLocalStorageItem("productos", list);
+      notifyListeners("productos", list);
+    }
+  },
+
+  updateProduct: async (sku: string, data: Partial<Omit<Producto, "sku">>): Promise<void> => {
+    if (isConfigured && realDb) {
+      const docRef = doc(realDb, "productos", sku);
+      await setDoc(docRef, data, { merge: true });
+    } else {
+      const list = getLocalStorageItem<Producto[]>("productos", []);
+      const index = list.findIndex(p => p.sku === sku);
+      if (index !== -1) {
+        list[index] = { ...list[index], ...data };
+        setLocalStorageItem("productos", list);
+        notifyListeners("productos", list);
+      }
+    }
+  },
+
+  deleteProduct: async (sku: string): Promise<void> => {
+    if (isConfigured && realDb) {
+      const docRef = doc(realDb, "productos", sku);
+      await deleteDoc(docRef);
+    } else {
+      const list = getLocalStorageItem<Producto[]>("productos", []);
+      const filtered = list.filter(p => p.sku !== sku);
+      setLocalStorageItem("productos", filtered);
+      notifyListeners("productos", filtered);
     }
   },
 
