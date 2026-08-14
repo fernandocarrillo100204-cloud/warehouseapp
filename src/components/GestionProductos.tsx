@@ -91,7 +91,8 @@ export default function GestionProductos() {
 
   // Get current active stock sum across all warehouses for a given SKU
   const getProductStockStatus = (productSku: string) => {
-    const productStocks = stockList.filter(item => item.sku === productSku);
+    const clean = productSku.trim().toUpperCase();
+    const productStocks = stockList.filter(item => item.sku?.trim().toUpperCase() === clean);
     const totalQty = productStocks.reduce((sum, item) => sum + item.cantidad, 0);
     const locationsCount = productStocks.filter(item => item.cantidad > 0).length;
 

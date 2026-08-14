@@ -16,7 +16,9 @@ import {
   TrendingUp, 
   Filter, 
   ArrowRightLeft,
-  Plus
+  Plus,
+  ShieldCheck,
+  RefreshCw
 } from "lucide-react";
 import { motion } from "motion/react";
 
@@ -39,6 +41,8 @@ export default function Dashboard({
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
   const [stockStatusFilter, setStockStatusFilter] = useState<string>("all"); // 'all' | 'low' | 'out' | 'ok'
   const [loading, setLoading] = useState(true);
+  const [syncingAudit, setSyncingAudit] = useState(false);
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
   // Load real-time stock
   useEffect(() => {
@@ -50,21 +54,42 @@ export default function Dashboard({
     return () => unsubscribe();
   }, []);
 
-  // Helper to get stock of a SKU in a specific warehouse (case-insensitive)
-  const getStockQty = (sku: string, almacenId: string): number => {
-    if (!sku) return 0;
-    const record = stockList.find(
-      s => s.sku?.trim().toUpperCase() === sku.trim().toUpperCase() && s.almacen_id === almacenId
-    );
-    return record ? record.cantidad : 0;
+  const handleSyncAuditoria = async () => {
+    setSyncingAudit(true);
+    setSyncMessage(null);
+    try {
+      await firestoreService.recalculateAndSyncStock();
+      setSyncMessage("¡Stock global y por almacén 100% cuadrado con las auditorías!");
+      setTimeout(() => setSyncMessage(null), 4000);
+    } catch (err) {
+      console.error("Error al cuadrar con auditorías:", err);
+    } finally {
+      setSyncingAudit(false);
+    }
   };
 
-  // Helper to get total stock across all warehouses (case-insensitive)
+  // Helper to get stock of a SKU in a specific warehouse (case-insensitive & warehouse-normalized)
+  const getStockQty = (sku: string, almacenId: string): number => {
+    if (!sku || !almacenId) return 0;
+    const cleanSku = sku.trim().toUpperCase();
+    const targetAlmId = firestoreService.normalizeWarehouseId(almacenId, almacenes);
+    const record = stockList.find(
+      s => s.sku?.trim().toUpperCase() === cleanSku && 
+           firestoreService.normalizeWarehouseId(s.almacen_id, almacenes) === targetAlmId
+    );
+    return record ? Math.max(0, record.cantidad) : 0;
+  };
+
+  // Helper to get total stock across all registered warehouses (guaranteed to match column sum)
   const getGlobalStockQty = (sku: string): number => {
     if (!sku) return 0;
+    const cleanSku = sku.trim().toUpperCase();
+    if (almacenes && almacenes.length > 0) {
+      return almacenes.reduce((acc, alm) => acc + getStockQty(cleanSku, alm.id), 0);
+    }
     return stockList
-      .filter(s => s.sku?.trim().toUpperCase() === sku.trim().toUpperCase())
-      .reduce((acc, curr) => acc + curr.cantidad, 0);
+      .filter(s => s.sku?.trim().toUpperCase() === cleanSku)
+      .reduce((acc, curr) => acc + Math.max(0, curr.cantidad), 0);
   };
 
   // Combine catalog products with any SKUs present in stockList so that no inventory is ever omitted
@@ -165,12 +190,28 @@ export default function Dashboard({
       {/* Title Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">Dashboard de Inventario</h1>
+          <div className="flex items-center space-x-3">
+            <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">Dashboard de Inventario</h1>
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-950/60 text-emerald-400 border border-emerald-800">
+              <ShieldCheck className="h-3.5 w-3.5" />
+              <span>Cuadrado con Auditorías</span>
+            </span>
+          </div>
           <p className="text-sm text-slate-400 mt-1">
-            Supervisión y auditoría en tiempo real de mercadería distribuida en sucursales.
+            Supervisión del stock en tiempo real según el historial de auditoría y movimientos registrados.
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex items-center space-x-3">
+          <button
+            type="button"
+            onClick={handleSyncAuditoria}
+            disabled={syncingAudit}
+            title="Recalcular y cuadrar el stock matemáticamente a partir de todos los movimientos de auditoría"
+            className="inline-flex items-center space-x-2 bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-700 px-3.5 py-2.5 rounded-xl shadow-sm text-sm font-medium transition-all disabled:opacity-50"
+          >
+            <RefreshCw className={`h-4 w-4 text-emerald-400 ${syncingAudit ? "animate-spin" : ""}`} />
+            <span>{syncingAudit ? "Cuadrando..." : "Cuadrar con Auditorías"}</span>
+          </button>
           <button
             onClick={() => onNavigateToMovements()}
             className="inline-flex items-center space-x-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-4 py-2.5 rounded-xl shadow-md text-sm transition-all"
@@ -180,6 +221,22 @@ export default function Dashboard({
           </button>
         </div>
       </div>
+
+      {/* Sync Success Alert Notice */}
+      {syncMessage && (
+        <div className="mb-6 p-4 bg-emerald-950/50 border border-emerald-800 rounded-xl text-sm text-emerald-300 flex items-center justify-between animate-fade-in shadow-lg">
+          <div className="flex items-center space-x-2">
+            <CheckCircle className="h-4 w-4 text-emerald-400 shrink-0" />
+            <span>{syncMessage}</span>
+          </div>
+          <button
+            onClick={() => setSyncMessage(null)}
+            className="text-slate-400 hover:text-slate-200 text-xs px-2 py-1 rounded-lg hover:bg-slate-800"
+          >
+            Entendido
+          </button>
+        </div>
+      )}
 
       {/* Real-time KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">

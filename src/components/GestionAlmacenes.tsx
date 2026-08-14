@@ -73,9 +73,12 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
     );
   });
 
-  // Check if a warehouse has stock registered
+  // Check if a warehouse has stock registered (with normalized warehouse matching)
   const getWarehouseStockStatus = (almacenId: string) => {
-    const warehouseStock = stockList.filter(item => item.almacen_id === almacenId);
+    const normId = firestoreService.normalizeWarehouseId(almacenId, almacenes);
+    const warehouseStock = stockList.filter(item => 
+      firestoreService.normalizeWarehouseId(item.almacen_id, almacenes) === normId
+    );
     const totalUnits = warehouseStock.reduce((acc, curr) => acc + curr.cantidad, 0);
     const uniqueItemsCount = warehouseStock.filter(item => item.cantidad > 0).length;
     
