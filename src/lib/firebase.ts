@@ -471,80 +471,8 @@ export const firestoreService = {
       if (!existing) {
         prods.push(productData);
         setLocalStorageItem("productos", prods);
-        notifyListeners("productos", prods);
       }
       return existing || productData;
-    }
-  },
-
-  // Synchronize any inventory SKUs that have stock or movements but are missing in the catalog collection
-  syncInventoryProducts: async (): Promise<number> => {
-    if (isConfigured && realDb) {
-      try {
-        const [stockSnap, prodSnap] = await Promise.all([
-          getDocs(collection(realDb, "stock")),
-          getDocs(collection(realDb, "productos"))
-        ]);
-
-        const existingSkus = new Set<string>();
-        prodSnap.forEach(d => existingSkus.add(d.id.toUpperCase()));
-
-        let addedCount = 0;
-        const promises: Promise<any>[] = [];
-
-        stockSnap.forEach(docSnap => {
-          const data = docSnap.data();
-          if (data && data.sku) {
-            const rawSku = data.sku.trim();
-            const upperSku = rawSku.toUpperCase();
-            if (upperSku && !existingSkus.has(upperSku)) {
-              existingSkus.add(upperSku);
-              addedCount++;
-              promises.push(
-                setDoc(doc(realDb, "productos", rawSku), {
-                  nombre: `Artículo ${rawSku}`,
-                  categoria: "General",
-                  stock_minimo: 5,
-                  unidad: "uds"
-                }, { merge: true })
-              );
-            }
-          }
-        });
-
-        if (promises.length > 0) {
-          await Promise.all(promises);
-        }
-        return addedCount;
-      } catch (err) {
-        console.error("Error auto-syncing Firestore products:", err);
-        return 0;
-      }
-    } else {
-      const prods = getLocalStorageItem<Producto[]>("productos", []);
-      const stockObj = getLocalStorageItem<Record<string, StockItem>>("stock", {});
-      const existingSkus = new Set(prods.map(p => p.sku.toUpperCase()));
-      let added = 0;
-
-      Object.values(stockObj).forEach(item => {
-        if (item.sku && !existingSkus.has(item.sku.toUpperCase())) {
-          existingSkus.add(item.sku.toUpperCase());
-          prods.push({
-            sku: item.sku,
-            nombre: `Artículo ${item.sku}`,
-            categoria: "General",
-            stock_minimo: 5,
-            unidad: "uds"
-          });
-          added++;
-        }
-      });
-
-      if (added > 0) {
-        setLocalStorageItem("productos", prods);
-        notifyListeners("productos", prods);
-      }
-      return added;
     }
   },
 

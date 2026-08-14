@@ -57,14 +57,9 @@ export default function GestionProductos() {
   } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Real-time subscriptions and auto-sync
+  // Real-time subscriptions
   useEffect(() => {
     setLoading(true);
-
-    // Auto-sync any existing inventory SKUs into catalog on initial view
-    firestoreService.syncInventoryProducts().catch((err) => {
-      console.error("Auto sync inventory products error:", err);
-    });
 
     // Subscribe to products list
     const unsubscribeProductos = firestoreService.getProductosRealtime((data) => {
@@ -72,7 +67,7 @@ export default function GestionProductos() {
       setLoading(false);
     });
 
-    // Subscribe to stock list for delete validation and inventory sync
+    // Subscribe to stock list for delete validation
     const unsubscribeStock = firestoreService.getStockRealtime((data) => {
       setStockList(data);
     });
@@ -83,41 +78,8 @@ export default function GestionProductos() {
     };
   }, []);
 
-  // Consolidate catalog with any SKU that has stock entries so the catalog is NEVER empty if inventory exists
-  const effectiveProductos = React.useMemo(() => {
-    const map = new Map<string, Producto>();
-
-    // 1. Add all registered catalog products
-    productos.forEach(p => {
-      if (p.sku) {
-        map.set(p.sku.trim().toUpperCase(), {
-          ...p,
-          sku: p.sku.trim().toUpperCase()
-        });
-      }
-    });
-
-    // 2. Complement with any SKUs present in stock records
-    stockList.forEach(s => {
-      if (s.sku) {
-        const cleanSku = s.sku.trim().toUpperCase();
-        if (!map.has(cleanSku)) {
-          map.set(cleanSku, {
-            sku: cleanSku,
-            nombre: `Artículo ${cleanSku}`,
-            categoria: "General",
-            stock_minimo: 5,
-            unidad: "uds"
-          });
-        }
-      }
-    });
-
-    return Array.from(map.values());
-  }, [productos, stockList]);
-
   // Filtered products
-  const filteredProductos = effectiveProductos.filter(p => {
+  const filteredProductos = productos.filter(p => {
     const queryStr = searchQuery.toLowerCase().trim();
     if (!queryStr) return true;
     return (
@@ -127,10 +89,9 @@ export default function GestionProductos() {
     );
   });
 
-  // Get current active stock sum across all warehouses for a given SKU (case-insensitive)
+  // Get current active stock sum across all warehouses for a given SKU
   const getProductStockStatus = (productSku: string) => {
-    const cleanSku = productSku ? productSku.trim().toUpperCase() : "";
-    const productStocks = stockList.filter(item => item.sku?.trim().toUpperCase() === cleanSku);
+    const productStocks = stockList.filter(item => item.sku === productSku);
     const totalQty = productStocks.reduce((sum, item) => sum + item.cantidad, 0);
     const locationsCount = productStocks.filter(item => item.cantidad > 0).length;
 
@@ -200,7 +161,7 @@ export default function GestionProductos() {
         setIsFormOpen(false);
       } else {
         // Add mode (Verify duplicate first)
-        const duplicate = effectiveProductos.find(p => p.sku.toUpperCase() === cleanSku);
+        const duplicate = productos.find(p => p.sku.toUpperCase() === cleanSku);
         if (duplicate) {
           throw new Error(`El SKU "${cleanSku}" ya está registrado en el catálogo.`);
         }
@@ -488,14 +449,11 @@ export default function GestionProductos() {
                   <th className="py-4 px-6">Categoría</th>
                   <th className="py-4 px-6">U. de Medida</th>
                   <th className="py-4 px-6">Mínimo Crítico</th>
-                  <th className="py-4 px-6">Stock Físico Real</th>
                   <th className="py-4 px-6 text-right">Acciones</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
                 {filteredProductos.map((p) => {
-                  const { hasStock, totalQty } = getProductStockStatus(p.sku);
-                  const isBelowMin = totalQty <= p.stock_minimo;
                   return (
                     <tr key={p.sku} className="hover:bg-slate-850/35 transition-colors group">
                       <td className="py-4 px-6 font-mono text-xs text-slate-400 font-semibold">
@@ -521,23 +479,6 @@ export default function GestionProductos() {
                       </td>
                       <td className="py-4 px-6 text-slate-300 text-sm">
                         {p.stock_minimo} {p.unidad}(s)
-                      </td>
-                      <td className="py-4 px-6">
-                        {hasStock ? (
-                          <div className={`inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
-                            isBelowMin 
-                              ? "bg-rose-950/45 text-rose-400 border border-rose-900/40" 
-                              : "bg-emerald-950/45 text-emerald-400 border border-emerald-900/40"
-                          }`}>
-                            <span className={`h-1.5 w-1.5 rounded-full ${isBelowMin ? "bg-rose-500 animate-pulse" : "bg-emerald-500"}`} />
-                            <span>{totalQty} {p.unidad}(s) {isBelowMin ? "(Stock Crítico)" : ""}</span>
-                          </div>
-                        ) : (
-                          <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-950 text-slate-500 border border-slate-800/60">
-                            <span className="h-1.5 w-1.5 bg-slate-700 rounded-full" />
-                            <span>Agotado (0)</span>
-                          </div>
-                        )}
                       </td>
                       <td className="py-4 px-6 text-right">
                         <div className="flex items-center justify-end space-x-2">
@@ -567,8 +508,6 @@ export default function GestionProductos() {
           {/* Mobile/Tablet Card Grid View */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
             {filteredProductos.map((p) => {
-              const { hasStock, totalQty } = getProductStockStatus(p.sku);
-              const isBelowMin = totalQty <= p.stock_minimo;
               return (
                 <div key={p.sku} className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
                   <div className="flex items-start justify-between">
@@ -597,7 +536,7 @@ export default function GestionProductos() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 pt-2 text-xs">
+                  <div className="grid grid-cols-3 gap-y-3 gap-x-2 pt-2 text-xs">
                     <div>
                       <span className="text-slate-500 block mb-0.5">Categoría:</span>
                       <span className="bg-slate-950 px-2 py-0.5 border border-slate-850 rounded text-slate-300">
@@ -610,17 +549,7 @@ export default function GestionProductos() {
                     </div>
                     <div>
                       <span className="text-slate-500 block mb-0.5">Mínimo crítico:</span>
-                      <span className="text-slate-200">{p.stock_minimo} uds</span>
-                    </div>
-                    <div>
-                      <span className="text-slate-500 block mb-0.5">Stock Real Total:</span>
-                      {hasStock ? (
-                        <span className={`font-semibold px-2 py-0.5 rounded ${isBelowMin ? "bg-rose-950/50 text-rose-400" : "bg-emerald-950/50 text-emerald-400"}`}>
-                          {totalQty} {isBelowMin ? "(Crítico)" : ""}
-                        </span>
-                      ) : (
-                        <span className="text-slate-500">0 (Agotado)</span>
-                      )}
+                      <span className="text-slate-200">{p.stock_minimo} {p.unidad}(s)</span>
                     </div>
                   </div>
                 </div>

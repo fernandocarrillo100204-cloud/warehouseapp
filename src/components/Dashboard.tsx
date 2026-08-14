@@ -178,7 +178,7 @@ export default function Dashboard({
       </div>
 
       {/* Real-time KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
         {/* Total SKUs */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
           <div className="flex items-center justify-between">
@@ -191,30 +191,6 @@ export default function Dashboard({
             <h3 className="text-2xl font-bold text-slate-100">{totalSkusInScope}</h3>
             <p className="text-xs text-slate-500 mt-1">
               {selectedAlmacen === "all" ? "Productos únicos registrados" : "SKUs con stock en sucursal"}
-            </p>
-          </div>
-        </div>
-
-        {/* Global Stock Volume */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-              {selectedAlmacen === "all" ? "Stock Total" : "Stock en Almacén"}
-            </span>
-            <div className="bg-slate-800 p-2 rounded-xl text-emerald-400">
-              <TrendingUp className="h-5 w-5" />
-            </div>
-          </div>
-          <div className="mt-4">
-            <h3 className="text-2xl font-bold text-slate-100">
-              {loading ? (
-                <span className="h-5 w-12 bg-slate-800 animate-pulse inline-block rounded" />
-              ) : (
-                totalStockInScope.toLocaleString()
-              )}
-            </h3>
-            <p className="text-xs text-slate-500 mt-1">
-              {selectedAlmacen === "all" ? "Unidades totales en red" : "Unidades en esta sucursal"}
             </p>
           </div>
         </div>
