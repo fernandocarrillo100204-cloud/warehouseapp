@@ -17,7 +17,9 @@ import {
   Layers,
   User,
   Calendar,
-  X
+  X,
+  Trash2,
+  AlertTriangle
 } from "lucide-react";
 
 interface HistorialProps {
@@ -38,6 +40,8 @@ export default function Historial({
   const [warehouseFilter, setWarehouseFilter] = useState("all");
   const [tipoFilter, setTipoFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [movToDelete, setMovToDelete] = useState<Movimiento | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Sync state with prop
   useEffect(() => {
@@ -54,6 +58,20 @@ export default function Historial({
       console.error("Error loading movements history:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!movToDelete) return;
+    setIsDeleting(true);
+    try {
+      await firestoreService.deleteMovimiento(movToDelete.id);
+      setMovimientos(prev => prev.filter(m => m.id !== movToDelete.id));
+      setMovToDelete(null);
+    } catch (error) {
+      console.error("Error al eliminar movimiento:", error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -178,7 +196,6 @@ export default function Historial({
               <option value="all">📁 Todos los tipos</option>
               <option value="entrada">📥 Compras (Entradas)</option>
               <option value="salida">📤 Ventas (Salidas)</option>
-              <option value="ajuste">⚙️ Ajustes de Inventario</option>
               <option value="transferencia">🔄 Transferencias Internas</option>
             </select>
           </div>
@@ -210,6 +227,7 @@ export default function Historial({
                   <th className="py-4 px-6 text-center">Cantidad</th>
                   <th className="py-4 px-6">Referencia / Glosa</th>
                   <th className="py-4 px-6">Responsable</th>
+                  <th className="py-4 px-6 text-right">Acción</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
@@ -241,12 +259,6 @@ export default function Historial({
                       typeLabel = "Salida";
                       qtyPrefix = "-";
                       qtyColorClass = "text-rose-400 font-bold";
-                      break;
-                    case "ajuste":
-                      badgeColorClass = "bg-purple-950 text-purple-400 border border-purple-800";
-                      typeLabel = "Ajuste";
-                      qtyPrefix = "≡";
-                      qtyColorClass = "text-purple-400 font-semibold";
                       break;
                     case "transferencia":
                       badgeColorClass = "bg-blue-950 text-blue-400 border border-blue-800";
@@ -314,6 +326,20 @@ export default function Historial({
                           </span>
                         </div>
                       </td>
+
+                      {/* Action Delete */}
+                      <td className="py-4 px-6 text-right">
+                        <button
+                          type="button"
+                          id={`btn-delete-mov-${mov.id}`}
+                          onClick={() => setMovToDelete(mov)}
+                          title="Eliminar movimiento del historial"
+                          className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors border border-transparent hover:border-rose-900/50 inline-flex items-center gap-1 text-xs font-medium"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          <span className="hidden sm:inline">Eliminar</span>
+                        </button>
+                      </td>
                     </tr>
                   );
                 })}
@@ -325,8 +351,80 @@ export default function Historial({
 
       <div className="mt-4 text-xs text-slate-500 flex justify-between px-2">
         <p>Mostrando {filteredMovimientos.length} de {movimientos.length} transacciones registradas.</p>
-        <p>Los registros históricos son de carácter auditable y no editables.</p>
+        <p>Los movimientos pueden ser eliminados individualmente para correcciones de registro.</p>
       </div>
+
+      {/* Confirmation Modal */}
+      {movToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
+            <div className="flex items-center space-x-3 text-rose-400">
+              <div className="p-3 bg-rose-950/60 border border-rose-800 rounded-xl">
+                <AlertTriangle className="h-6 w-6 text-rose-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-slate-100">¿Eliminar Movimiento?</h3>
+                <p className="text-xs text-slate-400">Esta acción removerá el registro del historial.</p>
+              </div>
+            </div>
+
+            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-sm text-slate-300">
+              <div className="flex justify-between">
+                <span className="text-slate-500">Producto:</span>
+                <span className="font-semibold text-slate-200">{getProductName(movToDelete.sku)}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">SKU:</span>
+                <span className="font-mono text-emerald-400">{movToDelete.sku}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Tipo / Cantidad:</span>
+                <span className="capitalize font-semibold text-slate-200">{movToDelete.tipo} ({movToDelete.cantidad} uds)</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Almacén:</span>
+                <span>{getWarehouseName(movToDelete.almacen_id)}</span>
+              </div>
+              {movToDelete.referencia && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Referencia:</span>
+                  <span className="italic text-slate-400 truncate max-w-[200px]">{movToDelete.referencia}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center justify-end space-x-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setMovToDelete(null)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-xl transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                id="btn-confirm-delete-mov"
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-colors inline-flex items-center space-x-2 shadow-lg shadow-rose-950/30 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Eliminando...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-3.5 w-3.5" />
+                    <span>Eliminar Registro</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

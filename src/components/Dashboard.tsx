@@ -103,17 +103,14 @@ export default function Dashboard({
   // Get distinct categories from effective products
   const categorias = Array.from(new Set(effectiveProductos.map(p => p.categoria).filter(Boolean)));
 
-  // Calculate stats based on filters & selected warehouse
-  const totalStockInScope = selectedAlmacen === "all"
-    ? stockList.reduce((acc, curr) => acc + curr.cantidad, 0)
-    : stockList.filter(s => s.almacen_id === selectedAlmacen).reduce((acc, curr) => acc + curr.cantidad, 0);
+  const selectedAlmacenObj = almacenes.find(a => a.id === selectedAlmacen);
 
-  // Total SKUs in scope (all registered, or count with stock in selected warehouse)
+  // Calculate stats based on filters & selected warehouse
   const totalSkusInScope = selectedAlmacen === "all"
     ? effectiveProductos.length
     : effectiveProductos.filter(p => getStockQty(p.sku, selectedAlmacen) > 0).length;
   
-  // Calculate how many products are low on stock
+  // Calculate how many products are low on stock in the selected scope
   const lowStockCount = effectiveProductos.filter(p => {
     const stockQty = selectedAlmacen === "all" 
       ? getGlobalStockQty(p.sku) 
@@ -139,11 +136,18 @@ export default function Dashboard({
     // 2. Category filter
     const matchesCategory = categoryFilter === "all" || p.categoria === categoryFilter;
 
-    // 3. Stock status filter
+    // 3. Stock status & warehouse filter
     const stockQty = selectedAlmacen === "all" 
       ? getGlobalStockQty(p.sku) 
       : getStockQty(p.sku, selectedAlmacen);
     
+    // When a specific warehouse is selected with 'all' status, only show products present in that warehouse
+    if (selectedAlmacen !== "all" && stockStatusFilter === "all") {
+      if (stockQty <= 0) {
+        return false;
+      }
+    }
+
     let matchesStatus = true;
     if (stockStatusFilter === "low") {
       matchesStatus = stockQty <= p.stock_minimo && stockQty > 0;
@@ -329,23 +333,26 @@ export default function Dashboard({
                   <th className="py-4 px-6 text-center">Mín. Requerido</th>
                   
                   {/* Warehouse specific columns */}
-                  {almacenes.map(alm => {
-                    const isHighlighted = selectedAlmacen === alm.id;
-                    return (
-                      <th 
-                        key={alm.id} 
-                        className={`py-4 px-6 text-center transition-all ${
-                          isHighlighted ? "bg-slate-800/40 text-emerald-400 font-bold" : ""
-                        }`}
-                      >
-                        {alm.nombre}
+                  {selectedAlmacen === "all" ? (
+                    <>
+                      {almacenes.map(alm => (
+                        <th 
+                          key={alm.id} 
+                          className="py-4 px-6 text-center"
+                        >
+                          {alm.nombre}
+                        </th>
+                      ))}
+                      <th className="py-4 px-6 text-center font-bold bg-slate-800/20 text-emerald-400">
+                        Stock Global
                       </th>
-                    );
-                  })}
+                    </>
+                  ) : (
+                    <th className="py-4 px-6 text-center font-bold bg-emerald-950/40 text-emerald-400 border-x border-slate-800">
+                      Stock en {selectedAlmacenObj?.nombre || "Almacén"}
+                    </th>
+                  )}
 
-                  <th className={`py-4 px-6 text-center font-bold ${selectedAlmacen === "all" ? "bg-slate-800/20 text-emerald-400" : "text-slate-300"}`}>
-                    Stock Global
-                  </th>
                   <th className="py-4 px-6 text-center">Estado</th>
                   <th className="py-4 px-6 text-right">Acciones</th>
                 </tr>
@@ -382,38 +389,49 @@ export default function Dashboard({
                         {prod.stock_minimo} <span className="text-[10px]">{prod.unidad}</span>
                       </td>
 
-                      {/* Warehouse stocks */}
-                      {almacenes.map(alm => {
-                        const qty = getStockQty(prod.sku, alm.id);
-                        const isColActive = selectedAlmacen === alm.id;
-                        
-                        let colorClass = "text-slate-300";
-                        if (qty === 0) colorClass = "text-rose-500/80 font-semibold";
-                        else if (qty <= prod.stock_minimo) colorClass = "text-amber-500 font-semibold";
+                      {/* Warehouse stocks / Single selected warehouse stock */}
+                      {selectedAlmacen === "all" ? (
+                        <>
+                          {almacenes.map(alm => {
+                            const qty = getStockQty(prod.sku, alm.id);
+                            let colorClass = "text-slate-300";
+                            if (qty === 0) colorClass = "text-rose-500/80 font-semibold";
+                            else if (qty <= prod.stock_minimo) colorClass = "text-amber-500 font-semibold";
 
-                        return (
-                          <td 
-                            key={alm.id} 
-                            className={`py-4 px-6 text-center font-mono transition-all ${
-                              isColActive ? "bg-slate-800/10 font-bold" : ""
-                            }`}
-                          >
-                            <span className={colorClass}>
-                              {qty}
+                            return (
+                              <td 
+                                key={alm.id} 
+                                className="py-4 px-6 text-center font-mono"
+                              >
+                                <span className={colorClass}>
+                                  {qty}
+                                </span>
+                              </td>
+                            );
+                          })}
+
+                          {/* Global stock */}
+                          <td className="py-4 px-6 text-center font-mono font-semibold bg-slate-800/10">
+                            <span className={globalQty === 0 ? "text-rose-500" : globalQty <= prod.stock_minimo ? "text-amber-500" : "text-emerald-400"}>
+                              {globalQty}
                             </span>
+                            <span className="text-[10px] text-slate-500 ml-1">{prod.unidad}</span>
                           </td>
-                        );
-                      })}
-
-                      {/* Global stock */}
-                      <td className={`py-4 px-6 text-center font-mono font-semibold ${
-                        selectedAlmacen === "all" ? "bg-slate-800/10" : ""
-                      }`}>
-                        <span className={globalQty === 0 ? "text-rose-500" : globalQty <= prod.stock_minimo ? "text-amber-500" : "text-emerald-400"}>
-                          {globalQty}
-                        </span>
-                        <span className="text-[10px] text-slate-500 ml-1">{prod.unidad}</span>
-                      </td>
+                        </>
+                      ) : (
+                        <td className="py-4 px-6 text-center font-mono font-bold bg-emerald-950/15 border-x border-slate-800/60">
+                          <span className={`text-base ${
+                            activeQty === 0 
+                              ? "text-rose-500" 
+                              : activeQty <= prod.stock_minimo 
+                              ? "text-amber-500" 
+                              : "text-emerald-400"
+                          }`}>
+                            {activeQty}
+                          </span>
+                          <span className="text-xs text-slate-500 ml-1.5 font-normal">{prod.unidad}</span>
+                        </td>
+                      )}
 
                       {/* Status indicator */}
                       <td className="py-4 px-6 text-center">
@@ -461,7 +479,9 @@ export default function Dashboard({
 
       {/* Footnote information */}
       <div className="mt-4 flex items-center justify-between text-xs text-slate-500 px-2">
-        <p>Mostrando {filteredProductos.length} de {effectiveProductos.length} productos / SKUs en inventario.</p>
+        <p>
+          Mostrando {filteredProductos.length} {selectedAlmacen === "all" ? "productos registrados en red global" : `artículos con inventario en ${selectedAlmacenObj?.nombre || 'el almacén seleccionado'}`}.
+        </p>
         <p className="flex items-center">
           <span className="h-2 w-2 rounded-full bg-emerald-500 mr-2 animate-pulse" />
           Actualización en tiempo real vía Firebase Firestore activada.

@@ -45,7 +45,7 @@ export default function MovimientoForm({
   
   const [almacenId, setAlmacenId] = useState("");
   const [almacenDestinoId, setAlmacenDestinoId] = useState("");
-  const [tipo, setTipo] = useState<"entrada" | "salida" | "ajuste" | "transferencia">("entrada");
+  const [tipo, setTipo] = useState<"entrada" | "salida" | "transferencia">("entrada");
   const [cantidad, setCantidad] = useState<number>(1);
   const [referencia, setReferencia] = useState("");
   
@@ -413,8 +413,8 @@ export default function MovimientoForm({
                 <label className="block text-xs font-semibold text-slate-400 mb-2">
                   Tipo de Transacción
                 </label>
-                <div className="grid grid-cols-4 gap-2">
-                  {(["entrada", "salida", "ajuste", "transferencia"] as const).map((t) => (
+                <div className="grid grid-cols-3 gap-2">
+                  {(["entrada", "salida", "transferencia"] as const).map((t) => (
                     <button
                       key={t}
                       type="button"
@@ -427,7 +427,6 @@ export default function MovimientoForm({
                     >
                       {t === "entrada" && "Entrada"}
                       {t === "salida" && "Salida"}
-                      {t === "ajuste" && "Ajuste"}
                       {t === "transferencia" && "Transf."}
                     </button>
                   ))}

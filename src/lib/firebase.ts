@@ -34,18 +34,22 @@ import { Almacen, Producto, StockItem, Movimiento, Usuario } from "../types";
 // Detect if Firebase config is present in environment variables
 const metaEnv = (import.meta as any).env || {};
 const firebaseConfig = {
-  apiKey: metaEnv.VITE_FIREBASE_API_KEY,
-  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: metaEnv.VITE_FIREBASE_APP_ID
+  apiKey: metaEnv.VITE_FIREBASE_API_KEY || "",
+  authDomain: metaEnv.VITE_FIREBASE_AUTH_DOMAIN || "",
+  projectId: metaEnv.VITE_FIREBASE_PROJECT_ID || "",
+  storageBucket: metaEnv.VITE_FIREBASE_STORAGE_BUCKET || "",
+  messagingSenderId: metaEnv.VITE_FIREBASE_MESSAGING_SENDER_ID || "",
+  appId: metaEnv.VITE_FIREBASE_APP_ID || ""
 };
 
-const isConfigured = !!(
+const isConfigured = Boolean(
   firebaseConfig.apiKey && 
   firebaseConfig.projectId && 
-  firebaseConfig.apiKey !== "MY_FIREBASE_API_KEY"
+  firebaseConfig.apiKey !== "MY_FIREBASE_API_KEY" &&
+  firebaseConfig.apiKey !== "your-api-key" &&
+  !firebaseConfig.apiKey.includes("your-") &&
+  !firebaseConfig.projectId.includes("your-") &&
+  firebaseConfig.apiKey.length > 15
 );
 
 // Initialize Firebase if configured
@@ -156,9 +160,9 @@ const seedData = () => {
       id: "mov_3",
       sku: "SKU-1003",
       almacen_id: "alm_3",
-      tipo: "ajuste",
+      tipo: "entrada",
       cantidad: 6,
-      referencia: "Inventario Mensual Julio",
+      referencia: "Recepción de Mercancía R-102",
       usuario: "admin@empresa.com",
       fecha: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000) // 1 día atrás
     }
@@ -297,263 +301,383 @@ export const authService = {
 export const firestoreService = {
   getAlmacenes: async (): Promise<Almacen[]> => {
     if (isConfigured && realDb) {
-      const snap = await getDocs(collection(realDb, "almacenes"));
-      const list: Almacen[] = [];
-      snap.forEach(d => {
-        list.push({ id: d.id, ...d.data() } as Almacen);
-      });
-      return list;
-    } else {
-      return getLocalStorageItem<Almacen[]>("almacenes", []);
-    }
-  },
-
-  getAlmacenesRealtime: (onUpdate: (almacenes: Almacen[]) => void): (() => void) => {
-    if (isConfigured && realDb) {
-      return onSnapshot(collection(realDb, "almacenes"), (snap) => {
+      try {
+        const snap = await getDocs(collection(realDb, "almacenes"));
         const list: Almacen[] = [];
         snap.forEach(d => {
           list.push({ id: d.id, ...d.data() } as Almacen);
         });
-        onUpdate(list);
-      });
-    } else {
-      const update = () => {
-        const list = getLocalStorageItem<Almacen[]>("almacenes", []);
-        onUpdate(list);
-      };
-      update();
-      listeners.almacenes.push(update);
-      return () => {
-        listeners.almacenes = listeners.almacenes.filter(cb => cb !== update);
-      };
+        if (list.length > 0) {
+          setLocalStorageItem("almacenes", list);
+          return list;
+        }
+      } catch (err) {
+        console.warn("Firestore getAlmacenes unavailable, using local cache:", err);
+      }
     }
+    return getLocalStorageItem<Almacen[]>("almacenes", []);
+  },
+
+  getAlmacenesRealtime: (onUpdate: (almacenes: Almacen[]) => void): (() => void) => {
+    if (isConfigured && realDb) {
+      try {
+        const unsubscribe = onSnapshot(
+          collection(realDb, "almacenes"),
+          (snap) => {
+            const list: Almacen[] = [];
+            snap.forEach(d => {
+              list.push({ id: d.id, ...d.data() } as Almacen);
+            });
+            if (list.length > 0) {
+              setLocalStorageItem("almacenes", list);
+              onUpdate(list);
+            } else {
+              const localList = getLocalStorageItem<Almacen[]>("almacenes", []);
+              onUpdate(localList);
+            }
+          },
+          (error) => {
+            console.warn("Firestore onSnapshot (almacenes) error, falling back to local state:", error.message);
+            const localList = getLocalStorageItem<Almacen[]>("almacenes", []);
+            onUpdate(localList);
+          }
+        );
+        return unsubscribe;
+      } catch (err) {
+        console.warn("Could not attach onSnapshot to almacenes, falling back to local listener:", err);
+      }
+    }
+
+    const update = () => {
+      const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+      onUpdate(list);
+    };
+    update();
+    listeners.almacenes.push(update);
+    return () => {
+      listeners.almacenes = listeners.almacenes.filter(cb => cb !== update);
+    };
   },
 
   addAlmacen: async (almacen: Omit<Almacen, "id">): Promise<string> => {
     if (isConfigured && realDb) {
-      const docRef = await addDoc(collection(realDb, "almacenes"), almacen);
-      return docRef.id;
-    } else {
-      const list = getLocalStorageItem<Almacen[]>("almacenes", []);
-      const newId = "alm_" + Math.random().toString(36).substr(2, 9);
-      const newItem: Almacen = { id: newId, ...almacen };
-      list.push(newItem);
-      setLocalStorageItem("almacenes", list);
-      notifyListeners("almacenes", list);
-      return newId;
+      try {
+        const docRef = await addDoc(collection(realDb, "almacenes"), almacen);
+        return docRef.id;
+      } catch (err) {
+        console.warn("Firestore addDoc failed, using local storage:", err);
+      }
     }
+    const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+    const newId = "alm_" + Math.random().toString(36).substr(2, 9);
+    const newItem: Almacen = { id: newId, ...almacen };
+    list.push(newItem);
+    setLocalStorageItem("almacenes", list);
+    notifyListeners("almacenes", list);
+    return newId;
   },
 
   updateAlmacen: async (id: string, data: Partial<Omit<Almacen, "id">>): Promise<void> => {
     if (isConfigured && realDb) {
-      const docRef = doc(realDb, "almacenes", id);
-      await setDoc(docRef, data, { merge: true });
-    } else {
-      const list = getLocalStorageItem<Almacen[]>("almacenes", []);
-      const index = list.findIndex(a => a.id === id);
-      if (index !== -1) {
-        list[index] = { ...list[index], ...data };
-        setLocalStorageItem("almacenes", list);
-        notifyListeners("almacenes", list);
+      try {
+        const docRef = doc(realDb, "almacenes", id);
+        await setDoc(docRef, data, { merge: true });
+      } catch (err) {
+        console.warn("Firestore updateAlmacen failed, using local storage:", err);
       }
+    }
+    const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+    const index = list.findIndex(a => a.id === id);
+    if (index !== -1) {
+      list[index] = { ...list[index], ...data };
+      setLocalStorageItem("almacenes", list);
+      notifyListeners("almacenes", list);
     }
   },
 
   deleteAlmacen: async (id: string): Promise<void> => {
     if (isConfigured && realDb) {
-      const docRef = doc(realDb, "almacenes", id);
-      await deleteDoc(docRef);
-    } else {
-      const list = getLocalStorageItem<Almacen[]>("almacenes", []);
-      const filtered = list.filter(a => a.id !== id);
-      setLocalStorageItem("almacenes", filtered);
-      notifyListeners("almacenes", filtered);
+      try {
+        const docRef = doc(realDb, "almacenes", id);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.warn("Firestore deleteDoc failed, using local storage:", err);
+      }
     }
+    const list = getLocalStorageItem<Almacen[]>("almacenes", []);
+    const filtered = list.filter(a => a.id !== id);
+    setLocalStorageItem("almacenes", filtered);
+    notifyListeners("almacenes", filtered);
   },
 
   getProductos: async (): Promise<Producto[]> => {
     if (isConfigured && realDb) {
-      const snap = await getDocs(collection(realDb, "productos"));
-      const list: Producto[] = [];
-      snap.forEach(d => {
-        list.push({ sku: d.id, ...d.data() } as Producto);
-      });
-      return list;
-    } else {
-      return getLocalStorageItem<Producto[]>("productos", []);
-    }
-  },
-
-  getProductosRealtime: (onUpdate: (productos: Producto[]) => void): (() => void) => {
-    if (isConfigured && realDb) {
-      return onSnapshot(collection(realDb, "productos"), (snap) => {
+      try {
+        const snap = await getDocs(collection(realDb, "productos"));
         const list: Producto[] = [];
         snap.forEach(d => {
           list.push({ sku: d.id, ...d.data() } as Producto);
         });
-        onUpdate(list);
-      });
-    } else {
-      const update = () => {
-        const list = getLocalStorageItem<Producto[]>("productos", []);
-        onUpdate(list);
-      };
-      update();
-      listeners.productos.push(update);
-      return () => {
-        listeners.productos = listeners.productos.filter(cb => cb !== update);
-      };
+        if (list.length > 0) {
+          setLocalStorageItem("productos", list);
+          return list;
+        }
+      } catch (err) {
+        console.warn("Firestore getProductos failed, using local storage:", err);
+      }
     }
+    return getLocalStorageItem<Producto[]>("productos", []);
+  },
+
+  getProductosRealtime: (onUpdate: (productos: Producto[]) => void): (() => void) => {
+    if (isConfigured && realDb) {
+      try {
+        const unsubscribe = onSnapshot(
+          collection(realDb, "productos"),
+          (snap) => {
+            const list: Producto[] = [];
+            snap.forEach(d => {
+              list.push({ sku: d.id, ...d.data() } as Producto);
+            });
+            if (list.length > 0) {
+              setLocalStorageItem("productos", list);
+              onUpdate(list);
+            } else {
+              const localList = getLocalStorageItem<Producto[]>("productos", []);
+              onUpdate(localList);
+            }
+          },
+          (error) => {
+            console.warn("Firestore onSnapshot (productos) error, falling back to local state:", error.message);
+            const localList = getLocalStorageItem<Producto[]>("productos", []);
+            onUpdate(localList);
+          }
+        );
+        return unsubscribe;
+      } catch (err) {
+        console.warn("Could not attach onSnapshot to productos, falling back to local listener:", err);
+      }
+    }
+
+    const update = () => {
+      const list = getLocalStorageItem<Producto[]>("productos", []);
+      onUpdate(list);
+    };
+    update();
+    listeners.productos.push(update);
+    return () => {
+      listeners.productos = listeners.productos.filter(cb => cb !== update);
+    };
   },
 
   addProduct: async (producto: Producto): Promise<void> => {
     if (isConfigured && realDb) {
-      const docRef = doc(realDb, "productos", producto.sku);
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        throw new Error("El SKU ya existe en la base de datos.");
+      try {
+        const docRef = doc(realDb, "productos", producto.sku);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) {
+          throw new Error("El SKU ya existe en la base de datos.");
+        }
+        const { sku, ...data } = producto;
+        await setDoc(docRef, data);
+      } catch (err: any) {
+        if (err?.message?.includes("ya existe")) {
+          throw err;
+        }
+        console.warn("Firestore addProduct failed, using local storage:", err);
       }
-      const { sku, ...data } = producto;
-      await setDoc(docRef, data);
-    } else {
-      const list = getLocalStorageItem<Producto[]>("productos", []);
-      const existing = list.find(p => p.sku.toLowerCase() === producto.sku.toLowerCase());
-      if (existing) {
-        throw new Error("El SKU ya existe.");
+    }
+    const list = getLocalStorageItem<Producto[]>("productos", []);
+    const existing = list.find(p => p.sku.toLowerCase() === producto.sku.toLowerCase());
+    if (existing) {
+      throw new Error("El SKU ya existe.");
+    }
+    list.push(producto);
+    setLocalStorageItem("productos", list);
+    notifyListeners("productos", list);
+  },
+
+  updateProduct: async (sku: string, data: Partial<Omit<Producto, "sku">>): Promise<void> => {
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "productos", sku);
+        await setDoc(docRef, data, { merge: true });
+      } catch (err) {
+        console.warn("Firestore updateProduct failed, using local storage:", err);
       }
-      list.push(producto);
+    }
+    const list = getLocalStorageItem<Producto[]>("productos", []);
+    const index = list.findIndex(p => p.sku === sku);
+    if (index !== -1) {
+      list[index] = { ...list[index], ...data };
       setLocalStorageItem("productos", list);
       notifyListeners("productos", list);
     }
   },
 
-  updateProduct: async (sku: string, data: Partial<Omit<Producto, "sku">>): Promise<void> => {
-    if (isConfigured && realDb) {
-      const docRef = doc(realDb, "productos", sku);
-      await setDoc(docRef, data, { merge: true });
-    } else {
-      const list = getLocalStorageItem<Producto[]>("productos", []);
-      const index = list.findIndex(p => p.sku === sku);
-      if (index !== -1) {
-        list[index] = { ...list[index], ...data };
-        setLocalStorageItem("productos", list);
-        notifyListeners("productos", list);
-      }
-    }
-  },
-
   deleteProduct: async (sku: string): Promise<void> => {
     if (isConfigured && realDb) {
-      const docRef = doc(realDb, "productos", sku);
-      await deleteDoc(docRef);
-    } else {
-      const list = getLocalStorageItem<Producto[]>("productos", []);
-      const filtered = list.filter(p => p.sku !== sku);
-      setLocalStorageItem("productos", filtered);
-      notifyListeners("productos", filtered);
+      try {
+        const docRef = doc(realDb, "productos", sku);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.warn("Firestore deleteDoc failed, using local storage:", err);
+      }
     }
+    const list = getLocalStorageItem<Producto[]>("productos", []);
+    const filtered = list.filter(p => p.sku !== sku);
+    setLocalStorageItem("productos", filtered);
+    notifyListeners("productos", filtered);
   },
 
   // Helper to ensure product exists in emulator or real database for scanning demonstration
   ensureProductExists: async (sku: string, nombre: string, categoria = "General", stockMinimo = 5, unidad = "uds"): Promise<Producto> => {
     const productData: Producto = { sku, nombre, categoria, stock_minimo: stockMinimo, unidad };
     if (isConfigured && realDb) {
-      const docRef = doc(realDb, "productos", sku);
-      const docSnap = await getDoc(docRef);
-      if (!docSnap.exists()) {
-        await setDoc(docRef, { nombre, categoria, stock_minimo: stockMinimo, unidad });
+      try {
+        const docRef = doc(realDb, "productos", sku);
+        const docSnap = await getDoc(docRef);
+        if (!docSnap.exists()) {
+          await setDoc(docRef, { nombre, categoria, stock_minimo: stockMinimo, unidad });
+        }
+        return productData;
+      } catch (err) {
+        console.warn("Firestore ensureProductExists failed, using local fallback:", err);
       }
-      return productData;
-    } else {
-      const prods = getLocalStorageItem<Producto[]>("productos", []);
-      const existing = prods.find(p => p.sku === sku);
-      if (!existing) {
-        prods.push(productData);
-        setLocalStorageItem("productos", prods);
-      }
-      return existing || productData;
     }
+    const prods = getLocalStorageItem<Producto[]>("productos", []);
+    const existing = prods.find(p => p.sku === sku);
+    if (!existing) {
+      prods.push(productData);
+      setLocalStorageItem("productos", prods);
+    }
+    return existing || productData;
   },
 
   getStockRealtime: (onUpdate: (stock: StockItem[]) => void): (() => void) => {
     if (isConfigured && realDb) {
-      return onSnapshot(collection(realDb, "stock"), (snap) => {
-        const list: StockItem[] = [];
+      try {
+        const unsubscribe = onSnapshot(
+          collection(realDb, "stock"),
+          (snap) => {
+            const list: StockItem[] = [];
+            snap.forEach(d => {
+              const data = d.data();
+              list.push({
+                id: d.id,
+                sku: data.sku,
+                almacen_id: data.almacen_id,
+                cantidad: data.cantidad,
+                actualizado: data.actualizado ? (data.actualizado as Timestamp).toDate() : new Date()
+              });
+            });
+            if (list.length > 0) {
+              onUpdate(list);
+            } else {
+              const stockRecord = getLocalStorageItem<Record<string, StockItem>>("stock", {});
+              const fallbackList = Object.values(stockRecord).map(item => ({
+                ...item,
+                actualizado: typeof item.actualizado === "string" ? new Date(item.actualizado) : item.actualizado
+              }));
+              onUpdate(fallbackList);
+            }
+          },
+          (error) => {
+            console.warn("Firestore onSnapshot (stock) error, serving local data:", error.message);
+            const stockRecord = getLocalStorageItem<Record<string, StockItem>>("stock", {});
+            const list = Object.values(stockRecord).map(item => ({
+              ...item,
+              actualizado: typeof item.actualizado === "string" ? new Date(item.actualizado) : item.actualizado
+            }));
+            onUpdate(list);
+          }
+        );
+        return unsubscribe;
+      } catch (err) {
+        console.warn("Could not attach onSnapshot to stock, using local fallback:", err);
+      }
+    }
+
+    // Local emulator live subscription
+    const update = () => {
+      const stockRecord = getLocalStorageItem<Record<string, StockItem>>("stock", {});
+      const list = Object.values(stockRecord).map(item => ({
+        ...item,
+        actualizado: typeof item.actualizado === "string" ? new Date(item.actualizado) : item.actualizado
+      }));
+      onUpdate(list);
+    };
+    
+    update();
+    listeners.stock.push(update);
+    
+    return () => {
+      listeners.stock = listeners.stock.filter(cb => cb !== update);
+    };
+  },
+
+  getMovimientos: async (skuFilter?: string): Promise<Movimiento[]> => {
+    if (isConfigured && realDb) {
+      try {
+        let q = query(collection(realDb, "movimientos"), orderBy("fecha", "desc"));
+        if (skuFilter) {
+          q = query(collection(realDb, "movimientos"), where("sku", "==", skuFilter), orderBy("fecha", "desc"));
+        }
+        const snap = await getDocs(q);
+        const list: Movimiento[] = [];
         snap.forEach(d => {
           const data = d.data();
           list.push({
             id: d.id,
             sku: data.sku,
             almacen_id: data.almacen_id,
+            tipo: data.tipo,
             cantidad: data.cantidad,
-            actualizado: data.actualizado ? (data.actualizado as Timestamp).toDate() : new Date()
+            referencia: data.referencia,
+            usuario: data.usuario,
+            fecha: data.fecha ? (data.fecha as Timestamp).toDate() : new Date(),
+            almacen_destino_id: data.almacen_destino_id
           });
         });
-        onUpdate(list);
-      });
-    } else {
-      // Local emulator live subscription
-      const update = () => {
-        const stockRecord = getLocalStorageItem<Record<string, StockItem>>("stock", {});
-        const list = Object.values(stockRecord).map(item => ({
-          ...item,
-          actualizado: typeof item.actualizado === "string" ? new Date(item.actualizado) : item.actualizado
-        }));
-        onUpdate(list);
-      };
-      
-      update();
-      listeners.stock.push(update);
-      
-      return () => {
-        listeners.stock = listeners.stock.filter(cb => cb !== update);
-      };
+        if (list.length > 0) {
+          return list;
+        }
+      } catch (err) {
+        console.warn("Firestore getMovimientos failed, using local storage:", err);
+      }
     }
+    let movs = getLocalStorageItem<Movimiento[]>("movimientos", []);
+    // Parse dates
+    movs = movs.map(m => ({
+      ...m,
+      fecha: typeof m.fecha === "string" ? new Date(m.fecha) : m.fecha
+    }));
+    // Sort desc
+    movs.sort((a, b) => {
+      const timeA = a.fecha instanceof Date ? a.fecha.getTime() : new Date((a.fecha as any).seconds * 1000).getTime();
+      const timeB = b.fecha instanceof Date ? b.fecha.getTime() : new Date((b.fecha as any).seconds * 1000).getTime();
+      return timeB - timeA;
+    });
+
+    if (skuFilter) {
+      return movs.filter(m => m.sku.toLowerCase() === skuFilter.toLowerCase());
+    }
+    return movs;
   },
 
-  getMovimientos: async (skuFilter?: string): Promise<Movimiento[]> => {
+  deleteMovimiento: async (id: string): Promise<void> => {
     if (isConfigured && realDb) {
-      let q = query(collection(realDb, "movimientos"), orderBy("fecha", "desc"));
-      if (skuFilter) {
-        q = query(collection(realDb, "movimientos"), where("sku", "==", skuFilter), orderBy("fecha", "desc"));
+      try {
+        const docRef = doc(realDb, "movimientos", id);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.warn("Firestore deleteDoc (movimientos) failed, using local storage:", err);
       }
-      const snap = await getDocs(q);
-      const list: Movimiento[] = [];
-      snap.forEach(d => {
-        const data = d.data();
-        list.push({
-          id: d.id,
-          sku: data.sku,
-          almacen_id: data.almacen_id,
-          tipo: data.tipo,
-          cantidad: data.cantidad,
-          referencia: data.referencia,
-          usuario: data.usuario,
-          fecha: data.fecha ? (data.fecha as Timestamp).toDate() : new Date(),
-          almacen_destino_id: data.almacen_destino_id
-        });
-      });
-      return list;
-    } else {
-      let movs = getLocalStorageItem<Movimiento[]>("movimientos", []);
-      // Parse dates
-      movs = movs.map(m => ({
-        ...m,
-        fecha: typeof m.fecha === "string" ? new Date(m.fecha) : m.fecha
-      }));
-      // Sort desc
-      movs.sort((a, b) => {
-        const timeA = a.fecha instanceof Date ? a.fecha.getTime() : new Date((a.fecha as any).seconds * 1000).getTime();
-        const timeB = b.fecha instanceof Date ? b.fecha.getTime() : new Date((b.fecha as any).seconds * 1000).getTime();
-        return timeB - timeA;
-      });
-
-      if (skuFilter) {
-        return movs.filter(m => m.sku.toLowerCase() === skuFilter.toLowerCase());
-      }
-      return movs;
     }
+    const list = getLocalStorageItem<Movimiento[]>("movimientos", []);
+    const filtered = list.filter(m => m.id !== id);
+    setLocalStorageItem("movimientos", filtered);
+    notifyListeners("movimientos", filtered);
   },
 
   registerMovimientoTransaction: async (mov: Omit<Movimiento, "fecha" | "usuario">): Promise<void> => {
@@ -561,140 +685,149 @@ export const firestoreService = {
     const usuarioEmail = user ? user.email : "sistema@empresa.com";
     
     if (isConfigured && realDb) {
-      // Real Firestore Transaction
-      await runTransaction(realDb, async (transaction) => {
-        // Read current stock
-        const stockId = `${mov.sku}_${mov.almacen_id}`;
-        const stockRef = doc(realDb, "stock", stockId);
-        const stockSnap = await transaction.get(stockRef);
-        
-        let currentQty = 0;
-        if (stockSnap.exists()) {
-          currentQty = stockSnap.data().cantidad || 0;
-        }
-
-        let newQty = currentQty;
-        if (mov.tipo === "entrada") {
-          newQty += mov.cantidad;
-        } else if (mov.tipo === "salida") {
-          newQty -= mov.cantidad;
-        } else if (mov.tipo === "ajuste") {
-          newQty = mov.cantidad;
-        } else if (mov.tipo === "transferencia" && mov.almacen_destino_id) {
-          // Dest warehouse transaction
-          newQty -= mov.cantidad;
+      try {
+        // Real Firestore Transaction
+        await runTransaction(realDb, async (transaction) => {
+          // Read current stock
+          const stockId = `${mov.sku}_${mov.almacen_id}`;
+          const stockRef = doc(realDb, "stock", stockId);
+          const stockSnap = await transaction.get(stockRef);
           
-          const destStockId = `${mov.sku}_${mov.almacen_destino_id}`;
-          const destStockRef = doc(realDb, "stock", destStockId);
-          const destStockSnap = await transaction.get(destStockRef);
-          
-          let destQty = 0;
-          if (destStockSnap.exists()) {
-            destQty = destStockSnap.data().cantidad || 0;
+          let currentQty = 0;
+          if (stockSnap.exists()) {
+            currentQty = stockSnap.data().cantidad || 0;
           }
-          
-          transaction.set(destStockRef, {
+
+          let newQty = currentQty;
+          if (mov.tipo === "entrada") {
+            newQty += mov.cantidad;
+          } else if (mov.tipo === "salida") {
+            newQty -= mov.cantidad;
+          } else if (mov.tipo === "transferencia" && mov.almacen_destino_id) {
+            // Dest warehouse transaction
+            newQty -= mov.cantidad;
+            
+            const destStockId = `${mov.sku}_${mov.almacen_destino_id}`;
+            const destStockRef = doc(realDb, "stock", destStockId);
+            const destStockSnap = await transaction.get(destStockRef);
+            
+            let destQty = 0;
+            if (destStockSnap.exists()) {
+              destQty = destStockSnap.data().cantidad || 0;
+            }
+            
+            transaction.set(destStockRef, {
+              sku: mov.sku,
+              almacen_id: mov.almacen_destino_id,
+              cantidad: destQty + mov.cantidad,
+              actualizado: Timestamp.now()
+            });
+          }
+
+          // Prevent negative stocks on real database
+          if (newQty < 0 && (mov.tipo === "salida" || mov.tipo === "transferencia")) {
+            throw new Error(`Inconsistencia: Stock insuficiente en el almacén de origen. Stock actual: ${currentQty}, cantidad solicitada: ${mov.cantidad}.`);
+          }
+
+          // Apply changes to origin stock
+          transaction.set(stockRef, {
             sku: mov.sku,
-            almacen_id: mov.almacen_destino_id,
-            cantidad: destQty + mov.cantidad,
+            almacen_id: mov.almacen_id,
+            cantidad: newQty,
             actualizado: Timestamp.now()
           });
+
+          // Add movement record
+          const movRef = doc(collection(realDb, "movimientos"));
+          transaction.set(movRef, {
+            sku: mov.sku,
+            almacen_id: mov.almacen_id,
+            tipo: mov.tipo,
+            cantidad: mov.cantidad,
+            referencia: mov.referencia,
+            usuario: usuarioEmail,
+            fecha: Timestamp.now(),
+            ...(mov.almacen_destino_id ? { almacen_destino_id: mov.almacen_destino_id } : {})
+          });
+        });
+        return;
+      } catch (err: any) {
+        if (err?.message?.includes("Inconsistencia: Stock insuficiente")) {
+          throw err;
         }
+        console.warn("Firestore transaction unavailable, executing local transaction fallback:", err);
+      }
+    }
 
-        // Apply changes to origin stock
-        transaction.set(stockRef, {
-          sku: mov.sku,
-          almacen_id: mov.almacen_id,
-          cantidad: newQty,
-          actualizado: Timestamp.now()
-        });
+    // High-Fidelity Local Emulator Transaction Simulation
+    const stocks = getLocalStorageItem<Record<string, StockItem>>("stock", {});
+    const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
 
-        // Add movement record
-        const movRef = doc(collection(realDb, "movimientos"));
-        transaction.set(movRef, {
-          sku: mov.sku,
-          almacen_id: mov.almacen_id,
-          tipo: mov.tipo,
-          cantidad: mov.cantidad,
-          referencia: mov.referencia,
-          usuario: usuarioEmail,
-          fecha: Timestamp.now(),
-          ...(mov.almacen_destino_id ? { almacen_destino_id: mov.almacen_destino_id } : {})
-        });
-      });
-    } else {
-      // High-Fidelity Local Emulator Transaction Simulation
-      const stocks = getLocalStorageItem<Record<string, StockItem>>("stock", {});
-      const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
+    const stockId = `${mov.sku}_${mov.almacen_id}`;
+    const currentStockItem = stocks[stockId] || {
+      id: stockId,
+      sku: mov.sku,
+      almacen_id: mov.almacen_id,
+      cantidad: 0,
+      actualizado: new Date()
+    };
 
-      const stockId = `${mov.sku}_${mov.almacen_id}`;
-      const currentStockItem = stocks[stockId] || {
-        id: stockId,
+    let currentQty = currentStockItem.cantidad;
+    let newQty = currentQty;
+
+    if (mov.tipo === "entrada") {
+      newQty += mov.cantidad;
+    } else if (mov.tipo === "salida") {
+      newQty -= mov.cantidad;
+    } else if (mov.tipo === "transferencia" && mov.almacen_destino_id) {
+      newQty -= mov.cantidad;
+      
+      // Handle destination warehouse
+      const destStockId = `${mov.sku}_${mov.almacen_destino_id}`;
+      const destStockItem = stocks[destStockId] || {
+        id: destStockId,
         sku: mov.sku,
-        almacen_id: mov.almacen_id,
+        almacen_id: mov.almacen_destino_id,
         cantidad: 0,
         actualizado: new Date()
       };
-
-      let currentQty = currentStockItem.cantidad;
-      let newQty = currentQty;
-
-      if (mov.tipo === "entrada") {
-        newQty += mov.cantidad;
-      } else if (mov.tipo === "salida") {
-        newQty -= mov.cantidad;
-      } else if (mov.tipo === "ajuste") {
-        newQty = mov.cantidad;
-      } else if (mov.tipo === "transferencia" && mov.almacen_destino_id) {
-        newQty -= mov.cantidad;
-        
-        // Handle destination warehouse
-        const destStockId = `${mov.sku}_${mov.almacen_destino_id}`;
-        const destStockItem = stocks[destStockId] || {
-          id: destStockId,
-          sku: mov.sku,
-          almacen_id: mov.almacen_destino_id,
-          cantidad: 0,
-          actualizado: new Date()
-        };
-        
-        destStockItem.cantidad += mov.cantidad;
-        destStockItem.actualizado = new Date();
-        stocks[destStockId] = destStockItem;
-      }
-
-      // Prevent negative stocks if not adjustment or forced
-      if (newQty < 0 && (mov.tipo === "salida" || mov.tipo === "transferencia")) {
-        throw new Error(`Inconsistencia: Stock insuficiente en el almacén de origen. Stock actual: ${currentQty}, cantidad solicitada: ${mov.cantidad}.`);
-      }
-
-      // Save origin stock change
-      currentStockItem.cantidad = newQty;
-      currentStockItem.actualizado = new Date();
-      stocks[stockId] = currentStockItem;
-
-      // Save stock state
-      setLocalStorageItem("stock", stocks);
-
-      // Create and save movement record
-      const nuevoMovimiento: Movimiento = {
-        id: "mov_" + Math.random().toString(36).substr(2, 9),
-        sku: mov.sku,
-        almacen_id: mov.almacen_id,
-        tipo: mov.tipo,
-        cantidad: mov.cantidad,
-        referencia: mov.referencia,
-        usuario: usuarioEmail,
-        fecha: new Date(),
-        ...(mov.almacen_destino_id ? { almacen_destino_id: mov.almacen_destino_id } : {})
-      };
-
-      movimientos.push(nuevoMovimiento);
-      setLocalStorageItem("movimientos", movimientos);
-
-      // Notify live snapshot listeners
-      notifyListeners("stock", stocks);
-      notifyListeners("movimientos", movimientos);
+      
+      destStockItem.cantidad += mov.cantidad;
+      destStockItem.actualizado = new Date();
+      stocks[destStockId] = destStockItem;
     }
+
+    // Prevent negative stocks if not adjustment or forced
+    if (newQty < 0 && (mov.tipo === "salida" || mov.tipo === "transferencia")) {
+      throw new Error(`Inconsistencia: Stock insuficiente en el almacén de origen. Stock actual: ${currentQty}, cantidad solicitada: ${mov.cantidad}.`);
+    }
+
+    // Save origin stock change
+    currentStockItem.cantidad = newQty;
+    currentStockItem.actualizado = new Date();
+    stocks[stockId] = currentStockItem;
+
+    // Save stock state
+    setLocalStorageItem("stock", stocks);
+
+    // Create and save movement record
+    const nuevoMovimiento: Movimiento = {
+      id: "mov_" + Math.random().toString(36).substr(2, 9),
+      sku: mov.sku,
+      almacen_id: mov.almacen_id,
+      tipo: mov.tipo,
+      cantidad: mov.cantidad,
+      referencia: mov.referencia,
+      usuario: usuarioEmail,
+      fecha: new Date(),
+      ...(mov.almacen_destino_id ? { almacen_destino_id: mov.almacen_destino_id } : {})
+    };
+
+    movimientos.push(nuevoMovimiento);
+    setLocalStorageItem("movimientos", movimientos);
+
+    // Notify live snapshot listeners
+    notifyListeners("stock", stocks);
+    notifyListeners("movimientos", movimientos);
   }
 };
