@@ -40,6 +40,9 @@ export default function App() {
     if (!user) return;
     setLoadingData(true);
     try {
+      // Sync any inventory SKUs that don't have catalog records yet
+      await firestoreService.syncInventoryProducts().catch(console.error);
+
       const [almList, prodList] = await Promise.all([
         firestoreService.getAlmacenes(),
         firestoreService.getProductos()

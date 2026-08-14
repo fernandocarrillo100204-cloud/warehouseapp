@@ -57,9 +57,14 @@ export default function GestionProductos() {
   } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Real-time subscriptions
+  // Real-time subscriptions and auto-sync
   useEffect(() => {
     setLoading(true);
+
+    // Auto-sync any existing inventory SKUs into catalog on initial view
+    firestoreService.syncInventoryProducts().catch((err) => {
+      console.error("Auto sync inventory products error:", err);
+    });
 
     // Subscribe to products list
     const unsubscribeProductos = firestoreService.getProductosRealtime((data) => {
@@ -67,7 +72,7 @@ export default function GestionProductos() {
       setLoading(false);
     });
 
-    // Subscribe to stock list for delete validation
+    // Subscribe to stock list for delete validation and inventory sync
     const unsubscribeStock = firestoreService.getStockRealtime((data) => {
       setStockList(data);
     });
@@ -78,8 +83,41 @@ export default function GestionProductos() {
     };
   }, []);
 
+  // Consolidate catalog with any SKU that has stock entries so the catalog is NEVER empty if inventory exists
+  const effectiveProductos = React.useMemo(() => {
+    const map = new Map<string, Producto>();
+
+    // 1. Add all registered catalog products
+    productos.forEach(p => {
+      if (p.sku) {
+        map.set(p.sku.trim().toUpperCase(), {
+          ...p,
+          sku: p.sku.trim().toUpperCase()
+        });
+      }
+    });
+
+    // 2. Complement with any SKUs present in stock records
+    stockList.forEach(s => {
+      if (s.sku) {
+        const cleanSku = s.sku.trim().toUpperCase();
+        if (!map.has(cleanSku)) {
+          map.set(cleanSku, {
+            sku: cleanSku,
+            nombre: `Artículo ${cleanSku}`,
+            categoria: "General",
+            stock_minimo: 5,
+            unidad: "uds"
+          });
+        }
+      }
+    });
+
+    return Array.from(map.values());
+  }, [productos, stockList]);
+
   // Filtered products
-  const filteredProductos = productos.filter(p => {
+  const filteredProductos = effectiveProductos.filter(p => {
     const queryStr = searchQuery.toLowerCase().trim();
     if (!queryStr) return true;
     return (
@@ -89,9 +127,10 @@ export default function GestionProductos() {
     );
   });
 
-  // Get current active stock sum across all warehouses for a given SKU
+  // Get current active stock sum across all warehouses for a given SKU (case-insensitive)
   const getProductStockStatus = (productSku: string) => {
-    const productStocks = stockList.filter(item => item.sku === productSku);
+    const cleanSku = productSku ? productSku.trim().toUpperCase() : "";
+    const productStocks = stockList.filter(item => item.sku?.trim().toUpperCase() === cleanSku);
     const totalQty = productStocks.reduce((sum, item) => sum + item.cantidad, 0);
     const locationsCount = productStocks.filter(item => item.cantidad > 0).length;
 
@@ -161,7 +200,7 @@ export default function GestionProductos() {
         setIsFormOpen(false);
       } else {
         // Add mode (Verify duplicate first)
-        const duplicate = productos.find(p => p.sku.toUpperCase() === cleanSku);
+        const duplicate = effectiveProductos.find(p => p.sku.toUpperCase() === cleanSku);
         if (duplicate) {
           throw new Error(`El SKU "${cleanSku}" ya está registrado en el catálogo.`);
         }
