@@ -4,8 +4,8 @@
  */
 
 import React from "react";
-import { isRealFirebase, authService } from "../lib/firebase";
-import { Warehouse, LogOut, Database, Wifi, ShieldAlert, Boxes, History, Package } from "lucide-react";
+import { authService } from "../lib/firebase";
+import { Warehouse, LogOut, ShieldAlert, Boxes, History, Package } from "lucide-react";
 import { Usuario } from "../types";
 
 interface NavbarProps {
@@ -26,10 +26,7 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
               <Warehouse className="h-6 w-6" id="nav-logo" />
             </div>
             <div>
-              <span className="font-bold text-lg tracking-tight block sm:inline">StockMaster</span>
-              <span className="text-xs text-slate-400 block sm:inline sm:ml-2 border-t sm:border-t-0 sm:border-l border-slate-700 sm:pl-2">
-                MVP Multialmacén
-              </span>
+              <span className="font-bold text-lg tracking-tight">StockMaster</span>
             </div>
           </div>
 
@@ -94,21 +91,6 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
 
           {/* User Profile & Connection Info */}
           <div className="flex items-center space-x-4">
-            {/* Real / Emulator Status Badge */}
-            <div className="flex items-center">
-              {isRealFirebase ? (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-emerald-950 text-emerald-400 border border-emerald-800">
-                  <Wifi className="h-3 w-3 mr-1 animate-pulse" />
-                  Nube Real
-                </span>
-              ) : (
-                <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold bg-amber-950 text-amber-400 border border-amber-800" title="Corriendo en emulador local de localStorage">
-                  <Database className="h-3 w-3 mr-1" />
-                  Local Emulator
-                </span>
-              )}
-            </div>
-
             {/* Profile Info */}
             <div className="text-right hidden sm:block">
               <p className="text-xs text-slate-400">Usuario activo</p>
