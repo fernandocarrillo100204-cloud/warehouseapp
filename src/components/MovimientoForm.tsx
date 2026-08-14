@@ -41,12 +41,12 @@ export default function MovimientoForm({
   const [useCustomSku, setUseCustomSku] = useState(false);
   const [newProductName, setNewProductName] = useState("");
   const [newProductCategory, setNewProductCategory] = useState("Tecnología");
-  const [newProductMinStock, setNewProductMinStock] = useState(5);
+  const [newProductMinStock, setNewProductMinStock] = useState<number | string>(5);
   
   const [almacenId, setAlmacenId] = useState("");
   const [almacenDestinoId, setAlmacenDestinoId] = useState("");
   const [tipo, setTipo] = useState<"entrada" | "salida" | "transferencia">("entrada");
-  const [cantidad, setCantidad] = useState<number>(1);
+  const [cantidad, setCantidad] = useState<number | string>(1);
   const [referencia, setReferencia] = useState("");
   
   const [loading, setLoading] = useState(false);
@@ -182,7 +182,8 @@ export default function MovimientoForm({
       return;
     }
 
-    if (cantidad <= 0) {
+    const numCantidad = Number(cantidad);
+    if (!cantidad || isNaN(numCantidad) || numCantidad <= 0) {
       setFormError("La cantidad debe ser mayor a 0.");
       return;
     }
@@ -199,7 +200,7 @@ export default function MovimientoForm({
           sku.toUpperCase(), 
           newProductName, 
           newProductCategory, 
-          newProductMinStock, 
+          Number(newProductMinStock) || 5, 
           "uds"
         );
       }
@@ -391,7 +392,10 @@ export default function MovimientoForm({
                         type="number"
                         min="1"
                         value={newProductMinStock}
-                        onChange={(e) => setNewProductMinStock(Number(e.target.value))}
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setNewProductMinStock(v === "" ? "" : Number(v));
+                        }}
                         className="w-full bg-slate-900 border border-slate-800 text-slate-200 rounded-lg py-2 px-3 text-xs focus:outline-none focus:border-emerald-500"
                       />
                     </div>
@@ -441,9 +445,19 @@ export default function MovimientoForm({
                 <input
                   type="number"
                   min="1"
+                  step="1"
                   required
+                  placeholder="Ej. 10"
                   value={cantidad}
-                  onChange={(e) => setCantidad(Math.max(1, Number(e.target.value)))}
+                  onChange={(e) => {
+                    const v = e.target.value;
+                    if (v === "") {
+                      setCantidad("");
+                    } else {
+                      const parsed = parseInt(v, 10);
+                      setCantidad(isNaN(parsed) ? "" : parsed);
+                    }
+                  }}
                   className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl py-2.5 px-4 text-sm focus:outline-none focus:border-emerald-500 font-mono"
                 />
               </div>

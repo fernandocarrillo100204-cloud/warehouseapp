@@ -42,7 +42,7 @@ export default function GestionProductos() {
   const [sku, setSku] = useState("");
   const [nombre, setNombre] = useState("");
   const [categoria, setCategoria] = useState("");
-  const [stockMinimo, setStockMinimo] = useState<number>(0);
+  const [stockMinimo, setStockMinimo] = useState<number | string>(0);
   const [unidad, setUnidad] = useState("pieza");
   const [formError, setFormError] = useState<string | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
@@ -682,7 +682,10 @@ export default function GestionProductos() {
                       required
                       placeholder="Ej. 10"
                       value={stockMinimo}
-                      onChange={(e) => setStockMinimo(Number(e.target.value))}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        setStockMinimo(v === "" ? "" : Number(v));
+                      }}
                       className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-slate-700 text-slate-200 text-sm rounded-xl focus:outline-none transition-all"
                     />
                     <p className="text-[10px] text-slate-500 leading-relaxed">
