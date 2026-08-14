@@ -53,7 +53,7 @@ export default function App() {
     }
   };
 
-  // Subscribe to real-time warehouses updates globally
+  // Subscribe to real-time warehouses and products updates globally
   useEffect(() => {
     if (!user) return;
     
@@ -62,8 +62,14 @@ export default function App() {
       setAlmacenes(almList);
     });
 
+    // Subscribe to products
+    const unsubscribeProductos = firestoreService.getProductosRealtime((prodList) => {
+      setProductos(prodList);
+    });
+
     return () => {
       unsubscribeAlmacenes();
+      unsubscribeProductos();
     };
   }, [user]);
 
