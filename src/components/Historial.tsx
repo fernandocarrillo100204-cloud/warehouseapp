@@ -93,11 +93,16 @@ export default function Historial({
 
   // Filters logic
   const filteredMovimientos = movimientos.filter(mov => {
-    const matchesSku = !skuFilter || mov.sku.toLowerCase().includes(skuFilter.toLowerCase());
+    const query = skuFilter.trim().toLowerCase();
+    const matchesSearch = !query || 
+      mov.sku.toLowerCase().includes(query) ||
+      (mov.folio && mov.folio.toLowerCase().includes(query)) ||
+      (mov.referencia && mov.referencia.toLowerCase().includes(query));
+
     const matchesWarehouse = warehouseFilter === "all" || mov.almacen_id === warehouseFilter || mov.almacen_destino_id === warehouseFilter;
     const matchesTipo = tipoFilter === "all" || mov.tipo === tipoFilter;
 
-    return matchesSku && matchesWarehouse && matchesTipo;
+    return matchesSearch && matchesWarehouse && matchesTipo;
   });
 
   return (
@@ -152,7 +157,7 @@ export default function Historial({
             </span>
             <input
               type="text"
-              placeholder="Buscar SKU específico..."
+              placeholder="Buscar por Folio, SKU o referencia..."
               value={skuFilter}
               onChange={(e) => setSkuFilter(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600"
@@ -220,6 +225,7 @@ export default function Historial({
             <table className="w-full text-left border-collapse" id="audit-log-table">
               <thead>
                 <tr className="bg-slate-950 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
+                  <th className="py-4 px-6">Folio</th>
                   <th className="py-4 px-6">Fecha / Hora</th>
                   <th className="py-4 px-6">SKU / Producto</th>
                   <th className="py-4 px-6">Almacén Origen</th>
@@ -270,6 +276,13 @@ export default function Historial({
 
                   return (
                     <tr key={mov.id} className="hover:bg-slate-800/10 transition-colors">
+                      {/* Folio */}
+                      <td className="py-4 px-6 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-slate-950 border border-slate-800 text-emerald-400">
+                          {mov.folio || "—"}
+                        </span>
+                      </td>
+
                       {/* Date & Time */}
                       <td className="py-4 px-6">
                         <div className="flex items-center space-x-2.5 text-slate-400">
@@ -369,13 +382,19 @@ export default function Historial({
             </div>
 
             <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-sm text-slate-300">
+              {movToDelete.folio && (
+                <div className="flex justify-between">
+                  <span className="text-slate-500">Folio:</span>
+                  <span className="font-mono font-bold text-emerald-400">{movToDelete.folio}</span>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span className="text-slate-500">Producto:</span>
                 <span className="font-semibold text-slate-200">{getProductName(movToDelete.sku)}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">SKU:</span>
-                <span className="font-mono text-emerald-400">{movToDelete.sku}</span>
+                <span className="font-mono text-slate-300">{movToDelete.sku}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500">Tipo / Cantidad:</span>

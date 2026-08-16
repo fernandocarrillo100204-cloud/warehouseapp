@@ -30,6 +30,7 @@ export interface StockItem {
 
 export interface Movimiento {
   id?: string;
+  folio?: string; // Folio consecutivo único: Entrada-1, Salida-1, Transferencia-1
   sku: string;
   almacen_id: string;
   tipo: "entrada" | "salida" | "ajuste" | "transferencia";
@@ -48,3 +49,8 @@ export interface Usuario {
   email: string;
   nombre?: string;
 }
+
+export type NavigationTab = "dashboard" | "almacenes" | "catalogo" | "movimientos" | "historial" | "ventas";
+
+export type PeriodoVenta = "esta_semana" | "mes_actual" | "ultimos_30_dias" | "personalizado";
+

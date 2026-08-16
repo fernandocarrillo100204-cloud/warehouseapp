@@ -1,6 +1,6 @@
 {
   "name": "Inventario Multialmacén",
-  "description": "Control de inventario en tiempo real con soporte para múltiples almacenes, transferencias, ajustes y escaneo de códigos de barra.",
+  "description": "Control de inventario en tiempo real con soporte para múltiples almacenes, transferencias, ajustes, escaneo de códigos de barra y análisis de ventas comercial.",
   "requestFramePermissions": [
     "camera"
   ],

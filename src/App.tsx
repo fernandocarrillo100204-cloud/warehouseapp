@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { authService, firestoreService } from "./lib/firebase";
-import { Usuario, Almacen, Producto } from "./types";
+import { Usuario, Almacen, Producto, NavigationTab } from "./types";
 import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
@@ -13,13 +13,14 @@ import MovimientoForm from "./components/MovimientoForm";
 import Historial from "./components/Historial";
 import GestionAlmacenes from "./components/GestionAlmacenes";
 import GestionProductos from "./components/GestionProductos";
+import AnalisisVentas from "./components/AnalisisVentas";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function App() {
   const [user, setUser] = useState<Usuario | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<"dashboard" | "almacenes" | "catalogo" | "movimientos" | "historial">("dashboard");
+  const [activeTab, setActiveTab] = useState<NavigationTab>("dashboard");
   const [preselectedSku, setPreselectedSku] = useState("");
 
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
@@ -162,6 +163,22 @@ export default function App() {
                     almacenes={almacenes} 
                     productos={productos} 
                     onNavigateToMovements={handleNavigateToMovements}
+                    onNavigateToHistory={handleNavigateToHistory}
+                  />
+                </motion.div>
+              )}
+
+              {activeTab === "ventas" && (
+                <motion.div
+                  key="ventas"
+                  initial={{ opacity: 0, y: 15 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -15 }}
+                  transition={{ duration: 0.25, ease: "easeInOut" }}
+                >
+                  <AnalisisVentas 
+                    almacenes={almacenes} 
+                    productos={productos} 
                     onNavigateToHistory={handleNavigateToHistory}
                   />
                 </motion.div>

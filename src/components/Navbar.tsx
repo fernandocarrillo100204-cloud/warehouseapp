@@ -5,13 +5,13 @@
 
 import React from "react";
 import { authService } from "../lib/firebase";
-import { Warehouse, LogOut, ShieldAlert, Boxes, History, Package } from "lucide-react";
-import { Usuario } from "../types";
+import { Warehouse, LogOut, Boxes, History, Package, TrendingUp } from "lucide-react";
+import { Usuario, NavigationTab } from "../types";
 
 interface NavbarProps {
   user: Usuario;
-  activeTab: "dashboard" | "almacenes" | "catalogo" | "movimientos" | "historial";
-  setActiveTab: (tab: "dashboard" | "almacenes" | "catalogo" | "movimientos" | "historial") => void;
+  activeTab: NavigationTab;
+  setActiveTab: (tab: NavigationTab) => void;
   onLogout: () => void;
 }
 
@@ -21,7 +21,7 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Brand Title */}
-          <div className="flex items-center">
+          <div className="flex items-center -ml-1 sm:-ml-2">
             <span className="font-bold text-lg tracking-tight text-white">StockMaster</span>
           </div>
 
@@ -36,7 +36,18 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
               }`}
             >
               <Boxes className="h-4 w-4" />
-              <span>Dashboard de Stock</span>
+              <span>Dashboard</span>
+            </button>
+            <button
+              onClick={() => setActiveTab("ventas")}
+              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                activeTab === "ventas"
+                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+              }`}
+            >
+              <TrendingUp className="h-4 w-4" />
+              <span>Análisis de ventas</span>
             </button>
             <button
               onClick={() => setActiveTab("almacenes")}
@@ -80,7 +91,7 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
               }`}
             >
               <History className="h-4 w-4" />
-              <span>Historial de Auditoría</span>
+              <span>Historial</span>
             </button>
           </nav>
 
@@ -105,10 +116,10 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
       </div>
 
       {/* Mobile navigation rail */}
-      <div className="md:hidden flex justify-around border-t border-slate-800 bg-slate-900 py-2">
+      <div className="md:hidden flex justify-around border-t border-slate-800 bg-slate-900 py-2 overflow-x-auto">
         <button
           onClick={() => setActiveTab("dashboard")}
-          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
             activeTab === "dashboard" ? "text-emerald-400" : "text-slate-400"
           }`}
         >
@@ -116,8 +127,17 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
           <span>Dashboard</span>
         </button>
         <button
+          onClick={() => setActiveTab("ventas")}
+          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
+            activeTab === "ventas" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <TrendingUp className="h-5 w-5" />
+          <span>Ventas</span>
+        </button>
+        <button
           onClick={() => setActiveTab("almacenes")}
-          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
             activeTab === "almacenes" ? "text-emerald-400" : "text-slate-400"
           }`}
         >
@@ -126,7 +146,7 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
         </button>
         <button
           onClick={() => setActiveTab("catalogo")}
-          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
             activeTab === "catalogo" ? "text-emerald-400" : "text-slate-400"
           }`}
         >
@@ -135,7 +155,7 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
         </button>
         <button
           onClick={() => setActiveTab("movimientos")}
-          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
             activeTab === "movimientos" ? "text-emerald-400" : "text-slate-400"
           }`}
         >
@@ -144,7 +164,7 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
         </button>
         <button
           onClick={() => setActiveTab("historial")}
-          className={`flex flex-col items-center space-y-1 text-xs px-3 py-1 rounded-md ${
+          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
             activeTab === "historial" ? "text-emerald-400" : "text-slate-400"
           }`}
         >

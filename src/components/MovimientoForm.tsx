@@ -9,13 +9,17 @@ import { Almacen, Producto } from "../types";
 import { 
   ArrowRightLeft, 
   QrCode, 
+  PlusCircle, 
+  MinusCircle, 
   Settings, 
   CheckCircle, 
   X, 
   AlertCircle, 
-  Info
+  Info,
+  Layers,
+  HelpCircle
 } from "lucide-react";
-import type { Html5Qrcode } from "html5-qrcode";
+import { Html5Qrcode } from "html5-qrcode";
 import { motion, AnimatePresence } from "motion/react";
 
 interface MovimientoFormProps {
@@ -61,6 +65,16 @@ export default function MovimientoForm({
     }
   }, [preselectedSku]);
 
+  // Set default warehouse if available
+  useEffect(() => {
+    if (almacenes.length > 0 && !almacenId) {
+      setAlmacenId(almacenes[0].id);
+    }
+    if (almacenes.length > 1 && !almacenDestinoId) {
+      setAlmacenDestinoId(almacenes[1].id);
+    }
+  }, [almacenes, almacenId, almacenDestinoId]);
+
   // Handle SKU changes to toggle "New product" creation state
   const handleSkuChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
@@ -68,25 +82,16 @@ export default function MovimientoForm({
     setFormError(null);
   };
 
-  // QR Scanner management with dynamic import
+  // QR Scanner management
   const startScanner = async () => {
-    if (html5QrcodeRef.current) {
-      try {
-        await html5QrcodeRef.current.stop();
-      } catch (e) {
-        // quiet ignore
-      }
-      html5QrcodeRef.current = null;
-    }
-
     setScannerError(null);
     setShowScanner(true);
     
-    // Allow DOM element to mount before initializing scanner
+    // Allow div to render before starting
     setTimeout(async () => {
       try {
-        const { Html5Qrcode } = await import("html5-qrcode");
         const qrInstance = new Html5Qrcode("qr-scanner-view");
+        html5QrcodeRef.ref = qrInstance; // Keep ref manually
         html5QrcodeRef.current = qrInstance;
 
         await qrInstance.start(
@@ -95,7 +100,7 @@ export default function MovimientoForm({
             fps: 15,
             qrbox: (width, height) => {
               const size = Math.min(width, height) * 0.7;
-              return { width: size, height: size * 0.5 };
+              return { width: size, height: size * 0.5 }; // Wider for barcodes
             }
           },
           (decodedText) => {
@@ -107,7 +112,7 @@ export default function MovimientoForm({
         );
       } catch (err: any) {
         console.error("Failed to start QR scanner:", err);
-        setScannerError("No se pudo acceder a la cámara. Por favor concede los permisos o escribe el SKU manualmente.");
+        setScannerError("No se pudo acceder a la cámara. Por favor concede los permisos o escribe el SKU.");
       }
     }, 300);
   };
@@ -129,39 +134,29 @@ export default function MovimientoForm({
 
   const handleScanSuccess = async (decodedSku: string) => {
     await stopScanner();
-    const cleanScannedSku = decodedSku.trim();
-    if (!cleanScannedSku) return;
     
-    // Check if the scanned SKU matches an existing product in catalogue (case-insensitive)
-    const matchedProduct = productos.find(p => p.sku.toLowerCase() === cleanScannedSku.toLowerCase());
+    // Check if the scanned SKU matches an existing product
+    const exists = productos.some(p => p.sku.toLowerCase() === decodedSku.toLowerCase());
+    setSku(decodedSku);
     
-    if (matchedProduct) {
-      // Use exact SKU registered in catalog
-      setSku(matchedProduct.sku);
+    if (exists) {
       setUseCustomSku(false);
-      setFormSuccess(`Código escaneado con éxito: "${matchedProduct.sku}" (${matchedProduct.nombre})`);
+      setFormSuccess(`Código escaneado con éxito: "${decodedSku}" (Producto existente)`);
     } else {
-      const formattedSku = cleanScannedSku.toUpperCase();
-      setSku(formattedSku);
       setUseCustomSku(true);
-      setNewProductName(`Nuevo Producto (${formattedSku})`);
-      setFormSuccess(`Código escaneado: "${formattedSku}". Es un SKU nuevo, por favor completa su información.`);
+      setNewProductName(`Nuevo Producto (${decodedSku})`);
+      setFormSuccess(`Código escaneado con éxito: "${decodedSku}". Es un SKU nuevo, por favor registra su nombre.`);
     }
     
+    // Auto clear success notice after 5s
     setTimeout(() => setFormSuccess(null), 5000);
   };
 
   // Cleanup scanner on unmount
   useEffect(() => {
     return () => {
-      if (html5QrcodeRef.current) {
-        try {
-          if (html5QrcodeRef.current.isScanning) {
-            html5QrcodeRef.current.stop().catch(console.error);
-          }
-        } catch (e) {
-          // ignore
-        }
+      if (html5QrcodeRef.current && html5QrcodeRef.current.isScanning) {
+        html5QrcodeRef.current.stop().catch(console.error);
       }
     };
   }, []);
@@ -172,14 +167,8 @@ export default function MovimientoForm({
     setFormSuccess(null);
 
     // Form validations
-    const cleanSku = sku.trim().toUpperCase();
-    if (!cleanSku) {
+    if (!sku) {
       setFormError("Por favor ingresa o selecciona un SKU.");
-      return;
-    }
-
-    if (cleanSku.includes("/")) {
-      setFormError("El SKU no puede contener diagonales ('/').");
       return;
     }
 
@@ -188,20 +177,14 @@ export default function MovimientoForm({
       return;
     }
 
-    if (tipo === "transferencia") {
-      if (!almacenDestinoId) {
-        setFormError("Por favor selecciona el almacén de destino.");
-        return;
-      }
-      if (almacenId === almacenDestinoId) {
-        setFormError("El almacén de destino debe ser diferente al de origen.");
-        return;
-      }
+    if (tipo === "transferencia" && almacenId === almacenDestinoId) {
+      setFormError("El almacén de destino debe ser diferente al de origen.");
+      return;
     }
 
     const numCantidad = Number(cantidad);
-    if (!cantidad || isNaN(numCantidad) || !Number.isInteger(numCantidad) || numCantidad <= 0) {
-      setFormError("La cantidad debe ser un número entero mayor a 0.");
+    if (!cantidad || isNaN(numCantidad) || numCantidad <= 0) {
+      setFormError("La cantidad debe ser mayor a 0.");
       return;
     }
 
@@ -214,7 +197,7 @@ export default function MovimientoForm({
           throw new Error("Por favor completa el nombre del nuevo producto.");
         }
         await firestoreService.ensureProductExists(
-          cleanSku, 
+          sku.toUpperCase(), 
           newProductName, 
           newProductCategory, 
           Number(newProductMinStock) || 5, 
@@ -222,17 +205,17 @@ export default function MovimientoForm({
         );
       }
 
-      // 2. Perform atomic movement transaction
-      await firestoreService.registerMovimientoTransaction({
-        sku: cleanSku,
+      // 2. Perform the movement database transaction
+      const result = await firestoreService.registerMovimientoTransaction({
+        sku: sku.toUpperCase(),
         almacen_id: almacenId,
         tipo,
-        cantidad: numCantidad,
+        cantidad: Number(cantidad),
         referencia: referencia.trim() || `Movimiento manual - ${tipo}`,
         almacen_destino_id: tipo === "transferencia" ? almacenDestinoId : undefined
       });
 
-      setFormSuccess("¡Movimiento registrado con éxito!");
+      setFormSuccess(`¡Movimiento registrado con éxito! Folio asignado: ${result.folio}`);
       
       // Notify parent & reset
       setTimeout(() => {
@@ -491,7 +474,6 @@ export default function MovimientoForm({
                   onChange={(e) => setAlmacenId(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:border-emerald-500"
                 >
-                  <option value="">-- Seleccionar almacén --</option>
                   {almacenes.map(a => (
                     <option key={a.id} value={a.id}>
                       {a.nombre} ({a.ubicacion})
@@ -511,7 +493,6 @@ export default function MovimientoForm({
                     onChange={(e) => setAlmacenDestinoId(e.target.value)}
                     className="w-full bg-slate-950 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:border-emerald-500"
                   >
-                    <option value="">-- Seleccionar almacén de destino --</option>
                     {almacenes.map(a => (
                       <option key={a.id} value={a.id}>
                         {a.nombre} ({a.ubicacion})
