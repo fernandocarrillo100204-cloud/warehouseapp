@@ -20,14 +20,9 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
     <header className="bg-slate-900 text-white border-b border-slate-800 shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Logo & Title */}
-          <div className="flex items-center space-x-3">
-            <div className="bg-emerald-500 p-2 rounded-lg text-slate-900 shadow-inner">
-              <Warehouse className="h-6 w-6" id="nav-logo" />
-            </div>
-            <div>
-              <span className="font-bold text-lg tracking-tight">StockMaster</span>
-            </div>
+          {/* Brand Title */}
+          <div className="flex items-center">
+            <span className="font-bold text-lg tracking-tight text-white">StockMaster</span>
           </div>
 
           {/* Navigation Items */}
