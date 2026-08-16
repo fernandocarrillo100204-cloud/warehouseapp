@@ -67,13 +67,13 @@ export default function MovimientoForm({
 
   // Set default warehouse if available
   useEffect(() => {
-    if (almacenes.length > 0 && !almacenId) {
-      setAlmacenId(almacenes[0].id);
+    if (almacenes.length > 0) {
+      setAlmacenId((prev) => (prev ? prev : almacenes[0].id));
     }
-    if (almacenes.length > 1 && !almacenDestinoId) {
-      setAlmacenDestinoId(almacenes[1].id);
+    if (almacenes.length > 1) {
+      setAlmacenDestinoId((prev) => (prev ? prev : almacenes[1].id));
     }
-  }, [almacenes, almacenId, almacenDestinoId]);
+  }, [almacenes]);
 
   // Handle SKU changes to toggle "New product" creation state
   const handleSkuChange = (e: React.ChangeEvent<HTMLSelectElement>) => {

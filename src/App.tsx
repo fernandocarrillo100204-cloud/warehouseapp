@@ -20,12 +20,11 @@ export default function App() {
   const [user, setUser] = useState<Usuario | null>(null);
   const [authChecking, setAuthChecking] = useState(true);
   
-  const [activeTab, setActiveTab] = useState<NavigationTab>("dashboard");
+  const [activeTab, setActiveTab] = useState<NavigationTab>("movimientos");
   const [preselectedSku, setPreselectedSku] = useState("");
 
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
-  const [loadingData, setLoadingData] = useState(false);
 
   // Monitor Auth State Changes
   useEffect(() => {
@@ -36,28 +35,11 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Fetch static warehouses and product list when user logs in
-  const loadStaticData = async () => {
-    if (!user) return;
-    setLoadingData(true);
-    try {
-      const [almList, prodList] = await Promise.all([
-        firestoreService.getAlmacenes(),
-        firestoreService.getProductos()
-      ]);
-      setAlmacenes(almList);
-      setProductos(prodList);
-    } catch (err) {
-      console.error("Failed to load warehouses or products data:", err);
-    } finally {
-      setLoadingData(false);
-    }
-  };
-
   // Subscribe to real-time warehouses and products updates globally
   useEffect(() => {
-    if (!user) return;
-    
+    const uid = user?.uid;
+    if (!uid) return;
+
     // Subscribe to warehouses
     const unsubscribeAlmacenes = firestoreService.getAlmacenesRealtime((almList) => {
       setAlmacenes(almList);
@@ -72,20 +54,14 @@ export default function App() {
       unsubscribeAlmacenes();
       unsubscribeProductos();
     };
-  }, [user]);
-
-  useEffect(() => {
-    if (user) {
-      loadStaticData();
-    }
-  }, [user]);
+  }, [user?.uid]);
 
   const handleLogout = async () => {
     try {
       await authService.logout();
       setUser(null);
       // Reset active views
-      setActiveTab("dashboard");
+      setActiveTab("movimientos");
       setPreselectedSku("");
     } catch (err) {
       console.error("Error signing out:", err);
@@ -122,7 +98,14 @@ export default function App() {
 
   // Auth Guard
   if (!user) {
-    return <Login onLoginSuccess={(u) => setUser(u)} />;
+    return (
+      <Login 
+        onLoginSuccess={(u) => {
+          setUser(u);
+          setActiveTab("movimientos");
+        }} 
+      />
+    );
   }
 
   return (
@@ -143,14 +126,8 @@ export default function App() {
 
       {/* Main Panel Content Area with motion transitions */}
       <main className="flex-1 w-full relative">
-        {loadingData ? (
-          <div className="py-24 text-center text-slate-400">
-            <span className="h-8 w-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block mb-3" />
-            <p className="text-sm">Sincronizando información de catálogo con Firestore...</p>
-          </div>
-        ) : (
-          <div className="w-full">
-            <AnimatePresence mode="wait">
+        <div className="w-full">
+          <AnimatePresence mode="wait">
               {activeTab === "dashboard" && (
                 <motion.div
                   key="dashboard"
@@ -206,7 +183,13 @@ export default function App() {
                   exit={{ opacity: 0, y: -15 }}
                   transition={{ duration: 0.25, ease: "easeInOut" }}
                 >
-                  <GestionProductos />
+                  <GestionProductos 
+                    almacenes={almacenes}
+                    onNavigateToMovimiento={(sku) => {
+                      setPreselectedSku(sku);
+                      setActiveTab("movimientos");
+                    }}
+                  />
                 </motion.div>
               )}
 
@@ -223,14 +206,11 @@ export default function App() {
                     productos={productos} 
                     preselectedSku={preselectedSku}
                     onSuccess={() => {
-                      // Refresh product list in case they added a brand new custom product
-                      loadStaticData();
-                      // Back to dashboard
-                      setActiveTab("dashboard");
+                      // Navigate to historial or keep on form with cleared SKU
+                      setActiveTab("historial");
                       setPreselectedSku("");
                     }}
                     onCancel={() => {
-                      setActiveTab("dashboard");
                       setPreselectedSku("");
                     }}
                   />
@@ -255,7 +235,6 @@ export default function App() {
               )}
             </AnimatePresence>
           </div>
-        )}
       </main>
     </div>
   );

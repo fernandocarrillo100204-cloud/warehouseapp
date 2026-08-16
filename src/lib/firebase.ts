@@ -29,7 +29,7 @@ import {
   GoogleAuthProvider,
   User as FirebaseUser
 } from "firebase/auth";
-import { Almacen, Producto, StockItem, Movimiento, Usuario } from "../types";
+import { Almacen, Producto, StockItem, Movimiento, Usuario, CategoriaCatalogo, UnidadMedidaCatalogo } from "../types";
 
 // Detect if Firebase config is present in environment variables
 const metaEnv = (import.meta as any).env || {};
@@ -413,14 +413,19 @@ seedData();
 
 // List of listeners for mock real-time updates
 const listeners: Record<string, ((data: any) => void)[]> = {
+  auth: [],
   stock: [],
   movimientos: [],
   almacenes: [],
-  productos: []
+  productos: [],
+  categorias: [],
+  unidades: []
 };
 
-const notifyListeners = (channel: "stock" | "movimientos" | "almacenes" | "productos", data: any) => {
-  listeners[channel].forEach(callback => callback(data));
+const notifyListeners = (channel: "auth" | "stock" | "movimientos" | "almacenes" | "productos" | "categorias" | "unidades", data: any) => {
+  if (listeners[channel]) {
+    listeners[channel].forEach(callback => callback(data));
+  }
 };
 
 // --- CORE EXPORTED SERVICE ---
@@ -445,6 +450,7 @@ export const authService = {
           nombre: "Administrador"
         };
         setLocalStorageItem("currentUser", adminUser);
+        notifyListeners("auth", adminUser);
         return adminUser;
       } else if (email && password.length >= 6) {
         // Allow dynamic creation/sign-in for easy testing
@@ -454,6 +460,7 @@ export const authService = {
           nombre: email.split("@")[0]
         };
         setLocalStorageItem("currentUser", newUser);
+        notifyListeners("auth", newUser);
         return newUser;
       } else {
         throw new Error("Credenciales inválidas. Usa admin@empresa.com con admin123 o ingresa una contraseña de al menos 6 caracteres.");
@@ -479,6 +486,7 @@ export const authService = {
         nombre: "Usuario Demo Google"
       };
       setLocalStorageItem("currentUser", googleUser);
+      notifyListeners("auth", googleUser);
       return googleUser;
     }
   },
@@ -488,6 +496,7 @@ export const authService = {
       await signOut(realAuth);
     } else {
       localStorage.removeItem(STORAGE_PREFIX + "currentUser");
+      notifyListeners("auth", null);
     }
   },
 
@@ -504,16 +513,24 @@ export const authService = {
         }
       });
     } else {
-      // Emulator state trigger
-      const checkUser = () => {
-        const user = getLocalStorageItem<Usuario | null>("currentUser", null);
-        callback(user);
+      // Initial user check
+      const initialUser = getLocalStorageItem<Usuario | null>("currentUser", null);
+      callback(initialUser);
+
+      // Event listener for auth changes
+      let currentCachedUid = initialUser ? initialUser.uid : null;
+      const update = (newUser: Usuario | null) => {
+        const newUid = newUser ? newUser.uid : null;
+        if (newUid !== currentCachedUid) {
+          currentCachedUid = newUid;
+          callback(newUser);
+        }
       };
-      checkUser();
-      
-      // Return simple unregister trigger
-      const interval = setInterval(checkUser, 1000);
-      return () => clearInterval(interval);
+
+      listeners.auth.push(update);
+      return () => {
+        listeners.auth = listeners.auth.filter(cb => cb !== update);
+      };
     }
   },
 
@@ -697,6 +714,22 @@ export const firestoreService = {
     return () => {
       listeners.productos = listeners.productos.filter(cb => cb !== update);
     };
+  },
+
+  checkSkuExists: async (sku: string): Promise<boolean> => {
+    const cleanSku = sku.trim().toUpperCase();
+    if (!cleanSku) return false;
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "productos", cleanSku);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists()) return true;
+      } catch (err) {
+        console.warn("Firestore checkSkuExists failed, checking local cache:", err);
+      }
+    }
+    const list = getLocalStorageItem<Producto[]>("productos", []);
+    return list.some(p => p.sku?.trim().toUpperCase() === cleanSku);
   },
 
   addProduct: async (producto: Producto): Promise<void> => {
@@ -1259,5 +1292,472 @@ export const firestoreService = {
     await firestoreService.recalculateAndSyncStock(movimientos);
 
     return { id: docId, folio: generatedFolio };
+  },
+
+  // ==========================================
+  // --- GESTIÓN DE CATÁLOGOS DINÁMICOS ---
+  // ==========================================
+
+  // Auto-import and seed categories & units merging existing products
+  seedAndImportCatalogos: async (): Promise<{ categorias: CategoriaCatalogo[]; unidades: UnidadMedidaCatalogo[] }> => {
+    // 1. Initial Standard Defaults
+    const defaultCategorias: CategoriaCatalogo[] = [
+      { id: "cat_tec", nombre: "Tecnología", activa: true },
+      { id: "cat_ofi", nombre: "Oficina", activa: true },
+      { id: "cat_alim", nombre: "Alimentos y Bebidas", activa: true },
+      { id: "cat_limp", nombre: "Limpieza", activa: true },
+      { id: "cat_ferr", nombre: "Ferretería", activa: true },
+      { id: "cat_pape", nombre: "Papelería", activa: true }
+    ];
+
+    const defaultUnidades: UnidadMedidaCatalogo[] = [
+      { id: "uni_pza", nombre: "Pieza", abreviatura: "pza", activa: true },
+      { id: "uni_uds", nombre: "Unidad", abreviatura: "uds", activa: true },
+      { id: "uni_cja", nombre: "Caja", abreviatura: "cja", activa: true },
+      { id: "uni_paq", nombre: "Paquete", abreviatura: "paq", activa: true },
+      { id: "uni_kg", nombre: "Kilogramo", abreviatura: "kg", activa: true },
+      { id: "uni_l", nombre: "Litro", abreviatura: "l", activa: true },
+      { id: "uni_m", nombre: "Metro", abreviatura: "m", activa: true },
+      { id: "uni_rll", nombre: "Rollo", abreviatura: "rll", activa: true }
+    ];
+
+    let currentCats = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
+    let currentUnits = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
+
+    if (currentCats.length === 0) {
+      currentCats = [...defaultCategorias];
+    }
+    if (currentUnits.length === 0) {
+      currentUnits = [...defaultUnidades];
+    }
+
+    // Scan existing products to import any custom category or unit already in use
+    const productos = getLocalStorageItem<Producto[]>("productos", []);
+    
+    productos.forEach(p => {
+      // Check category
+      if (p.categoria && p.categoria.trim()) {
+        const cleanCat = p.categoria.trim();
+        const exists = currentCats.some(c => c.nombre.trim().toLowerCase() === cleanCat.toLowerCase());
+        if (!exists) {
+          currentCats.push({
+            id: "cat_" + Math.random().toString(36).substr(2, 9),
+            nombre: cleanCat,
+            activa: true
+          });
+        }
+      }
+
+      // Check unit
+      if (p.unidad && p.unidad.trim()) {
+        const cleanUnit = p.unidad.trim();
+        const exists = currentUnits.some(u => 
+          u.abreviatura.trim().toLowerCase() === cleanUnit.toLowerCase() ||
+          u.nombre.trim().toLowerCase() === cleanUnit.toLowerCase()
+        );
+        if (!exists) {
+          const capitalizedName = cleanUnit.charAt(0).toUpperCase() + cleanUnit.slice(1);
+          currentUnits.push({
+            id: "uni_" + Math.random().toString(36).substr(2, 9),
+            nombre: capitalizedName,
+            abreviatura: cleanUnit.toLowerCase(),
+            activa: true
+          });
+        }
+      }
+    });
+
+    setLocalStorageItem("categorias", currentCats);
+    setLocalStorageItem("unidades", currentUnits);
+
+    notifyListeners("categorias", currentCats);
+    notifyListeners("unidades", currentUnits);
+
+    return { categorias: currentCats, unidades: currentUnits };
+  },
+
+  // --- CATEGORÍAS ---
+  getCategorias: async (): Promise<CategoriaCatalogo[]> => {
+    if (isConfigured && realDb) {
+      try {
+        const snap = await getDocs(collection(realDb, "catalogo_categorias"));
+        const list: CategoriaCatalogo[] = [];
+        snap.forEach(d => {
+          list.push({ id: d.id, ...d.data() } as CategoriaCatalogo);
+        });
+        if (list.length > 0) {
+          setLocalStorageItem("categorias", list);
+          return list;
+        }
+      } catch (err) {
+        console.warn("Firestore getCategorias failed, using local storage:", err);
+      }
+    }
+    const local = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
+    if (local.length === 0) {
+      const res = await firestoreService.seedAndImportCatalogos();
+      return res.categorias;
+    }
+    return local;
+  },
+
+  getCategoriasRealtime: (onUpdate: (cats: CategoriaCatalogo[]) => void): (() => void) => {
+    if (isConfigured && realDb) {
+      try {
+        const unsubscribe = onSnapshot(
+          collection(realDb, "catalogo_categorias"),
+          (snap) => {
+            const list: CategoriaCatalogo[] = [];
+            snap.forEach(d => {
+              list.push({ id: d.id, ...d.data() } as CategoriaCatalogo);
+            });
+            if (list.length > 0) {
+              setLocalStorageItem("categorias", list);
+              onUpdate(list);
+            } else {
+              const localList = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
+              onUpdate(localList);
+            }
+          },
+          (error) => {
+            console.warn("Firestore onSnapshot (categorias) error:", error.message);
+            const localList = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
+            onUpdate(localList);
+          }
+        );
+        return unsubscribe;
+      } catch (err) {
+        console.warn("Could not attach onSnapshot to catalogo_categorias:", err);
+      }
+    }
+
+    const update = () => {
+      const list = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
+      if (list.length === 0) {
+        firestoreService.seedAndImportCatalogos().then(res => onUpdate(res.categorias));
+      } else {
+        onUpdate(list);
+      }
+    };
+    update();
+    listeners.categorias.push(update);
+    return () => {
+      listeners.categorias = listeners.categorias.filter(cb => cb !== update);
+    };
+  },
+
+  addCategoria: async (nombre: string): Promise<string> => {
+    const cleanNombre = nombre.trim();
+    if (!cleanNombre) throw new Error("El nombre de la categoría es obligatorio.");
+
+    const list = await firestoreService.getCategorias();
+    const isDuplicate = list.some(c => c.nombre.trim().toLowerCase() === cleanNombre.toLowerCase());
+    if (isDuplicate) {
+      throw new Error(`La categoría "${cleanNombre}" ya existe en el catálogo.`);
+    }
+
+    const newId = "cat_" + Math.random().toString(36).substr(2, 9);
+    const newCat: CategoriaCatalogo = {
+      id: newId,
+      nombre: cleanNombre,
+      activa: true,
+      creado: new Date()
+    };
+
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "catalogo_categorias", newId);
+        await setDoc(docRef, {
+          nombre: cleanNombre,
+          activa: true,
+          creado: Timestamp.now()
+        });
+      } catch (err) {
+        console.warn("Firestore addCategoria failed, using local storage:", err);
+      }
+    }
+
+    list.push(newCat);
+    setLocalStorageItem("categorias", list);
+    notifyListeners("categorias", list);
+    return newId;
+  },
+
+  updateCategoria: async (id: string, data: Partial<Omit<CategoriaCatalogo, "id">>): Promise<void> => {
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "catalogo_categorias", id);
+        await setDoc(docRef, data, { merge: true });
+      } catch (err) {
+        console.warn("Firestore updateCategoria failed, using local storage:", err);
+      }
+    }
+    const list = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
+    const index = list.findIndex(c => c.id === id);
+    if (index !== -1) {
+      list[index] = { ...list[index], ...data };
+      setLocalStorageItem("categorias", list);
+      notifyListeners("categorias", list);
+    }
+  },
+
+  renameCategoriaAndSyncProducts: async (id: string, oldNombre: string, newNombre: string): Promise<void> => {
+    const cleanOld = oldNombre.trim();
+    const cleanNew = newNombre.trim();
+    if (!cleanNew) throw new Error("El nuevo nombre no puede estar vacío.");
+
+    const cats = await firestoreService.getCategorias();
+    const duplicate = cats.some(c => c.id !== id && c.nombre.trim().toLowerCase() === cleanNew.toLowerCase());
+    if (duplicate) {
+      throw new Error(`Ya existe otra categoría con el nombre "${cleanNew}".`);
+    }
+
+    // 1. Update category
+    await firestoreService.updateCategoria(id, { nombre: cleanNew });
+
+    // 2. Cascade rename to all products using old category
+    const productos = getLocalStorageItem<Producto[]>("productos", []);
+    let modifiedAny = false;
+
+    productos.forEach(p => {
+      if (p.categoria && p.categoria.trim().toLowerCase() === cleanOld.toLowerCase()) {
+        p.categoria = cleanNew;
+        modifiedAny = true;
+        if (isConfigured && realDb) {
+          try {
+            const prodDoc = doc(realDb, "productos", p.sku);
+            setDoc(prodDoc, { categoria: cleanNew }, { merge: true });
+          } catch (e) {
+            console.warn("Error updating product category in Firestore:", e);
+          }
+        }
+      }
+    });
+
+    if (modifiedAny) {
+      setLocalStorageItem("productos", productos);
+      notifyListeners("productos", productos);
+    }
+  },
+
+  toggleCategoriaStatus: async (id: string, activa: boolean): Promise<void> => {
+    await firestoreService.updateCategoria(id, { activa });
+  },
+
+  deleteCategoria: async (id: string): Promise<void> => {
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "catalogo_categorias", id);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.warn("Firestore deleteCategoria failed, updating local storage:", err);
+      }
+    }
+    const list = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
+    const updated = list.filter(c => c.id !== id);
+    setLocalStorageItem("categorias", updated);
+    notifyListeners("categorias", updated);
+  },
+
+  // --- UNIDADES DE MEDIDA ---
+  getUnidades: async (): Promise<UnidadMedidaCatalogo[]> => {
+    if (isConfigured && realDb) {
+      try {
+        const snap = await getDocs(collection(realDb, "catalogo_unidades"));
+        const list: UnidadMedidaCatalogo[] = [];
+        snap.forEach(d => {
+          list.push({ id: d.id, ...d.data() } as UnidadMedidaCatalogo);
+        });
+        if (list.length > 0) {
+          setLocalStorageItem("unidades", list);
+          return list;
+        }
+      } catch (err) {
+        console.warn("Firestore getUnidades failed, using local storage:", err);
+      }
+    }
+    const local = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
+    if (local.length === 0) {
+      const res = await firestoreService.seedAndImportCatalogos();
+      return res.unidades;
+    }
+    return local;
+  },
+
+  getUnidadesRealtime: (onUpdate: (units: UnidadMedidaCatalogo[]) => void): (() => void) => {
+    if (isConfigured && realDb) {
+      try {
+        const unsubscribe = onSnapshot(
+          collection(realDb, "catalogo_unidades"),
+          (snap) => {
+            const list: UnidadMedidaCatalogo[] = [];
+            snap.forEach(d => {
+              list.push({ id: d.id, ...d.data() } as UnidadMedidaCatalogo);
+            });
+            if (list.length > 0) {
+              setLocalStorageItem("unidades", list);
+              onUpdate(list);
+            } else {
+              const localList = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
+              onUpdate(localList);
+            }
+          },
+          (error) => {
+            console.warn("Firestore onSnapshot (unidades) error:", error.message);
+            const localList = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
+            onUpdate(localList);
+          }
+        );
+        return unsubscribe;
+      } catch (err) {
+        console.warn("Could not attach onSnapshot to catalogo_unidades:", err);
+      }
+    }
+
+    const update = () => {
+      const list = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
+      if (list.length === 0) {
+        firestoreService.seedAndImportCatalogos().then(res => onUpdate(res.unidades));
+      } else {
+        onUpdate(list);
+      }
+    };
+    update();
+    listeners.unidades.push(update);
+    return () => {
+      listeners.unidades = listeners.unidades.filter(cb => cb !== update);
+    };
+  },
+
+  addUnidad: async (nombre: string, abreviatura: string): Promise<string> => {
+    const cleanNombre = nombre.trim();
+    const cleanAbrev = abreviatura.trim().toLowerCase();
+    if (!cleanNombre) throw new Error("El nombre de la unidad es obligatorio.");
+    if (!cleanAbrev) throw new Error("La abreviatura de la unidad es obligatoria.");
+
+    const list = await firestoreService.getUnidades();
+    const duplicateNombre = list.some(u => u.nombre.trim().toLowerCase() === cleanNombre.toLowerCase());
+    if (duplicateNombre) {
+      throw new Error(`La unidad de medida "${cleanNombre}" ya existe.`);
+    }
+
+    const duplicateAbrev = list.some(u => u.abreviatura.trim().toLowerCase() === cleanAbrev);
+    if (duplicateAbrev) {
+      throw new Error(`La abreviatura "${cleanAbrev}" ya está asignada a otra unidad de medida.`);
+    }
+
+    const newId = "uni_" + Math.random().toString(36).substr(2, 9);
+    const newUnit: UnidadMedidaCatalogo = {
+      id: newId,
+      nombre: cleanNombre,
+      abreviatura: cleanAbrev,
+      activa: true,
+      creado: new Date()
+    };
+
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "catalogo_unidades", newId);
+        await setDoc(docRef, {
+          nombre: cleanNombre,
+          abreviatura: cleanAbrev,
+          activa: true,
+          creado: Timestamp.now()
+        });
+      } catch (err) {
+        console.warn("Firestore addUnidad failed, using local storage:", err);
+      }
+    }
+
+    list.push(newUnit);
+    setLocalStorageItem("unidades", list);
+    notifyListeners("unidades", list);
+    return newId;
+  },
+
+  updateUnidad: async (id: string, data: Partial<Omit<UnidadMedidaCatalogo, "id">>): Promise<void> => {
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "catalogo_unidades", id);
+        await setDoc(docRef, data, { merge: true });
+      } catch (err) {
+        console.warn("Firestore updateUnidad failed, using local storage:", err);
+      }
+    }
+    const list = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
+    const index = list.findIndex(u => u.id === id);
+    if (index !== -1) {
+      list[index] = { ...list[index], ...data };
+      setLocalStorageItem("unidades", list);
+      notifyListeners("unidades", list);
+    }
+  },
+
+  renameUnidadAndSyncProducts: async (id: string, oldAbreviatura: string, newAbreviatura: string, newNombre: string): Promise<void> => {
+    const cleanOldAbrev = oldAbreviatura.trim().toLowerCase();
+    const cleanNewAbrev = newAbreviatura.trim().toLowerCase();
+    const cleanNewNombre = newNombre.trim();
+
+    if (!cleanNewNombre) throw new Error("El nombre de la unidad no puede estar vacío.");
+    if (!cleanNewAbrev) throw new Error("La abreviatura no puede estar vacía.");
+
+    const units = await firestoreService.getUnidades();
+    const duplicateNombre = units.some(u => u.id !== id && u.nombre.trim().toLowerCase() === cleanNewNombre.toLowerCase());
+    if (duplicateNombre) {
+      throw new Error(`Ya existe otra unidad de medida con el nombre "${cleanNewNombre}".`);
+    }
+
+    const duplicateAbrev = units.some(u => u.id !== id && u.abreviatura.trim().toLowerCase() === cleanNewAbrev);
+    if (duplicateAbrev) {
+      throw new Error(`La abreviatura "${cleanNewAbrev}" ya está asignada a otra unidad de medida.`);
+    }
+
+    // 1. Update unit
+    await firestoreService.updateUnidad(id, { nombre: cleanNewNombre, abreviatura: cleanNewAbrev });
+
+    // 2. Cascade rename in products
+    const productos = getLocalStorageItem<Producto[]>("productos", []);
+    let modifiedAny = false;
+
+    productos.forEach(p => {
+      const prodUnitLower = (p.unidad || "").trim().toLowerCase();
+      if (prodUnitLower === cleanOldAbrev) {
+        p.unidad = cleanNewAbrev;
+        modifiedAny = true;
+        if (isConfigured && realDb) {
+          try {
+            const prodDoc = doc(realDb, "productos", p.sku);
+            setDoc(prodDoc, { unidad: cleanNewAbrev }, { merge: true });
+          } catch (e) {
+            console.warn("Error updating product unit in Firestore:", e);
+          }
+        }
+      }
+    });
+
+    if (modifiedAny) {
+      setLocalStorageItem("productos", productos);
+      notifyListeners("productos", productos);
+    }
+  },
+
+  toggleUnidadStatus: async (id: string, activa: boolean): Promise<void> => {
+    await firestoreService.updateUnidad(id, { activa });
+  },
+
+  deleteUnidad: async (id: string): Promise<void> => {
+    if (isConfigured && realDb) {
+      try {
+        const docRef = doc(realDb, "catalogo_unidades", id);
+        await deleteDoc(docRef);
+      } catch (err) {
+        console.warn("Firestore deleteUnidad failed, updating local storage:", err);
+      }
+    }
+    const list = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
+    const updated = list.filter(u => u.id !== id);
+    setLocalStorageItem("unidades", updated);
+    notifyListeners("unidades", updated);
   }
 };
+

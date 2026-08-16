@@ -130,18 +130,60 @@ export default function Dashboard({
 
   const selectedAlmacenObj = almacenes.find(a => a.id === selectedAlmacen);
 
+  // Helper to get effective minimum stock threshold for a product in a given warehouse/scope
+  const getProductMinStock = (p: Producto, almId: string): number => {
+    if (almId !== "all") {
+      const normId = firestoreService.normalizeWarehouseId(almId, almacenes);
+      if (p.stock_minimo_almacenes && p.stock_minimo_almacenes[normId] !== undefined) {
+        return Number(p.stock_minimo_almacenes[normId]) || 0;
+      }
+      if (p.stock_minimo_almacenes && p.stock_minimo_almacenes[almId] !== undefined) {
+        return Number(p.stock_minimo_almacenes[almId]) || 0;
+      }
+      return Number(p.stock_minimo) || 0;
+    }
+    // For global scope: return legacy minimum or max of warehouse limits
+    if (p.stock_minimo_almacenes && Object.keys(p.stock_minimo_almacenes).length > 0) {
+      const vals = Object.values(p.stock_minimo_almacenes).map(v => Number(v) || 0);
+      return Math.max(0, ...vals);
+    }
+    return Number(p.stock_minimo) || 0;
+  };
+
+  // Helper to evaluate if product is in low stock condition in the current scope
+  const isProductLowStock = (p: Producto, almId: string): boolean => {
+    if (almId !== "all") {
+      const min = getProductMinStock(p, almId);
+      if (min <= 0) return false; // 0 = Alerta desactivada
+      const qty = getStockQty(p.sku, almId);
+      return qty <= min && qty > 0;
+    }
+
+    // When viewing "all" warehouses:
+    // Check if any warehouse has an active alert (min > 0) and stock is <= min
+    if (p.stock_minimo_almacenes && Object.keys(p.stock_minimo_almacenes).length > 0) {
+      return almacenes.some(alm => {
+        const min = getProductMinStock(p, alm.id);
+        if (min <= 0) return false;
+        const qty = getStockQty(p.sku, alm.id);
+        return qty <= min && qty > 0;
+      });
+    }
+
+    // Legacy fallback
+    const globalMin = Number(p.stock_minimo) || 0;
+    if (globalMin <= 0) return false;
+    const globalQty = getGlobalStockQty(p.sku);
+    return globalQty <= globalMin && globalQty > 0;
+  };
+
   // Calculate stats based on filters & selected warehouse
   const totalSkusInScope = selectedAlmacen === "all"
     ? effectiveProductos.length
     : effectiveProductos.filter(p => getStockQty(p.sku, selectedAlmacen) > 0).length;
   
   // Calculate how many products are low on stock in the selected scope
-  const lowStockCount = effectiveProductos.filter(p => {
-    const stockQty = selectedAlmacen === "all" 
-      ? getGlobalStockQty(p.sku) 
-      : getStockQty(p.sku, selectedAlmacen);
-    return stockQty <= p.stock_minimo && stockQty > 0;
-  }).length;
+  const lowStockCount = effectiveProductos.filter(p => isProductLowStock(p, selectedAlmacen)).length;
 
   const outOfStockCount = effectiveProductos.filter(p => {
     const stockQty = selectedAlmacen === "all" 
@@ -174,12 +216,15 @@ export default function Dashboard({
     }
 
     let matchesStatus = true;
+    const isLow = isProductLowStock(p, selectedAlmacen);
+    const isOut = stockQty === 0;
+
     if (stockStatusFilter === "low") {
-      matchesStatus = stockQty <= p.stock_minimo && stockQty > 0;
+      matchesStatus = isLow;
     } else if (stockStatusFilter === "out") {
-      matchesStatus = stockQty === 0;
+      matchesStatus = isOut;
     } else if (stockStatusFilter === "ok") {
-      matchesStatus = stockQty > p.stock_minimo;
+      matchesStatus = !isLow && !isOut;
     }
 
     return matchesSearch && matchesCategory && matchesStatus;
@@ -423,8 +468,9 @@ export default function Dashboard({
                     ? globalQty 
                     : getStockQty(prod.sku, selectedAlmacen);
 
-                  const isLow = activeQty <= prod.stock_minimo && activeQty > 0;
+                  const isLow = isProductLowStock(prod, selectedAlmacen);
                   const isOut = activeQty === 0;
+                  const minStockToDisplay = getProductMinStock(prod, selectedAlmacen);
 
                   return (
                     <tr key={prod.sku} className="hover:bg-slate-800/20 transition-colors">
@@ -443,7 +489,13 @@ export default function Dashboard({
 
                       {/* Min stock */}
                       <td className="py-4 px-6 text-center font-mono text-slate-400">
-                        {prod.stock_minimo} <span className="text-[10px]">{prod.unidad}</span>
+                        {minStockToDisplay > 0 ? (
+                          <>
+                            {minStockToDisplay} <span className="text-[10px]">{prod.unidad}</span>
+                          </>
+                        ) : (
+                          <span className="text-slate-500 text-xs">Off (0)</span>
+                        )}
                       </td>
 
                       {/* Warehouse stocks / Single selected warehouse stock */}
@@ -451,9 +503,10 @@ export default function Dashboard({
                         <>
                           {almacenes.map(alm => {
                             const qty = getStockQty(prod.sku, alm.id);
+                            const almMin = getProductMinStock(prod, alm.id);
                             let colorClass = "text-slate-300";
                             if (qty === 0) colorClass = "text-rose-500/80 font-semibold";
-                            else if (qty <= prod.stock_minimo) colorClass = "text-amber-500 font-semibold";
+                            else if (almMin > 0 && qty <= almMin) colorClass = "text-amber-500 font-semibold";
 
                             return (
                               <td 
@@ -469,7 +522,7 @@ export default function Dashboard({
 
                           {/* Global stock */}
                           <td className="py-4 px-6 text-center font-mono font-semibold bg-slate-800/10">
-                            <span className={globalQty === 0 ? "text-rose-500" : globalQty <= prod.stock_minimo ? "text-amber-500" : "text-emerald-400"}>
+                            <span className={globalQty === 0 ? "text-rose-500" : isLow ? "text-amber-500" : "text-emerald-400"}>
                               {globalQty}
                             </span>
                             <span className="text-[10px] text-slate-500 ml-1">{prod.unidad}</span>
@@ -480,7 +533,7 @@ export default function Dashboard({
                           <span className={`text-base ${
                             activeQty === 0 
                               ? "text-rose-500" 
-                              : activeQty <= prod.stock_minimo 
+                              : isLow 
                               ? "text-amber-500" 
                               : "text-emerald-400"
                           }`}>

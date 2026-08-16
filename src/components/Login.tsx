@@ -71,7 +71,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
             <Warehouse className="h-8 w-8" id="login-brand-icon" />
           </div>
           <h1 className="text-2xl font-bold text-slate-100 tracking-tight">StockMaster</h1>
-          <p className="text-sm text-slate-400 mt-1 text-center">
+          <p className="text-xs font-medium text-slate-400 mt-0.5 tracking-wide">
+            Metálicos y Plásticos Polo
+          </p>
+          <p className="text-xs text-slate-500 mt-1 text-center">
             Control de Inventario Multialmacén en Tiempo Real
           </p>
         </div>

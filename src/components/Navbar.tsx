@@ -20,83 +20,91 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
     <header className="bg-slate-900 text-white border-b border-slate-800 shadow-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          {/* Brand Title */}
-          <div className="flex items-center -ml-1 sm:-ml-2">
-            <span className="font-bold text-lg tracking-tight text-white">StockMaster</span>
+          {/* Brand Title & Desktop Navigation */}
+          <div className="flex items-center space-x-8 lg:space-x-12 -ml-1 sm:-ml-2">
+            {/* Brand Block */}
+            <div className="flex flex-col items-start text-left shrink-0">
+              <span className="font-bold text-lg sm:text-xl tracking-tight text-white leading-tight">
+                StockMaster
+              </span>
+              <span className="text-[11px] sm:text-xs text-slate-400 font-normal leading-tight mt-0.5 whitespace-nowrap">
+                Metálicos y Plásticos Polo
+              </span>
+            </div>
+
+            {/* Navigation Items */}
+            <nav className="hidden md:flex space-x-1">
+              <button
+                onClick={() => setActiveTab("movimientos")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "movimientos"
+                    ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <PlusCircleIcon className="h-4 w-4" />
+                <span>Registrar movimiento</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("historial")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "historial"
+                    ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <History className="h-4 w-4" />
+                <span>Historial</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("dashboard")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "dashboard"
+                    ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <Boxes className="h-4 w-4" />
+                <span>Dashboard</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("ventas")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "ventas"
+                    ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <TrendingUp className="h-4 w-4" />
+                <span>Análisis de ventas</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("almacenes")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "almacenes"
+                    ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <Warehouse className="h-4 w-4" />
+                <span>Almacenes</span>
+              </button>
+              <button
+                onClick={() => setActiveTab("catalogo")}
+                className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                  activeTab === "catalogo"
+                    ? "bg-slate-800 text-emerald-400 border border-slate-700"
+                    : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                }`}
+              >
+                <Package className="h-4 w-4" />
+                <span>Productos</span>
+              </button>
+            </nav>
           </div>
 
-          {/* Navigation Items */}
-          <nav className="hidden md:flex space-x-1">
-            <button
-              onClick={() => setActiveTab("dashboard")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "dashboard"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Boxes className="h-4 w-4" />
-              <span>Dashboard</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("ventas")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "ventas"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <TrendingUp className="h-4 w-4" />
-              <span>Análisis de ventas</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("almacenes")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "almacenes"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Warehouse className="h-4 w-4" />
-              <span>Almacenes</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("catalogo")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "catalogo"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <Package className="h-4 w-4" />
-              <span>Catálogo</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("movimientos")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "movimientos"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <PlusCircleIcon className="h-4 w-4" />
-              <span>Registrar Movimiento</span>
-            </button>
-            <button
-              onClick={() => setActiveTab("historial")}
-              className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                activeTab === "historial"
-                  ? "bg-slate-800 text-emerald-400 border border-slate-700"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
-              }`}
-            >
-              <History className="h-4 w-4" />
-              <span>Historial</span>
-            </button>
-          </nav>
-
           {/* User Profile & Connection Info */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-3 sm:space-x-4 shrink-0">
             {/* Profile Info */}
             <div className="text-right hidden sm:block">
               <p className="text-xs text-slate-400">Usuario activo</p>
@@ -118,44 +126,8 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
       {/* Mobile navigation rail */}
       <div className="md:hidden flex justify-around border-t border-slate-800 bg-slate-900 py-2 overflow-x-auto">
         <button
-          onClick={() => setActiveTab("dashboard")}
-          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
-            activeTab === "dashboard" ? "text-emerald-400" : "text-slate-400"
-          }`}
-        >
-          <Boxes className="h-5 w-5" />
-          <span>Dashboard</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("ventas")}
-          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
-            activeTab === "ventas" ? "text-emerald-400" : "text-slate-400"
-          }`}
-        >
-          <TrendingUp className="h-5 w-5" />
-          <span>Ventas</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("almacenes")}
-          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
-            activeTab === "almacenes" ? "text-emerald-400" : "text-slate-400"
-          }`}
-        >
-          <Warehouse className="h-5 w-5" />
-          <span>Almacenes</span>
-        </button>
-        <button
-          onClick={() => setActiveTab("catalogo")}
-          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
-            activeTab === "catalogo" ? "text-emerald-400" : "text-slate-400"
-          }`}
-        >
-          <Package className="h-5 w-5" />
-          <span>Catálogo</span>
-        </button>
-        <button
           onClick={() => setActiveTab("movimientos")}
-          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
+          className={`flex flex-col items-center space-y-1 text-xs px-2 py-1 rounded-md shrink-0 ${
             activeTab === "movimientos" ? "text-emerald-400" : "text-slate-400"
           }`}
         >
@@ -164,12 +136,48 @@ export default function Navbar({ user, activeTab, setActiveTab, onLogout }: Navb
         </button>
         <button
           onClick={() => setActiveTab("historial")}
-          className={`flex flex-col items-center space-y-1 text-xs px-2.5 py-1 rounded-md shrink-0 ${
+          className={`flex flex-col items-center space-y-1 text-xs px-2 py-1 rounded-md shrink-0 ${
             activeTab === "historial" ? "text-emerald-400" : "text-slate-400"
           }`}
         >
           <History className="h-5 w-5" />
           <span>Historial</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("dashboard")}
+          className={`flex flex-col items-center space-y-1 text-xs px-2 py-1 rounded-md shrink-0 ${
+            activeTab === "dashboard" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <Boxes className="h-5 w-5" />
+          <span>Dashboard</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("ventas")}
+          className={`flex flex-col items-center space-y-1 text-xs px-2 py-1 rounded-md shrink-0 ${
+            activeTab === "ventas" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <TrendingUp className="h-5 w-5" />
+          <span>Ventas</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("almacenes")}
+          className={`flex flex-col items-center space-y-1 text-xs px-2 py-1 rounded-md shrink-0 ${
+            activeTab === "almacenes" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <Warehouse className="h-5 w-5" />
+          <span>Almacenes</span>
+        </button>
+        <button
+          onClick={() => setActiveTab("catalogo")}
+          className={`flex flex-col items-center space-y-1 text-xs px-2 py-1 rounded-md shrink-0 ${
+            activeTab === "catalogo" ? "text-emerald-400" : "text-slate-400"
+          }`}
+        >
+          <Package className="h-5 w-5" />
+          <span>Productos</span>
         </button>
       </div>
     </header>
