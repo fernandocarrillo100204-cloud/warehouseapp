@@ -20,7 +20,6 @@ import {
   ShoppingBag, 
   Building2, 
   CalendarDays, 
-  Clock, 
   Info,
   ChevronRight
 } from "lucide-react";
@@ -71,9 +70,6 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
     return new Date().toISOString().split("T")[0];
   });
   const [compareWithPrevious, setCompareWithPrevious] = useState<boolean>(true);
-
-  // Time-series focus product for chart 4
-  const [focusProductSku, setFocusProductSku] = useState<string>("auto");
 
   // Real-time data state
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
@@ -450,52 +446,6 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
     return Object.values(map);
   }, [almacenes, salesCurrentPeriod, salesPreviousPeriod]);
 
-  // Chart 4: Behavior of selected product over time
-  const activeFocusSku = useMemo(() => {
-    if (selectedSku !== "all") return selectedSku;
-    if (focusProductSku !== "auto") return focusProductSku;
-    return metrics.topProductSku || (productos[0]?.sku || "");
-  }, [selectedSku, focusProductSku, metrics.topProductSku, productos]);
-
-  const productTrendData = useMemo(() => {
-    if (!activeFocusSku) return [];
-
-    const { currentStart, daysElapsed } = periodRanges;
-    const daysCount = Math.min(31, Math.max(1, daysElapsed));
-
-    const dayLabels: string[] = [];
-    const unitsPerDay: number[] = new Array(daysCount).fill(0);
-    const weekdays = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-
-    for (let i = 0; i < daysCount; i++) {
-      const bucketDate = new Date(currentStart.getTime() + i * 24 * 60 * 60 * 1000);
-      if (periodo === "esta_semana") {
-        const dayIdx = bucketDate.getDay();
-        dayLabels.push(`${weekdays[dayIdx]} ${bucketDate.getDate()}`);
-      } else if (periodo === "mes_actual") {
-        dayLabels.push(`Día ${i + 1}`);
-      } else {
-        dayLabels.push(`${bucketDate.getDate()}/${bucketDate.getMonth() + 1}`);
-      }
-    }
-
-    salesCurrentPeriod.forEach(m => {
-      if (m.sku.toUpperCase() === activeFocusSku.toUpperCase()) {
-        const mDate = normalizeDate(m.fecha);
-        const diffMs = mDate.getTime() - currentStart.getTime();
-        const dayIdx = Math.floor(diffMs / (24 * 60 * 60 * 1000));
-        if (dayIdx >= 0 && dayIdx < daysCount) {
-          unitsPerDay[dayIdx] += Number(m.cantidad || 0);
-        }
-      }
-    });
-
-    return dayLabels.map((label, idx) => ({
-      dia: label,
-      unidades: unitsPerDay[idx]
-    }));
-  }, [activeFocusSku, periodRanges, periodo, salesCurrentPeriod]);
-
   // Automated Data-Driven Summary (strictly based on factual numbers)
   const automatedSummary = useMemo(() => {
     if (salesCurrentPeriod.length === 0 && salesPreviousPeriod.length === 0) {
@@ -569,7 +519,6 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
       setSelectedSku("all");
     } else {
       setSelectedSku(sku);
-      setFocusProductSku(sku);
     }
   };
 
@@ -586,7 +535,6 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
     setSelectedAlmacen("all");
     setSelectedSku("all");
     setSelectedCategoria("all");
-    setFocusProductSku("auto");
   };
 
   const hasActiveFilters = selectedAlmacen !== "all" || selectedSku !== "all" || selectedCategoria !== "all" || periodo !== "esta_semana";
@@ -692,12 +640,7 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
             </label>
             <select
               value={selectedSku}
-              onChange={(e) => {
-                setSelectedSku(e.target.value);
-                if (e.target.value !== "all") {
-                  setFocusProductSku(e.target.value);
-                }
-              }}
+              onChange={(e) => setSelectedSku(e.target.value)}
               className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
             >
               <option value="all">Todos los productos</option>
@@ -901,9 +844,9 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
             </div>
           </div>
 
-          {/* Main Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Chart 1: Ventas por día (Líneas comparativas) */}
+          {/* Main Charts Section */}
+          <div className="space-y-6">
+            {/* Chart 1: Ventas por día (Arriba, ocupando todo el ancho) */}
             <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
               <div className="flex items-center justify-between mb-4">
                 <div>
@@ -917,7 +860,7 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
                 </div>
               </div>
 
-              <div className="h-64 w-full">
+              <div className="h-72 w-full">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={salesByDayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                     <defs>
@@ -964,198 +907,136 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
               </div>
             </div>
 
-            {/* Chart 2: Ventas por producto (Barras horizontales ordenadas) */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                    <BarChart3 className="h-4 w-4 text-emerald-400" />
-                    <span>Ventas por producto</span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Ranking de unidades vendidas (clic en una barra para filtrar)
-                  </p>
+            {/* Sub-grid for Chart 2 & Chart 3 (Abajo en dos columnas iguales, apiladas en móviles) */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Chart 2: Ventas por producto */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
+                      <BarChart3 className="h-4 w-4 text-emerald-400" />
+                      <span>Ventas por producto</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Ranking de unidades vendidas (clic en una barra para filtrar)
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="h-64 w-full overflow-y-auto">
-                <ResponsiveContainer width="100%" height={Math.max(240, salesByProductData.length * 40)}>
-                  <BarChart
-                    layout="vertical"
-                    data={salesByProductData}
-                    margin={{ top: 5, right: 20, left: 40, bottom: 5 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                    <XAxis type="number" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
-                    <YAxis
-                      type="category"
-                      dataKey="sku"
-                      stroke="#64748b"
-                      tick={{ fill: "#cbd5e1", fontSize: 11, fontWeight: 500 }}
-                      width={70}
-                    />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#0f172a",
-                        borderColor: "#334155",
-                        borderRadius: "0.75rem",
-                        color: "#f8fafc",
-                        fontSize: "12px"
-                      }}
-                      formatter={(val: any, name: any, item: any) => [
-                        `${val} unidades (${item.payload.nombre})`,
-                        "Ventas"
-                      ]}
-                    />
-                    <Bar
-                      dataKey="unidades"
-                      radius={[0, 6, 6, 0]}
-                      cursor="pointer"
-                      onClick={(data: any) => {
-                        if (data && data.sku) {
-                          handleSelectProductFromChart(data.sku);
-                        }
-                      }}
+                <div className="h-64 w-full overflow-y-auto">
+                  <ResponsiveContainer width="100%" height={Math.max(240, salesByProductData.length * 40)}>
+                    <BarChart
+                      layout="vertical"
+                      data={salesByProductData}
+                      margin={{ top: 5, right: 20, left: 40, bottom: 5 }}
                     >
-                      {salesByProductData.map((entry) => (
-                        <Cell
-                          key={`cell-${entry.sku}`}
-                          fill={selectedSku === entry.sku ? "#34d399" : "#10b981"}
-                          opacity={selectedSku !== "all" && selectedSku !== entry.sku ? 0.35 : 1}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Chart 3: Ventas por almacén */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                    <Building2 className="h-4 w-4 text-cyan-400" />
-                    <span>Ventas por almacén</span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Distribución de salidas por centro logístico (clic para filtrar)
-                  </p>
-                </div>
-              </div>
-
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={salesByWarehouseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="nombre" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                    <YAxis stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#0f172a",
-                        borderColor: "#334155",
-                        borderRadius: "0.75rem",
-                        color: "#f8fafc",
-                        fontSize: "12px"
-                      }}
-                      formatter={(val: any) => [`${val} unidades`, ""]}
-                    />
-                    <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
-                    <Bar
-                      dataKey="unidades"
-                      name="Periodo actual"
-                      fill="#06b6d4"
-                      radius={[6, 6, 0, 0]}
-                      cursor="pointer"
-                      onClick={(data: any) => {
-                        if (data && data.id) {
-                          handleSelectWarehouseFromChart(data.id);
-                        }
-                      }}
-                    >
-                      {salesByWarehouseData.map((entry) => (
-                        <Cell
-                          key={`alm-${entry.id}`}
-                          fill={selectedAlmacen === entry.id ? "#22d3ee" : "#06b6d4"}
-                          opacity={selectedAlmacen !== "all" && selectedAlmacen !== entry.id ? 0.35 : 1}
-                        />
-                      ))}
-                    </Bar>
-                    {compareWithPrevious && (
-                      <Bar
-                        dataKey="unidadesAnterior"
-                        name="Periodo anterior"
-                        fill="#475569"
-                        radius={[6, 6, 0, 0]}
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                      <XAxis type="number" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
+                      <YAxis
+                        type="category"
+                        dataKey="sku"
+                        stroke="#64748b"
+                        tick={{ fill: "#cbd5e1", fontSize: 11, fontWeight: 500 }}
+                        width={70}
                       />
-                    )}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-
-            {/* Chart 4: Comportamiento del producto seleccionado a través del tiempo */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                    <Clock className="h-4 w-4 text-indigo-400" />
-                    <span>Tendencia temporal del producto</span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    Comportamiento cronológico de ventas de la referencia seleccionada
-                  </p>
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0f172a",
+                          borderColor: "#334155",
+                          borderRadius: "0.75rem",
+                          color: "#f8fafc",
+                          fontSize: "12px"
+                        }}
+                        formatter={(val: any, name: any, item: any) => [
+                          `${val} unidades (${item.payload.nombre})`,
+                          "Ventas"
+                        ]}
+                      />
+                      <Bar
+                        dataKey="unidades"
+                        radius={[0, 6, 6, 0]}
+                        cursor="pointer"
+                        onClick={(data: any) => {
+                          if (data && data.sku) {
+                            handleSelectProductFromChart(data.sku);
+                          }
+                        }}
+                      >
+                        {salesByProductData.map((entry) => (
+                          <Cell
+                            key={`cell-${entry.sku}`}
+                            fill={selectedSku === entry.sku ? "#34d399" : "#10b981"}
+                            opacity={selectedSku !== "all" && selectedSku !== entry.sku ? 0.35 : 1}
+                          />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
-                <div className="w-44">
-                  <select
-                    value={activeFocusSku}
-                    onChange={(e) => {
-                      setFocusProductSku(e.target.value);
-                      setSelectedSku(e.target.value);
-                    }}
-                    className="w-full bg-slate-950 border border-slate-800 text-slate-200 text-xs rounded-lg px-2.5 py-1.5 focus:border-indigo-500 focus:outline-none truncate"
-                  >
-                    {productos.map(p => (
-                      <option key={p.sku} value={p.sku}>
-                        {p.sku} - {p.nombre}
-                      </option>
-                    ))}
-                  </select>
-                </div>
               </div>
 
-              <div className="h-64 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={productTrendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="productTrendGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#818cf8" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#818cf8" stopOpacity={0.0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="dia" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                    <YAxis stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#0f172a",
-                        borderColor: "#334155",
-                        borderRadius: "0.75rem",
-                        color: "#f8fafc",
-                        fontSize: "12px"
-                      }}
-                      formatter={(val: any) => [`${val} unidades`, activeFocusSku]}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="unidades"
-                      stroke="#818cf8"
-                      strokeWidth={2.5}
-                      fillOpacity={1}
-                      fill="url(#productTrendGradient)"
-                    />
-                  </AreaChart>
-                </ResponsiveContainer>
+              {/* Chart 3: Ventas por almacén */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-4">
+                  <div>
+                    <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
+                      <Building2 className="h-4 w-4 text-cyan-400" />
+                      <span>Ventas por almacén</span>
+                    </h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Distribución de salidas por centro logístico (clic para filtrar)
+                    </p>
+                  </div>
+                </div>
+
+                <div className="h-64 w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={salesByWarehouseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                      <XAxis dataKey="nombre" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} />
+                      <YAxis stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
+                      <Tooltip
+                        contentStyle={{
+                          backgroundColor: "#0f172a",
+                          borderColor: "#334155",
+                          borderRadius: "0.75rem",
+                          color: "#f8fafc",
+                          fontSize: "12px"
+                        }}
+                        formatter={(val: any) => [`${val} unidades`, ""]}
+                      />
+                      <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
+                      <Bar
+                        dataKey="unidades"
+                        name="Periodo actual"
+                        fill="#06b6d4"
+                        radius={[6, 6, 0, 0]}
+                        cursor="pointer"
+                        onClick={(data: any) => {
+                          if (data && data.id) {
+                            handleSelectWarehouseFromChart(data.id);
+                          }
+                        }}
+                      >
+                        {salesByWarehouseData.map((entry) => (
+                          <Cell
+                            key={`alm-${entry.id}`}
+                            fill={selectedAlmacen === entry.id ? "#22d3ee" : "#06b6d4"}
+                            opacity={selectedAlmacen !== "all" && selectedAlmacen !== entry.id ? 0.35 : 1}
+                          />
+                        ))}
+                      </Bar>
+                      {compareWithPrevious && (
+                        <Bar
+                          dataKey="unidadesAnterior"
+                          name="Periodo anterior"
+                          fill="#475569"
+                          radius={[6, 6, 0, 0]}
+                        />
+                      )}
+                    </BarChart>
+                  </ResponsiveContainer>
+                </div>
               </div>
             </div>
           </div>
