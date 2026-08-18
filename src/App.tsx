@@ -6,7 +6,7 @@
 import React, { useState, useEffect } from "react";
 import { authService, firestoreService } from "./lib/firebase";
 import { Usuario, Almacen, Producto, NavigationTab } from "./types";
-import Navbar from "./components/Navbar";
+import Sidebar from "./components/Sidebar";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import MovimientoForm from "./components/MovimientoForm";
@@ -89,9 +89,9 @@ export default function App() {
   // Render Loading spinner during initial firebase state check
   if (authChecking) {
     return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center text-slate-400">
-        <span className="h-10 w-10 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-sm font-medium">Iniciando entorno de inventario...</p>
+      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#64748B]">
+        <span className="h-9 w-9 border-3 border-[#059669] border-t-transparent rounded-full animate-spin mb-4" />
+        <p className="text-xs font-medium text-[#172033]">Iniciando entorno de inventario...</p>
       </div>
     );
   }
@@ -109,9 +109,9 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-slate-950">
-      {/* Shared Navbar */}
-      <Navbar 
+    <div className="min-h-screen bg-white text-[#172033] flex flex-col md:flex-row font-sans selection:bg-[#ECFDF5] selection:text-[#059669]">
+      {/* Left Minimalist Sidebar (Desktop permanent + Mobile slide-over) */}
+      <Sidebar 
         user={user} 
         activeTab={activeTab} 
         setActiveTab={(tab) => {
@@ -124,10 +124,11 @@ export default function App() {
         onLogout={handleLogout} 
       />
 
-      {/* Main Panel Content Area with motion transitions */}
-      <main className="flex-1 w-full relative">
-        <div className="w-full">
-          <AnimatePresence mode="wait">
+      {/* Main Content Area: offsets for 224px fixed desktop sidebar */}
+      <div className="flex-1 flex flex-col min-w-0 md:pl-[224px]">
+        <main className="flex-1 w-full relative min-h-screen overflow-x-hidden">
+          <div className="w-full">
+            <AnimatePresence mode="wait">
               {activeTab === "dashboard" && (
                 <motion.div
                   key="dashboard"
@@ -170,7 +171,7 @@ export default function App() {
                   transition={{ duration: 0.25, ease: "easeInOut" }}
                 >
                   <GestionAlmacenes 
-                    productos={productos}
+                    productos={productos} 
                   />
                 </motion.div>
               )}
@@ -235,7 +236,8 @@ export default function App() {
               )}
             </AnimatePresence>
           </div>
-      </main>
+        </main>
+      </div>
     </div>
   );
 }

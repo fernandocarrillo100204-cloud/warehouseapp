@@ -58,36 +58,36 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FFFFFF] flex flex-col items-center justify-center p-4">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl shadow-xl p-8"
+        transition={{ duration: 0.4 }}
+        className="w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-8"
       >
         {/* Brand Header */}
-        <div className="flex flex-col items-center mb-8">
-          <div className="bg-emerald-500 p-3 rounded-2xl text-slate-950 shadow-lg shadow-emerald-500/10 mb-3">
+        <div className="flex flex-col items-center mb-7">
+          <div className="bg-[#ECFDF5] border border-emerald-200 p-3 rounded-2xl text-[#059669] mb-3">
             <Warehouse className="h-8 w-8" id="login-brand-icon" />
           </div>
-          <h1 className="text-2xl font-bold text-slate-100 tracking-tight">StockMaster</h1>
-          <p className="text-xs font-medium text-slate-400 mt-0.5 tracking-wide">
+          <h1 className="text-2xl font-bold text-[#172033] tracking-tight">StockMaster</h1>
+          <p className="text-xs font-semibold text-[#059669] mt-0.5 tracking-wide">
             Metálicos y Plásticos Polo
           </p>
-          <p className="text-xs text-slate-500 mt-1 text-center">
+          <p className="text-xs text-[#64748B] mt-1 text-center">
             Control de Inventario Multialmacén en Tiempo Real
           </p>
         </div>
 
         {/* Demo Warning / Guide */}
-        <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl p-4 mb-6">
+        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 mb-6">
           <div className="flex items-start space-x-3">
-            <Database className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+            <Database className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-xs font-semibold text-slate-200">
+              <h3 className="text-xs font-semibold text-[#172033]">
                 {isRealFirebase ? "Conexión Firebase Nube Activa" : "Modo Demostración / Emulador"}
               </h3>
-              <p className="text-xs text-slate-400 mt-1 leading-relaxed">
+              <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
                 {isRealFirebase 
                   ? "Puedes ingresar con cualquier cuenta Firebase registrada de tu proyecto." 
                   : "Usa las siguientes credenciales preestablecidas para acceder al sistema:"}
@@ -96,7 +96,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 <button
                   type="button"
                   onClick={loadDemoCredentials}
-                  className="mt-2.5 inline-flex items-center text-xs text-emerald-400 hover:text-emerald-300 font-medium underline transition-all"
+                  className="mt-2.5 inline-flex items-center text-xs text-[#059669] hover:text-emerald-700 font-medium underline transition-all"
                 >
                   <Key className="h-3 w-3 mr-1" />
                   Autocompletar credenciales de Demo
@@ -110,33 +110,21 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         {error && (
           <div className="space-y-4 mb-6">
             {error.toLowerCase().includes("unauthorized-domain") || error.toLowerCase().includes("unauthorized domain") ? (
-              <div className="bg-amber-950/40 border border-amber-800 text-amber-300 p-5 rounded-xl text-sm space-y-3">
-                <div className="flex items-start space-x-2.5">
-                  <AlertCircle className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div className="font-semibold text-slate-200">Dominio no autorizado en Firebase Auth</div>
+              <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-xs space-y-2.5">
+                <div className="flex items-start space-x-2">
+                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
+                  <div className="font-semibold text-amber-900">Dominio no autorizado en Firebase Auth</div>
                 </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  Firebase Authentication requiere que autorices el dominio de esta aplicación para habilitar el inicio de sesión con Google o redirecciones seguras.
+                <p className="text-xs text-amber-800 leading-relaxed">
+                  Firebase Authentication requiere que autorices el dominio de esta aplicación para habilitar el inicio de sesión con Google.
                 </p>
-                <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs text-emerald-400 break-all select-all">
+                <div className="bg-white p-2.5 rounded-lg border border-amber-200 font-mono text-xs text-emerald-700 break-all select-all">
                   {window.location.hostname}
-                </div>
-                <div className="text-xs text-slate-300 space-y-1 pt-1">
-                  <p className="font-semibold text-slate-200">¿Cómo solucionarlo?</p>
-                  <ol className="list-decimal list-inside space-y-1 pl-1">
-                    <li>Ve a tu <a href="https://console.firebase.google.com/" target="_blank" rel="noopener noreferrer" className="text-emerald-400 hover:underline">Consola de Firebase</a>.</li>
-                    <li>Selecciona tu proyecto e ingresa a <strong>Authentication</strong>.</li>
-                    <li>Haz clic en la pestaña <strong>Ajustes (Settings)</strong> &gt; <strong>Dominios autorizados (Authorized domains)</strong>.</li>
-                    <li>Haz clic en <strong>Agregar dominio (Add domain)</strong> y pega el dominio de arriba.</li>
-                  </ol>
-                </div>
-                <div className="pt-2 text-[11px] text-slate-400">
-                  Mientras tanto, puedes seguir probando todas las funciones usando el <strong>Modo Demostración / Emulador local</strong> arriba con las credenciales autocompletadas.
                 </div>
               </div>
             ) : (
-              <div className="bg-rose-950/40 border border-rose-800 text-rose-300 px-4 py-3 rounded-xl flex items-start space-x-2.5 text-sm">
-                <AlertCircle className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+              <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-start space-x-2.5 text-xs">
+                <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
             )}
@@ -144,14 +132,14 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         )}
 
         {/* Login Form */}
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-xs font-semibold text-[#172033] mb-1.5">
               Correo Electrónico
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                <Mail className="h-4 w-4 text-slate-500" />
+                <Mail className="h-4 w-4 text-[#64748B]" />
               </span>
               <input
                 type="email"
@@ -159,18 +147,18 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 placeholder="usuario@empresa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm transition-all placeholder:text-slate-600"
+                className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-[#059669] text-xs sm:text-sm transition-all placeholder:text-slate-400"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+            <label className="block text-xs font-semibold text-[#172033] mb-1.5">
               Contraseña
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                <Lock className="h-4 w-4 text-slate-500" />
+                <Lock className="h-4 w-4 text-[#64748B]" />
               </span>
               <input
                 type="password"
@@ -178,7 +166,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl py-3 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-sm transition-all placeholder:text-slate-600"
+                className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-[#059669] text-xs sm:text-sm transition-all placeholder:text-slate-400"
               />
             </div>
           </div>
@@ -186,10 +174,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center space-x-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold rounded-xl py-3.5 px-4 transition-all hover:shadow-lg hover:shadow-emerald-500/10 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-sm"
+            className="w-full flex items-center justify-center space-x-2 bg-[#059669] hover:bg-[#047857] text-white font-semibold rounded-xl py-3 px-4 transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
           >
             {loading ? (
-              <span className="h-4 w-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+              <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
             ) : (
               <>
                 <LogIn className="h-4 w-4" />
@@ -199,12 +187,12 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           </button>
         </form>
 
-        <div className="relative my-6">
+        <div className="relative my-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-slate-800"></div>
+            <div className="w-full border-t border-[#E2E8F0]"></div>
           </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-slate-900 px-3 text-slate-500">O también</span>
+          <div className="relative flex justify-center text-xs">
+            <span className="bg-white px-3 text-[#64748B]">O también</span>
           </div>
         </div>
 
@@ -212,9 +200,9 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center space-x-2.5 bg-slate-950 hover:bg-slate-850 text-slate-200 border border-slate-800 hover:border-slate-700 font-semibold rounded-xl py-3.5 px-4 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-sm shadow-sm"
+          className="w-full flex items-center justify-center space-x-2.5 bg-white hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] font-medium rounded-xl py-2.5 px-4 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm shadow-xs"
         >
-          <svg className="h-5 w-5 mr-1" viewBox="0 0 24 24">
+          <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24">
             <path
               d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
               fill="#4285F4"
@@ -235,8 +223,8 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <span>Iniciar sesión con Google</span>
         </button>
 
-        <div className="mt-8 pt-6 border-t border-slate-800 text-center">
-          <p className="text-xs text-slate-500">
+        <div className="mt-6 pt-4 border-t border-[#E2E8F0] text-center">
+          <p className="text-[11px] text-[#64748B]">
             © {new Date().getFullYear()} StockMaster Corp. Todos los derechos reservados.
           </p>
         </div>

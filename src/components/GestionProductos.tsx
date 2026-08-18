@@ -645,65 +645,67 @@ export default function GestionProductos({
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="gestion-productos-view">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-5 lg:px-6 py-5" id="gestion-productos-view">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 space-y-4 md:space-y-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">Catálogo de Productos</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#172033] tracking-tight leading-tight">
+            Catálogo de Productos
+          </h1>
+          <p className="text-xs text-[#64748B] mt-0.5">
             Gestiona la lista maestra de productos, categorías, unidades de medida y alertas de stock mínimo por almacén.
           </p>
         </div>
-        <div className="flex flex-col sm:flex-row gap-3">
+        <div className="flex flex-wrap sm:flex-nowrap gap-2 shrink-0">
           <button
             onClick={() => {
               setImportResults(null);
               setCsvFile(null);
               setIsImportOpen(true);
             }}
-            className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 text-sm focus:outline-none"
+            className="flex-1 sm:flex-initial bg-white hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] font-semibold px-3 py-2 rounded-lg transition-all flex items-center justify-center space-x-1.5 text-xs focus:outline-none shadow-xs"
           >
-            <Upload className="h-4 w-4 text-slate-400" />
+            <Upload className="h-3.5 w-3.5 text-[#64748B]" />
             <span>Importar CSV</span>
           </button>
 
           <button
             onClick={() => setIsCatalogosOpen(true)}
-            className="w-full sm:w-auto bg-slate-900 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-slate-700 font-semibold px-4 py-2.5 rounded-xl transition-all flex items-center justify-center space-x-2 text-sm focus:outline-none"
+            className="flex-1 sm:flex-initial bg-white hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] font-semibold px-3 py-2 rounded-lg transition-all flex items-center justify-center space-x-1.5 text-xs focus:outline-none shadow-xs"
           >
-            <FolderTree className="h-4 w-4 text-emerald-400" />
+            <FolderTree className="h-3.5 w-3.5 text-[#059669]" />
             <span>Administrar catálogos</span>
           </button>
           
           <button
             onClick={() => openFormModal(null)}
-            className="w-full sm:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-500/10 flex items-center justify-center space-x-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full sm:w-auto bg-[#059669] hover:bg-[#047857] text-white font-semibold px-3.5 py-2 rounded-lg transition-all shadow-xs flex items-center justify-center space-x-1.5 text-xs focus:outline-none"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             <span>Crear producto</span>
           </button>
         </div>
       </div>
 
       {/* Search Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-8">
+      <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 mb-4 shadow-xs">
         <div className="relative max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-500" />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-3.5 w-3.5 text-[#64748B]" />
           </div>
           <input
             type="text"
             placeholder="Buscar por SKU, nombre o categoría..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-slate-700 text-slate-200 text-sm rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-700 transition-all placeholder:text-slate-600"
+            className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#E2E8F0] text-[#172033] text-xs sm:text-sm rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery("")} 
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
+              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#64748B] hover:text-[#172033]"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
@@ -711,104 +713,109 @@ export default function GestionProductos({
 
       {/* Products list */}
       {loading ? (
-        <div className="py-24 text-center text-slate-400">
-          <span className="h-8 w-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block mb-3" />
-          <p className="text-sm font-medium">Cargando catálogo de productos...</p>
+        <div className="py-14 text-center text-[#64748B]">
+          <span className="h-6 w-6 border-2 border-[#059669] border-t-transparent rounded-full animate-spin inline-block mb-2" />
+          <p className="text-xs font-medium">Cargando catálogo de productos...</p>
         </div>
       ) : filteredProductos.length === 0 ? (
-        <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-12 text-center">
-          <div className="bg-slate-950 inline-flex p-4 rounded-full text-slate-600 mb-4">
-            <Package className="h-8 w-8" />
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 text-center shadow-xs">
+          <div className="bg-[#F8FAFC] inline-flex p-3 rounded-full text-slate-400 mb-2.5">
+            <Package className="h-6 w-6" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-200 mb-1">Catálogo de productos vacío</h3>
-          <p className="text-sm text-slate-500 max-w-sm mx-auto">
+          <h3 className="text-base font-semibold text-[#172033] mb-0.5">Catálogo de productos vacío</h3>
+          <p className="text-xs text-[#64748B] max-w-sm mx-auto">
             {searchQuery ? "No se encontraron productos que coincidan con la búsqueda." : "Crea tu primer producto con el botón 'Crear producto' o importa una lista con archivo CSV."}
           </p>
         </div>
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden lg:block overflow-hidden bg-slate-900 border border-slate-800 rounded-2xl">
+          <div className="hidden lg:block overflow-hidden bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-950/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-6">SKU / ID</th>
-                  <th className="py-4 px-6">Nombre del Producto</th>
-                  <th className="py-4 px-6">Categoría</th>
-                  <th className="py-4 px-6">U. de Medida</th>
-                  <th className="py-4 px-6">Stock Mínimo (Almacenes)</th>
-                  <th className="py-4 px-6 text-right">Acciones</th>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                  <th className="py-2.5 px-4">SKU / ID</th>
+                  <th className="py-2.5 px-4">Nombre del Producto</th>
+                  <th className="py-2.5 px-4">Categoría</th>
+                  <th className="py-2.5 px-4">U. de Medida</th>
+                  <th className="py-2.5 px-4">Stock Mínimo (Almacenes)</th>
+                  <th className="py-2.5 px-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#E2E8F0] text-xs sm:text-sm">
                 {filteredProductos.map((p) => {
                   return (
-                    <tr key={p.sku} className="hover:bg-slate-850/35 transition-colors group">
-                      <td className="py-4 px-6 font-mono text-xs text-slate-400 font-semibold">
+                    <tr key={p.sku} className="hover:bg-[#F1F5F9] transition-colors group">
+                      <td className="py-2.5 px-4 font-mono text-[11px] text-[#64748B] font-semibold">
                         {p.sku}
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-slate-950 p-2 rounded-lg text-emerald-400 border border-slate-800">
-                            <Package className="h-4 w-4" />
+                      <td className="py-2.5 px-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-[#ECFDF5] p-1.5 rounded-md text-[#059669] border border-emerald-200">
+                            <Package className="h-3.5 w-3.5" />
                           </div>
-                          <span className="font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors">
+                          <span className="font-semibold text-[#172033] group-hover:text-[#059669] transition-colors">
                             {p.nombre}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <span className="bg-slate-950 px-2.5 py-1 text-xs text-slate-400 border border-slate-800 rounded-lg">
+                      <td className="py-2.5 px-4">
+                        <span className="bg-[#F8FAFC] px-2 py-0.5 text-xs text-[#172033] border border-[#E2E8F0] rounded-md">
                           {p.categoria}
                         </span>
                       </td>
-                      <td className="py-4 px-6 text-slate-300 text-sm font-medium capitalize">
+                      <td className="py-2.5 px-4 text-[#172033] text-xs font-medium capitalize">
                         {p.unidad}
                       </td>
-                      <td className="py-4 px-6 text-slate-300 text-xs">
-                        {p.stock_minimo_almacenes && Object.keys(p.stock_minimo_almacenes).length > 0 ? (
-                          <div className="flex flex-wrap gap-1.5 max-w-xs">
-                            {almacenes.map(alm => {
-                              const minVal = p.stock_minimo_almacenes?.[alm.id] ?? 0;
-                              return (
-                                <span 
-                                  key={alm.id}
-                                  className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] border ${
-                                    minVal > 0 
-                                      ? "bg-slate-950 border-slate-800 text-slate-300" 
-                                      : "bg-slate-950/40 border-slate-850 text-slate-500"
-                                  }`}
-                                  title={`${alm.nombre}: ${minVal > 0 ? `${minVal} ${p.unidad}(s)` : "Alerta desactivada"}`}
-                                >
-                                  <span className="text-slate-400 font-medium mr-1">{alm.nombre.split(" ")[0]}:</span>
-                                  <span className={minVal > 0 ? "font-semibold text-emerald-400" : "text-slate-500"}>
-                                    {minVal > 0 ? minVal : "Off"}
-                                  </span>
-                                </span>
-                              );
-                            })}
-                          </div>
-                        ) : (
-                          <span className="text-slate-400">
-                            {p.stock_minimo > 0 ? `${p.stock_minimo} ${p.unidad}(s) (Global)` : "Sin alerta"}
-                          </span>
-                        )}
+                      <td className="py-2.5 px-4 text-[#172033] text-xs">
+                        {(() => {
+                          const configuredAlmacenes = almacenes.filter(alm => (p.stock_minimo_almacenes?.[alm.id] ?? 0) > 0);
+                          const totalConfigured = configuredAlmacenes.length;
+                          const tooltipLines = almacenes.map(alm => {
+                            const val = p.stock_minimo_almacenes?.[alm.id] ?? 0;
+                            return `${alm.nombre}: ${val > 0 ? `${val} ${p.unidad || "uds"}` : "Sin alerta"}`;
+                          }).join(" • ");
+
+                          if (totalConfigured > 0) {
+                            return (
+                              <span 
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#F8FAFC] border border-[#E2E8F0] text-[#172033] cursor-default"
+                                title={tooltipLines}
+                              >
+                                <span className="font-semibold text-[#059669] mr-1">{totalConfigured}</span>
+                                <span>{totalConfigured === 1 ? "almacén configurado" : "almacenes configurados"}</span>
+                              </span>
+                            );
+                          } else if (p.stock_minimo && p.stock_minimo > 0) {
+                            return (
+                              <span className="text-[#172033] text-xs font-medium">
+                                {p.stock_minimo} {p.unidad || "uds"} · mínimo global
+                              </span>
+                            );
+                          } else {
+                            return (
+                              <span className="text-[#64748B] text-xs">
+                                Sin alertas activas
+                              </span>
+                            );
+                          }
+                        })()}
                       </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end space-x-2">
+                      <td className="py-2.5 px-4 text-right">
+                        <div className="flex items-center justify-end space-x-1">
                           <button
                             onClick={() => openFormModal(p)}
-                            className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors focus:outline-none"
+                            className="p-1.5 text-[#64748B] hover:text-[#059669] hover:bg-[#F1F5F9] rounded-md transition-colors"
                             title="Editar producto"
                           >
-                            <Edit2 className="h-4 w-4" />
+                            <Edit2 className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => openDeleteModal(p)}
-                            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors focus:outline-none"
+                            className="p-1.5 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                             title="Eliminar producto"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
@@ -820,68 +827,76 @@ export default function GestionProductos({
           </div>
 
           {/* Mobile/Tablet Card Grid View */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:hidden">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 lg:hidden">
             {filteredProductos.map((p) => {
+              const configuredAlmacenes = almacenes.filter(alm => (p.stock_minimo_almacenes?.[alm.id] ?? 0) > 0);
+              const totalConfigured = configuredAlmacenes.length;
+              const tooltipLines = almacenes.map(alm => {
+                const val = p.stock_minimo_almacenes?.[alm.id] ?? 0;
+                return `${alm.nombre}: ${val > 0 ? `${val} ${p.unidad || "uds"}` : "Sin alerta"}`;
+              }).join(" • ");
+
               return (
-                <div key={p.sku} className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                <div key={p.sku} className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 space-y-2.5 shadow-xs">
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-slate-950 p-2.5 rounded-xl text-emerald-400 border border-slate-800">
-                        <Package className="h-5 w-5" />
+                    <div className="flex items-center space-x-2.5">
+                      <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+                        <Package className="h-4 w-4" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-slate-200 text-base">{p.nombre}</h4>
-                        <span className="font-mono text-[10px] text-slate-500 uppercase">{p.sku}</span>
+                        <h4 className="font-semibold text-[#172033] text-sm">{p.nombre}</h4>
+                        <span className="font-mono text-[10px] text-[#64748B] uppercase">{p.sku}</span>
                       </div>
                     </div>
                     <div className="flex space-x-1">
                       <button
                         onClick={() => openFormModal(p)}
-                        className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-1.5 text-[#64748B] hover:text-[#059669] hover:bg-[#F1F5F9] rounded-md transition-colors"
+                        title="Editar producto"
                       >
-                        <Edit2 className="h-4 w-4" />
+                        <Edit2 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => openDeleteModal(p)}
-                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-1.5 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                        title="Eliminar producto"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-y-3 gap-x-2 pt-2 text-xs">
+                  <div className="grid grid-cols-2 gap-y-2 gap-x-2 pt-1 text-xs">
                     <div>
-                      <span className="text-slate-500 block mb-0.5">Categoría:</span>
-                      <span className="bg-slate-950 px-2 py-0.5 border border-slate-800 rounded text-slate-300">
+                      <span className="text-[#64748B] block text-[11px] mb-0.5">Categoría:</span>
+                      <span className="bg-[#F8FAFC] px-2 py-0.5 border border-[#E2E8F0] rounded text-[#172033] text-xs">
                         {p.categoria}
                       </span>
                     </div>
                     <div>
-                      <span className="text-slate-500 block mb-0.5">U. de Medida:</span>
-                      <span className="text-slate-200 font-semibold capitalize">{p.unidad}</span>
+                      <span className="text-[#64748B] block text-[11px] mb-0.5">U. de Medida:</span>
+                      <span className="text-[#172033] font-semibold capitalize text-xs">{p.unidad}</span>
                     </div>
                   </div>
 
                   {/* Warehouse minimums on mobile */}
-                  <div className="pt-2 border-t border-slate-800/80">
-                    <span className="text-[11px] text-slate-500 block mb-1 font-medium">Stock mínimo por almacén:</span>
-                    <div className="flex flex-wrap gap-1.5">
-                      {almacenes.map(alm => {
-                        const minVal = p.stock_minimo_almacenes?.[alm.id] ?? p.stock_minimo ?? 0;
-                        return (
-                          <span 
-                            key={alm.id}
-                            className="bg-slate-950 px-2 py-0.5 border border-slate-850 rounded text-[10px] text-slate-300"
-                          >
-                            <span className="text-slate-400">{alm.nombre}: </span>
-                            <span className={minVal > 0 ? "font-bold text-emerald-400" : "text-slate-500"}>
-                              {minVal > 0 ? minVal : "Off"}
-                            </span>
-                          </span>
-                        );
-                      })}
-                    </div>
+                  <div className="pt-2 border-t border-[#E2E8F0] flex items-center justify-between">
+                    <span className="text-[11px] text-[#64748B]">Mínimos por almacén:</span>
+                    <span 
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#F8FAFC] border border-[#E2E8F0] text-[#172033]"
+                      title={tooltipLines}
+                    >
+                      {totalConfigured > 0 ? (
+                        <>
+                          <span className="font-semibold text-[#059669] mr-1">{totalConfigured}</span>
+                          <span>{totalConfigured === 1 ? "almacén" : "almacenes"}</span>
+                        </>
+                      ) : p.stock_minimo && p.stock_minimo > 0 ? (
+                        <span>{p.stock_minimo} {p.unidad || "uds"} · global</span>
+                      ) : (
+                        <span className="text-[#64748B]">Sin alertas</span>
+                      )}
+                    </span>
                   </div>
                 </div>
               );
@@ -893,7 +908,7 @@ export default function GestionProductos({
       {/* FORM MODAL (CREATE / EDIT PRODUCT) */}
       <AnimatePresence>
         {isFormOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -901,37 +916,35 @@ export default function GestionProductos({
               onClick={() => {
                 if (!submitLoading) setIsFormOpen(false);
               }}
-              className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-2xl bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+              className="relative w-full max-w-xl bg-white border border-[#E2E8F0] rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
             >
-              <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500" />
-
               <button
                 onClick={() => {
                   if (!submitLoading) setIsFormOpen(false);
                 }}
                 disabled={submitLoading}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all disabled:opacity-40 z-10"
+                className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all disabled:opacity-40 z-10"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
 
               {/* Modal Header (Fixed at top) */}
-              <div className="p-6 pb-4 flex items-center space-x-3 shrink-0 border-b border-slate-800/80">
-                <div className="bg-emerald-500/10 p-2.5 rounded-xl text-emerald-400 border border-emerald-500/10">
-                  <Package className="h-6 w-6" />
+              <div className="p-4 flex items-center space-x-2.5 shrink-0 border-b border-[#E2E8F0]">
+                <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+                  <Package className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-100">
+                  <h3 className="text-base font-bold text-[#172033] leading-tight">
                     {selectedProduct ? "Editar Producto" : "Crear Nuevo Producto"}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-[11px] text-[#64748B]">
                     Define la ficha técnica del producto y sus límites de stock mínimo por almacén.
                   </p>
                 </div>
@@ -940,229 +953,230 @@ export default function GestionProductos({
               {/* Form with scrollable body and fixed footer */}
               <form onSubmit={handleFormSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
                 {/* Scrollable central content */}
-                <div className="p-6 space-y-5 overflow-y-auto flex-1 min-h-0">
+                <div className="p-4 space-y-3.5 overflow-y-auto flex-1 min-h-0">
                   {/* General Form Error Banner */}
                   {fieldErrors.general && (
-                    <div className="bg-rose-950/40 border border-rose-800 text-rose-300 px-4 py-3 rounded-xl flex items-start space-x-2 text-xs">
-                      <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                    <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
+                      <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
                       <span>{fieldErrors.general}</span>
                     </div>
                   )}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  
-                  {/* SKU FIELD */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                      <span>SKU del Producto {!selectedProduct && <span className="text-emerald-400">*</span>}</span>
-                      {selectedProduct && (
-                        <span className="text-[10px] text-slate-400 font-normal lowercase bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-                          solo lectura
-                        </span>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    
+                    {/* SKU FIELD */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider flex items-center justify-between">
+                        <span>SKU del Producto {!selectedProduct && <span className="text-[#059669]">*</span>}</span>
+                        {selectedProduct && (
+                          <span className="text-[9px] text-[#64748B] font-normal lowercase bg-[#F8FAFC] px-1.5 py-0.5 rounded border border-[#E2E8F0]">
+                            solo lectura
+                          </span>
+                        )}
+                      </label>
+                      {selectedProduct ? (
+                        <div className="w-full px-3 py-1.5 bg-[#F8FAFC] border border-[#E2E8F0] text-[#172033] text-xs rounded-lg font-mono select-all flex items-center justify-between">
+                          <span>{selectedProduct.sku}</span>
+                          <span className="text-[10px] text-[#64748B] font-sans">Identificador maestro</span>
+                        </div>
+                      ) : (
+                        <input
+                          type="text"
+                          required
+                          disabled={submitLoading}
+                          placeholder="Ej. PLAS-POLO-01"
+                          value={sku}
+                          onChange={(e) => handleSkuInputChange(e.target.value)}
+                          className={`w-full px-3 py-1.5 bg-white border ${
+                            fieldErrors.sku ? "border-rose-500" : "border-[#E2E8F0]"
+                          } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400 font-mono uppercase`}
+                        />
                       )}
-                    </label>
-                    {selectedProduct ? (
-                      <div className="w-full px-4 py-2.5 bg-slate-950/70 border border-slate-800 text-slate-300 text-sm rounded-xl font-mono select-all flex items-center justify-between">
-                        <span>{selectedProduct.sku}</span>
-                        <span className="text-[11px] text-slate-500 font-sans">Identificador maestro</span>
-                      </div>
-                    ) : (
+                      {fieldErrors.sku && !selectedProduct ? (
+                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                          <AlertCircle className="h-3 w-3 shrink-0" />
+                          <span>{fieldErrors.sku}</span>
+                        </p>
+                      ) : (
+                        <p className="text-[10px] text-[#64748B] leading-tight">
+                          {selectedProduct 
+                            ? "El SKU es permanente para proteger los registros históricos." 
+                            : "Solo letras mayúsculas, números y guiones (-)."}
+                        </p>
+                      )}
+                    </div>
+
+                    {/* NOMBRE DEL PRODUCTO */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
+                        Nombre del Producto <span className="text-[#059669]">*</span>
+                      </label>
                       <input
                         type="text"
                         required
                         disabled={submitLoading}
-                        placeholder="Ej. PLAS-POLO-01"
-                        value={sku}
-                        onChange={(e) => handleSkuInputChange(e.target.value)}
-                        className={`w-full px-4 py-2.5 bg-slate-950 border ${
-                          fieldErrors.sku ? "border-rose-500 focus:border-rose-500" : "border-slate-800 focus:border-slate-700"
-                        } text-slate-200 text-sm rounded-xl focus:outline-none transition-all placeholder:text-slate-700 font-mono uppercase`}
+                        placeholder="Ej. Tapa de Polipropileno 28mm"
+                        value={nombre}
+                        onChange={(e) => {
+                          setNombre(e.target.value);
+                          if (fieldErrors.nombre) {
+                            setFieldErrors(prev => ({ ...prev, nombre: undefined }));
+                          }
+                        }}
+                        className={`w-full px-3 py-1.5 bg-white border ${
+                          fieldErrors.nombre ? "border-rose-500" : "border-[#E2E8F0]"
+                        } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400`}
                       />
-                    )}
-                    {fieldErrors.sku && !selectedProduct ? (
-                      <p className="text-xs text-rose-400 flex items-center gap-1 mt-1">
-                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                        <span>{fieldErrors.sku}</span>
-                      </p>
-                    ) : (
-                      <p className="text-[11px] text-slate-500 leading-tight">
-                        {selectedProduct 
-                          ? "El SKU es un identificador permanente y se conserva intacto para proteger los registros históricos." 
-                          : "Solo letras mayúsculas, números y guiones (-). No podrá modificarse una vez creado."}
-                      </p>
-                    )}
-                  </div>
+                      {fieldErrors.nombre && (
+                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                          <AlertCircle className="h-3 w-3 shrink-0" />
+                          <span>{fieldErrors.nombre}</span>
+                        </p>
+                      )}
+                    </div>
 
-                  {/* NOMBRE DEL PRODUCTO */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Nombre del Producto <span className="text-emerald-400">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      disabled={submitLoading}
-                      placeholder="Ej. Tapa de Polipropileno 28mm"
-                      value={nombre}
-                      onChange={(e) => {
-                        setNombre(e.target.value);
-                        if (fieldErrors.nombre) {
-                          setFieldErrors(prev => ({ ...prev, nombre: undefined }));
-                        }
-                      }}
-                      className={`w-full px-4 py-2.5 bg-slate-950 border ${
-                        fieldErrors.nombre ? "border-rose-500 focus:border-rose-500" : "border-slate-800 focus:border-slate-700"
-                      } text-slate-200 text-sm rounded-xl focus:outline-none transition-all placeholder:text-slate-700`}
-                    />
-                    {fieldErrors.nombre && (
-                      <p className="text-xs text-rose-400 flex items-center gap-1 mt-1">
-                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                        <span>{fieldErrors.nombre}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  {/* CATEGORÍA SELECTOR & CREAR NUEVA */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Categoría del Producto <span className="text-emerald-400">*</span>
-                    </label>
-                    <select
-                      value={categoriaSelect}
-                      disabled={submitLoading}
-                      onChange={(e) => {
-                        setCategoriaSelect(e.target.value);
-                        if (fieldErrors.categoria) {
-                          setFieldErrors(prev => ({ ...prev, categoria: undefined }));
-                        }
-                      }}
-                      className={`w-full px-4 py-2.5 bg-slate-950 border ${
-                        fieldErrors.categoria ? "border-rose-500 focus:border-rose-500" : "border-slate-800 focus:border-slate-700"
-                      } text-slate-200 text-sm rounded-xl focus:outline-none transition-all`}
-                    >
-                      <option value="" disabled>-- Seleccionar categoría --</option>
-                      {categoriasOpciones.map((cat) => (
-                        <option key={cat.id || cat.nombre} value={cat.nombre}>
-                          {cat.nombre} {!cat.activa ? "(Desactivada)" : ""}
-                        </option>
-                      ))}
-                      <option value="__NEW__" className="text-emerald-400 font-semibold">
-                        ➕ Crear nueva categoría...
-                      </option>
-                    </select>
-
-                    {/* Input extra si seleccionó "Crear nueva categoría" */}
-                    {categoriaSelect === "__NEW__" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="pt-1.5"
+                    {/* CATEGORÍA SELECTOR & CREAR NUEVA */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
+                        Categoría del Producto <span className="text-[#059669]">*</span>
+                      </label>
+                      <select
+                        value={categoriaSelect}
+                        disabled={submitLoading}
+                        onChange={(e) => {
+                          setCategoriaSelect(e.target.value);
+                          if (fieldErrors.categoria) {
+                            setFieldErrors(prev => ({ ...prev, categoria: undefined }));
+                          }
+                        }}
+                        className={`w-full px-3 py-1.5 bg-white border ${
+                          fieldErrors.categoria ? "border-rose-500" : "border-[#E2E8F0]"
+                        } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all`}
                       >
-                        <input
-                          type="text"
-                          required
-                          disabled={submitLoading}
-                          placeholder="Escribe el nombre de la nueva categoría..."
-                          value={nuevaCategoria}
-                          onChange={(e) => {
-                            setNuevaCategoria(e.target.value);
-                            if (fieldErrors.categoria) {
-                              setFieldErrors(prev => ({ ...prev, categoria: undefined }));
-                            }
-                          }}
-                          className="w-full px-4 py-2 bg-slate-950 border border-emerald-500/60 focus:border-emerald-500 text-slate-200 text-sm rounded-xl focus:outline-none transition-all placeholder:text-slate-700"
-                        />
-                      </motion.div>
-                    )}
-
-                    {fieldErrors.categoria && (
-                      <p className="text-xs text-rose-400 flex items-center gap-1 mt-1">
-                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                        <span>{fieldErrors.categoria}</span>
-                      </p>
-                    )}
-                  </div>
-
-                  {/* UNIDAD DE MEDIDA ESTANDARIZADA */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                      Unidad de Medida <span className="text-emerald-400">*</span>
-                    </label>
-                    <select
-                      value={unidadSelect}
-                      disabled={submitLoading}
-                      onChange={(e) => {
-                        setUnidadSelect(e.target.value);
-                        if (fieldErrors.unidad) {
-                          setFieldErrors(prev => ({ ...prev, unidad: undefined }));
-                        }
-                      }}
-                      className={`w-full px-4 py-2.5 bg-slate-950 border ${
-                        fieldErrors.unidad ? "border-rose-500 focus:border-rose-500" : "border-slate-800 focus:border-slate-700"
-                      } text-slate-200 text-sm rounded-xl focus:outline-none transition-all`}
-                    >
-                      {unidadesOpciones.map((u) => (
-                        <option key={u.id || u.abreviatura} value={u.abreviatura}>
-                          {u.nombre} ({u.abreviatura}) {!u.activa ? "(Desactivada)" : ""}
+                        <option value="" disabled>-- Seleccionar categoría --</option>
+                        {categoriasOpciones.map((cat) => (
+                          <option key={cat.id || cat.nombre} value={cat.nombre}>
+                            {cat.nombre} {!cat.activa ? "(Desactivada)" : ""}
+                          </option>
+                        ))}
+                        <option value="__NEW__" className="text-[#059669] font-semibold">
+                          ➕ Crear nueva categoría...
                         </option>
-                      ))}
-                      <option value="otra" className="text-emerald-400 font-semibold">
-                        ➕ Otra unidad (especificar)...
-                      </option>
-                    </select>
+                      </select>
 
-                    {/* Input extra si seleccionó "otra" */}
-                    {unidadSelect === "otra" && (
-                      <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: "auto" }}
-                        className="pt-1.5"
+                      {/* Input extra si seleccionó "Crear nueva categoría" */}
+                      {categoriaSelect === "__NEW__" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="pt-1"
+                        >
+                          <input
+                            type="text"
+                            required
+                            disabled={submitLoading}
+                            placeholder="Escribe el nombre de la nueva categoría..."
+                            value={nuevaCategoria}
+                            onChange={(e) => {
+                              setNuevaCategoria(e.target.value);
+                              if (fieldErrors.categoria) {
+                                setFieldErrors(prev => ({ ...prev, categoria: undefined }));
+                              }
+                            }}
+                            className="w-full px-3 py-1.5 bg-white border border-[#059669] text-[#172033] text-xs rounded-lg focus:outline-none transition-all placeholder:text-slate-400"
+                          />
+                        </motion.div>
+                      )}
+
+                      {fieldErrors.categoria && (
+                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                          <AlertCircle className="h-3 w-3 shrink-0" />
+                          <span>{fieldErrors.categoria}</span>
+                        </p>
+                      )}
+                    </div>
+
+                    {/* UNIDAD DE MEDIDA ESTANDARIZADA */}
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
+                        Unidad de Medida <span className="text-[#059669]">*</span>
+                      </label>
+                      <select
+                        value={unidadSelect}
+                        disabled={submitLoading}
+                        onChange={(e) => {
+                          setUnidadSelect(e.target.value);
+                          if (fieldErrors.unidad) {
+                            setFieldErrors(prev => ({ ...prev, unidad: undefined }));
+                          }
+                        }}
+                        className={`w-full px-3 py-1.5 bg-white border ${
+                          fieldErrors.unidad ? "border-rose-500" : "border-[#E2E8F0]"
+                        } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all`}
                       >
-                        <input
-                          type="text"
-                          required
-                          disabled={submitLoading}
-                          placeholder="Especifica la unidad (ej. par, tonelada, millar)..."
-                          value={otraUnidad}
-                          onChange={(e) => {
-                            setOtraUnidad(e.target.value);
-                            if (fieldErrors.unidad) {
-                              setFieldErrors(prev => ({ ...prev, unidad: undefined }));
-                            }
-                          }}
-                          className="w-full px-4 py-2 bg-slate-950 border border-emerald-500/60 focus:border-emerald-500 text-slate-200 text-sm rounded-xl focus:outline-none transition-all placeholder:text-slate-700"
-                        />
-                      </motion.div>
-                    )}
+                        {unidadesOpciones.map((u) => (
+                          <option key={u.id || u.abreviatura} value={u.abreviatura}>
+                            {u.nombre} ({u.abreviatura}) {!u.activa ? "(Desactivada)" : ""}
+                          </option>
+                        ))}
+                        <option value="otra" className="text-[#059669] font-semibold">
+                          ➕ Otra unidad (especificar)...
+                        </option>
+                      </select>
 
-                    {fieldErrors.unidad && (
-                      <p className="text-xs text-rose-400 flex items-center gap-1 mt-1">
-                        <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                        <span>{fieldErrors.unidad}</span>
-                      </p>
-                    )}
+                      {/* Input extra si seleccionó "otra" */}
+                      {unidadSelect === "otra" && (
+                        <motion.div
+                          initial={{ opacity: 0, height: 0 }}
+                          animate={{ opacity: 1, height: "auto" }}
+                          className="pt-1"
+                        >
+                          <input
+                            type="text"
+                            required
+                            disabled={submitLoading}
+                            placeholder="Especifica la unidad (ej. par, tonelada, millar)..."
+                            value={otraUnidad}
+                            onChange={(e) => {
+                              setOtraUnidad(e.target.value);
+                              if (fieldErrors.unidad) {
+                                setFieldErrors(prev => ({ ...prev, unidad: undefined }));
+                              }
+                            }}
+                            className="w-full px-3 py-1.5 bg-white border border-[#059669] text-[#172033] text-xs rounded-lg focus:outline-none transition-all placeholder:text-slate-400"
+                          />
+                        </motion.div>
+                      )}
+
+                      {fieldErrors.unidad && (
+                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                          <AlertCircle className="h-3 w-3 shrink-0" />
+                          <span>{fieldErrors.unidad}</span>
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </div>
 
                   {/* STOCK MÍNIMO POR ALMACÉN ACTIVO */}
-                  <div className="pt-3 border-t border-slate-800/90 space-y-3">
+                  <div className="pt-2.5 border-t border-[#E2E8F0] space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                       <div>
-                        <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-1.5">
-                          <Warehouse className="h-3.5 w-3.5 text-emerald-400" />
+                        <h4 className="text-[11px] font-bold text-[#172033] uppercase tracking-wider flex items-center gap-1.5">
+                          <Warehouse className="h-3 w-3 text-[#059669]" />
                           <span>Stock Mínimo por Almacén</span>
                         </h4>
-                        <p className="text-[11px] text-slate-400 mt-0.5">
-                          Define el límite de alerta de resurtido para cada almacén. El valor <span className="font-semibold text-slate-300">0</span> desactiva la alerta.
+                        <p className="text-[10px] text-[#64748B] mt-0.5">
+                          Límite de alerta de resurtido para cada almacén. El valor <span className="font-semibold text-[#172033]">0</span> desactiva la alerta.
                         </p>
                       </div>
                     </div>
 
                     {almacenes.length === 0 ? (
-                      <div className="bg-slate-950 p-4 rounded-xl border border-slate-800 text-xs text-slate-500 text-center">
+                      <div className="bg-[#F8FAFC] p-3 rounded-lg border border-[#E2E8F0] text-[11px] text-[#64748B] text-center">
                         No hay almacenes activos registrados. Se guardará sin alertas específicas de almacén.
                       </div>
                     ) : (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {almacenes.map((alm) => {
                           const rawVal = stockMinimosPorAlmacen[alm.id] ?? 0;
                           const numVal = Number(rawVal);
@@ -1172,24 +1186,24 @@ export default function GestionProductos({
                           return (
                             <div 
                               key={alm.id}
-                              className="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2 hover:border-slate-700 transition-colors"
+                              className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-2.5 space-y-1.5 hover:border-slate-300 transition-colors"
                             >
                               <div className="flex items-start justify-between">
                                 <div>
-                                  <span className="font-semibold text-slate-200 text-xs block">{alm.nombre}</span>
-                                  <span className="text-[10px] text-slate-500 block">{alm.ubicacion}</span>
+                                  <span className="font-semibold text-[#172033] text-[11px] block">{alm.nombre}</span>
+                                  <span className="text-[10px] text-[#64748B] block">{alm.ubicacion}</span>
                                 </div>
-                                <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full border ${
+                                <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full border ${
                                   isAlertOff 
-                                    ? "bg-slate-900 border-slate-800 text-slate-500" 
-                                    : "bg-emerald-950/60 border-emerald-800 text-emerald-400"
+                                    ? "bg-white border-[#E2E8F0] text-[#64748B]" 
+                                    : "bg-emerald-50 border-emerald-200 text-emerald-700 font-semibold"
                                 }`}>
-                                  {isAlertOff ? "Alerta desactivada (0)" : `Alerta: ≤ ${numVal} ${currentUnitText}`}
+                                  {isAlertOff ? "Alerta off (0)" : `≤ ${numVal} ${currentUnitText}`}
                                 </span>
                               </div>
 
                               <div className="flex items-center space-x-2">
-                                <label className="text-[11px] text-slate-400 shrink-0">Mínimo:</label>
+                                <label className="text-[10px] text-[#64748B] shrink-0">Mínimo:</label>
                                 <input
                                   type="number"
                                   min={0}
@@ -1203,7 +1217,7 @@ export default function GestionProductos({
                                       [alm.id]: v === "" ? "" : Math.max(0, Number(v))
                                     }));
                                   }}
-                                  className="w-full px-3 py-1.5 bg-slate-900 border border-slate-800 focus:border-slate-700 text-slate-200 text-sm rounded-lg focus:outline-none transition-all font-mono"
+                                  className="w-full px-2.5 py-1 bg-white border border-[#E2E8F0] focus:border-[#059669] text-[#172033] text-xs rounded-md focus:outline-none transition-all font-mono"
                                 />
                               </div>
                             </div>
@@ -1215,24 +1229,24 @@ export default function GestionProductos({
                 </div>
 
                 {/* Modal Footer Controls (Fixed at bottom) */}
-                <div className="p-5 border-t border-slate-800 bg-slate-900/95 flex items-center justify-end space-x-3 shrink-0">
+                <div className="p-3.5 border-t border-[#E2E8F0] bg-white flex items-center justify-end space-x-2 shrink-0">
                   <button
                     type="button"
                     disabled={submitLoading}
                     onClick={() => setIsFormOpen(false)}
-                    className="px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 font-semibold rounded-xl text-xs transition-colors disabled:opacity-40"
+                    className="px-3 py-1.5 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors disabled:opacity-40"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitLoading}
-                    className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center space-x-2 disabled:opacity-50 shadow-md shadow-emerald-500/10"
+                    className="px-4 py-1.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 shadow-xs"
                   >
                     {submitLoading ? (
                       <>
-                        <span className="h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
-                        <span>Guardando producto...</span>
+                        <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        <span>Guardando...</span>
                       </>
                     ) : (
                       <span>{selectedProduct ? "Guardar cambios" : "Crear producto"}</span>
@@ -1248,70 +1262,68 @@ export default function GestionProductos({
       {/* PROMPT MODAL: "¿Deseas registrar su entrada inicial?" */}
       <AnimatePresence>
         {createdProductPrompt && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setCreatedProductPrompt(null)}
-              className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-2xl overflow-hidden"
             >
-              <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500" />
-
               <button
                 onClick={() => setCreatedProductPrompt(null)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all"
+                className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
 
               <div className="flex flex-col items-center text-center p-1">
-                <div className="bg-emerald-500/10 border border-emerald-500/20 p-3.5 rounded-full mb-4 text-emerald-400">
-                  <Sparkles className="h-8 w-8" />
+                <div className="bg-[#ECFDF5] border border-emerald-200 p-2.5 rounded-full mb-3 text-[#059669]">
+                  <Sparkles className="h-6 w-6" />
                 </div>
 
-                <h3 className="text-lg font-bold text-slate-100">
+                <h3 className="text-base font-bold text-[#172033]">
                   ¡Producto creado correctamente!
                 </h3>
 
-                <p className="text-slate-300 text-sm mt-2 font-medium">
+                <p className="text-[#64748B] text-xs mt-1 font-medium">
                   ¿Deseas registrar su entrada inicial?
                 </p>
 
                 {/* Product Summary Badge */}
-                <div className="w-full my-4 bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-left font-mono text-xs text-slate-300 space-y-1">
+                <div className="w-full my-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-left font-mono text-xs text-[#172033] space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-slate-500">SKU:</span>
-                    <span className="text-emerald-400 font-bold">{createdProductPrompt.sku}</span>
+                    <span className="text-[#64748B]">SKU:</span>
+                    <span className="text-[#059669] font-bold">{createdProductPrompt.sku}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Nombre:</span>
-                    <span className="text-slate-200 truncate max-w-[200px]">{createdProductPrompt.nombre}</span>
+                    <span className="text-[#64748B]">Nombre:</span>
+                    <span className="text-[#172033] truncate max-w-[200px]">{createdProductPrompt.nombre}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Categoría:</span>
-                    <span className="text-slate-400">{createdProductPrompt.categoria}</span>
+                    <span className="text-[#64748B]">Categoría:</span>
+                    <span className="text-[#64748B]">{createdProductPrompt.categoria}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-slate-500">Unidad:</span>
-                    <span className="text-slate-400 capitalize">{createdProductPrompt.unidad}</span>
+                    <span className="text-[#64748B]">Unidad:</span>
+                    <span className="text-[#64748B] capitalize">{createdProductPrompt.unidad}</span>
                   </div>
                 </div>
 
-                <div className="w-full flex flex-col sm:flex-row gap-2.5 mt-2">
+                <div className="w-full flex flex-col sm:flex-row gap-2 mt-1">
                   <button
                     type="button"
                     onClick={() => setCreatedProductPrompt(null)}
-                    className="w-full sm:w-1/2 px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 font-semibold rounded-xl text-xs transition-colors"
+                    className="w-full sm:w-1/2 px-3 py-2 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
                   >
-                    No, continuar en catálogo
+                    No, permanecer aquí
                   </button>
                   <button
                     type="button"
@@ -1322,7 +1334,7 @@ export default function GestionProductos({
                         onNavigateToMovimiento(skuToPreselect);
                       }
                     }}
-                    className="w-full sm:w-1/2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center justify-center space-x-1.5 shadow-md shadow-emerald-500/10"
+                    className="w-full sm:w-1/2 px-3 py-2 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs transition-all flex items-center justify-center space-x-1 shadow-xs"
                   >
                     <span>Sí, registrar entrada</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -1339,48 +1351,48 @@ export default function GestionProductos({
         {isDeleteOpen && selectedProduct && (() => {
           const { hasStock, totalQty } = getProductStockStatus(selectedProduct.sku);
           return (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center p-3">
               <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setIsDeleteOpen(false)}
-                className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
               />
 
               <motion.div
                 initial={{ scale: 0.95, opacity: 0, y: 10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl overflow-hidden"
+                className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-2xl overflow-hidden"
               >
                 <button
                   onClick={() => setIsDeleteOpen(false)}
-                  className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all"
+                  className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
 
-                <div className="flex flex-col items-center text-center p-2">
-                  <div className={`p-3.5 rounded-full mb-4 border ${hasStock ? "bg-amber-950/50 border-amber-800 text-amber-400" : "bg-rose-950/50 border-rose-800 text-rose-400"}`}>
-                    <AlertTriangle className="h-8 w-8" />
+                <div className="flex flex-col items-center text-center p-1">
+                  <div className={`p-2.5 rounded-full mb-3 border ${hasStock ? "bg-amber-50 border-amber-200 text-amber-600" : "bg-rose-50 border-rose-200 text-rose-600"}`}>
+                    <AlertTriangle className="h-6 w-6" />
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-100">
+                  <h3 className="text-base font-bold text-[#172033]">
                     {hasStock ? "Bloqueado: Producto con inventario activo" : "¿Eliminar producto del catálogo?"}
                   </h3>
 
-                  <p className="text-slate-400 text-xs mt-2 leading-relaxed font-sans">
+                  <p className="text-[#64748B] text-xs mt-1.5 leading-relaxed font-sans">
                     {hasStock 
                       ? `Este producto tiene actualmente stock disponible (${totalQty} ${selectedProduct.unidad}) registrado en tus almacenes. Para proteger la integridad histórica de tu inventario, primero debes liquidar, transferir o dar salida a la mercadería existente de este SKU.`
                       : `¿Estás completamente seguro de eliminar el producto "${selectedProduct.nombre}" (SKU: ${selectedProduct.sku}) del catálogo maestro? Esta acción es definitiva.`}
                   </p>
 
-                  <div className="w-full mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2.5">
+                  <div className="w-full mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
                     <button
                       type="button"
                       onClick={() => setIsDeleteOpen(false)}
-                      className="w-full sm:w-auto px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 font-semibold rounded-xl text-xs transition-colors"
+                      className="w-full sm:w-auto px-3.5 py-2 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
                     >
                       {hasStock ? "Cerrar" : "Cancelar"}
                     </button>
@@ -1389,10 +1401,10 @@ export default function GestionProductos({
                         type="button"
                         onClick={handleDeleteSubmit}
                         disabled={submitLoading}
-                        className="w-full sm:w-auto px-5 py-2.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50"
+                        className="w-full sm:w-auto px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50 shadow-xs"
                       >
                         {submitLoading ? (
-                          <span className="h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                          <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : null}
                         <span>Eliminar del Catálogo</span>
                       </button>
@@ -1408,74 +1420,71 @@ export default function GestionProductos({
       {/* CSV IMPORT MODAL */}
       <AnimatePresence>
         {isImportOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-3">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsImportOpen(false)}
-              className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-xl bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="relative w-full max-w-lg bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
             >
-              <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500" />
-
               <button
                 onClick={() => setIsImportOpen(false)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all"
+                className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
 
-              <div className="mb-4 flex items-center space-x-3 shrink-0">
-                <div className="bg-emerald-500/10 p-2.5 rounded-xl text-emerald-400 border border-emerald-500/10">
-                  <Upload className="h-6 w-6" />
+              <div className="mb-3 flex items-center space-x-2.5 shrink-0">
+                <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+                  <Upload className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-100">Importación Masiva de Productos (CSV)</h3>
-                  <p className="text-xs text-slate-400">
+                  <h3 className="text-base font-bold text-[#172033]">Importación Masiva de Productos (CSV)</h3>
+                  <p className="text-xs text-[#64748B]">
                     Carga el catálogo de productos de la empresa mediante un archivo plano CSV.
                   </p>
                 </div>
               </div>
 
               {/* CSV Spec Guidelines */}
-              <div className="bg-slate-950 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-400 space-y-2 shrink-0 mb-4">
-                <div className="flex items-center space-x-1.5 font-semibold text-emerald-400">
-                  <FileText className="h-3.5 w-3.5" />
+              <div className="bg-[#F8FAFC] p-2.5 rounded-lg border border-[#E2E8F0] text-[10px] text-[#64748B] space-y-1.5 shrink-0 mb-3">
+                <div className="flex items-center space-x-1.5 font-semibold text-[#059669]">
+                  <FileText className="h-3 w-3" />
                   <span>Especificación requerida del archivo:</span>
                 </div>
                 <p>
                   Sube un archivo delimitado por comas (`.csv`) con las siguientes columnas exactas en la primera fila:
                 </p>
-                <div className="bg-slate-900 p-2.5 rounded font-mono text-xs text-slate-300 border border-slate-800 overflow-x-auto select-all">
+                <div className="bg-white p-2 rounded font-mono text-[11px] text-[#172033] border border-[#E2E8F0] overflow-x-auto select-all">
                   sku,nombre,categoria,stock_minimo,unidad
                 </div>
                 <p>
-                  Ejemplo de fila:<br />
-                  <span className="font-mono text-slate-500 text-xs">POLO-MET-01,"Tornillo Hexagonal 3/8",Cerrajería Metálica,100,pieza</span>
+                  Ejemplo: <span className="font-mono text-[#64748B] text-[10px]">POLO-MET-01,"Tornillo Hexagonal 3/8",Cerrajería Metálica,100,pieza</span>
                 </p>
               </div>
 
               {/* Drop area / Progress */}
-              <div className="overflow-y-auto pr-1 space-y-4 flex-1">
+              <div className="overflow-y-auto pr-1 space-y-3 flex-1">
                 {!importResults ? (
                   <div
                     onDragOver={handleDragOver}
                     onDragLeave={handleDragLeave}
                     onDrop={handleDrop}
                     onClick={() => fileInputRef.current?.click()}
-                    className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-3 ${
+                    className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-2 ${
                       isDragging 
-                        ? "border-emerald-500 bg-emerald-950/20 text-emerald-300" 
+                        ? "border-[#059669] bg-emerald-50 text-[#059669]" 
                         : csvFile 
-                          ? "border-emerald-500/50 bg-slate-950/50" 
-                          : "border-slate-800 hover:border-slate-700 bg-slate-950/20"
+                          ? "border-emerald-300 bg-emerald-50/40" 
+                          : "border-[#E2E8F0] hover:border-slate-300 bg-[#F8FAFC]"
                     }`}
                   >
                     <input
@@ -1486,54 +1495,54 @@ export default function GestionProductos({
                       className="hidden"
                     />
 
-                    <div className="bg-slate-900 p-4 rounded-full border border-slate-800 text-slate-500 group-hover:text-emerald-400 transition-colors">
-                      <FileText className="h-8 w-8 text-slate-400" />
+                    <div className="bg-white p-3 rounded-full border border-[#E2E8F0] text-[#64748B]">
+                      <FileText className="h-6 w-6 text-[#64748B]" />
                     </div>
 
                     {csvFile ? (
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-emerald-400">{csvFile.name}</p>
-                        <p className="text-xs text-slate-500">{(csvFile.size / 1024).toFixed(2)} KB • Archivo listo</p>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-semibold text-[#059669]">{csvFile.name}</p>
+                        <p className="text-[10px] text-[#64748B]">{(csvFile.size / 1024).toFixed(2)} KB • Archivo listo</p>
                       </div>
                     ) : (
-                      <div className="space-y-1">
-                        <p className="text-sm font-semibold text-slate-300">Arrastra tu archivo CSV aquí</p>
-                        <p className="text-xs text-slate-500">o haz clic para explorar en el equipo</p>
+                      <div className="space-y-0.5">
+                        <p className="text-xs font-semibold text-[#172033]">Arrastra tu archivo CSV aquí</p>
+                        <p className="text-[10px] text-[#64748B]">o haz clic para explorar en el equipo</p>
                       </div>
                     )}
                   </div>
                 ) : (
                   /* Import Complete Summary Box */
-                  <div className="space-y-4">
-                    <div className="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-3">
-                      <h4 className="font-bold text-slate-100 flex items-center space-x-2 text-sm">
-                        <Check className="h-4 w-4 text-emerald-400" />
+                  <div className="space-y-3">
+                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 space-y-2">
+                      <h4 className="font-bold text-[#172033] flex items-center space-x-1.5 text-xs">
+                        <Check className="h-3.5 w-3.5 text-[#059669]" />
                         <span>¡Procesamiento de productos completo!</span>
                       </h4>
-                      <div className="grid grid-cols-3 gap-2.5 text-center">
-                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
-                          <span className="text-2xl font-bold text-emerald-400">{importResults.successCount}</span>
-                          <span className="block text-[10px] text-slate-500 uppercase mt-0.5 font-semibold">Cargados</span>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                          <span className="text-xl font-bold text-[#059669]">{importResults.successCount}</span>
+                          <span className="block text-[9px] text-[#64748B] uppercase mt-0.5 font-semibold">Cargados</span>
                         </div>
-                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
-                          <span className="text-2xl font-bold text-amber-400">{importResults.skippedCount}</span>
-                          <span className="block text-[10px] text-slate-500 uppercase mt-0.5 font-semibold">Omitidos</span>
+                        <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                          <span className="text-xl font-bold text-amber-600">{importResults.skippedCount}</span>
+                          <span className="block text-[9px] text-[#64748B] uppercase mt-0.5 font-semibold">Omitidos</span>
                         </div>
-                        <div className="bg-slate-900 p-3 rounded-lg border border-slate-800">
-                          <span className="text-2xl font-bold text-rose-400">{importResults.errors.length}</span>
-                          <span className="block text-[10px] text-slate-500 uppercase mt-0.5 font-semibold">Alertas</span>
+                        <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
+                          <span className="text-xl font-bold text-rose-600">{importResults.errors.length}</span>
+                          <span className="block text-[9px] text-[#64748B] uppercase mt-0.5 font-semibold">Alertas</span>
                         </div>
                       </div>
                     </div>
 
                     {/* Detailed errors list */}
                     {importResults.errors.length > 0 && (
-                      <div className="space-y-2">
-                        <h5 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Bitácora de Advertencias/Errores:</h5>
-                        <div className="bg-slate-950 border border-slate-800 rounded-xl p-3 max-h-40 overflow-y-auto font-mono text-[10px] text-slate-400 divide-y divide-slate-900">
+                      <div className="space-y-1.5">
+                        <h5 className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider">Bitácora de Advertencias/Errores:</h5>
+                        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 max-h-32 overflow-y-auto font-mono text-[9px] text-[#64748B] divide-y divide-[#E2E8F0]">
                           {importResults.errors.map((err, i) => (
-                            <p key={i} className="py-1.5 text-rose-300 flex items-start space-x-2">
-                              <span className="text-slate-600 shrink-0 select-none">•</span>
+                            <p key={i} className="py-1 text-rose-700 flex items-start space-x-1.5">
+                              <span className="text-slate-400 shrink-0 select-none">•</span>
                               <span>{err}</span>
                             </p>
                           ))}
@@ -1545,11 +1554,11 @@ export default function GestionProductos({
               </div>
 
               {/* Footer */}
-              <div className="pt-4 mt-4 border-t border-slate-800 flex items-center justify-end space-x-3 shrink-0">
+              <div className="pt-3 mt-3 border-t border-[#E2E8F0] flex items-center justify-end space-x-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsImportOpen(false)}
-                  className="px-4 py-2.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 text-slate-400 hover:text-slate-200 font-semibold rounded-xl text-xs transition-colors"
+                  className="px-3.5 py-1.5 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
                 >
                   Cerrar ventana
                 </button>
@@ -1558,10 +1567,10 @@ export default function GestionProductos({
                     type="button"
                     onClick={processCSV}
                     disabled={submitLoading}
-                    className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center space-x-1.5 disabled:opacity-50"
+                    className="px-4 py-1.5 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 shadow-xs"
                   >
                     {submitLoading ? (
-                      <span className="h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : null}
                     <span>Iniciar Procesamiento</span>
                   </button>

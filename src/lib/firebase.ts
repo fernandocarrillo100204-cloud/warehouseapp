@@ -5,7 +5,9 @@
 
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { 
-  getFirestore, 
+  getFirestore,
+  initializeFirestore,
+  setLogLevel,
   collection, 
   doc, 
   getDocs, 
@@ -30,6 +32,13 @@ import {
   User as FirebaseUser
 } from "firebase/auth";
 import { Almacen, Producto, StockItem, Movimiento, Usuario, CategoriaCatalogo, UnidadMedidaCatalogo } from "../types";
+
+// Silence non-critical network retry noise from Firestore client
+try {
+  setLogLevel("error");
+} catch {
+  // Ignore if not supported in runtime
+}
 
 // Detect if Firebase config is present in environment variables
 const metaEnv = (import.meta as any).env || {};
@@ -60,9 +69,16 @@ let realAuth: any = null;
 if (isConfigured) {
   try {
     realApp = getApps().length === 0 ? initializeApp(firebaseConfig) : getApp();
-    realDb = getFirestore(realApp);
+    try {
+      realDb = initializeFirestore(realApp, {
+        experimentalAutoDetectLongPolling: true,
+        ignoreUndefinedProperties: true
+      });
+    } catch {
+      realDb = getFirestore(realApp);
+    }
     realAuth = getAuth(realApp);
-    console.log("Firebase initialized successfully with real configuration.");
+    console.log("Firebase initialized successfully with auto-detect long polling and resilient offline fallback.");
   } catch (error) {
     console.error("Failed to initialize Firebase with real config, falling back to local emulator:", error);
   }

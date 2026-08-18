@@ -540,17 +540,17 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
   const hasActiveFilters = selectedAlmacen !== "all" || selectedSku !== "all" || selectedCategoria !== "all" || periodo !== "esta_semana";
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8 animate-fadeIn" id="sales-analytics-container">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-5 lg:px-6 py-5 space-y-4 animate-fadeIn" id="sales-analytics-container">
       {/* Header Section */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-800 pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 border-b border-[#E2E8F0] pb-3.5">
         <div>
-          <div className="flex items-center space-x-3">
-            <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400">
-              <TrendingUp className="h-6 w-6" />
+          <div className="flex items-center space-x-2.5">
+            <div className="p-2 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-[#059669]">
+              <TrendingUp className="h-5 w-5" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-100 tracking-tight">Análisis de Ventas</h1>
-              <p className="text-sm text-slate-400">
+              <h1 className="text-2xl sm:text-[28px] font-bold text-[#172033] tracking-tight leading-tight">Análisis de Ventas</h1>
+              <p className="text-xs text-[#64748B] mt-0.5">
                 Monitoreo comercial y tendencias de salida de mercancía por producto, almacén y periodo
               </p>
             </div>
@@ -558,52 +558,52 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
         </div>
 
         {/* Global actions */}
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center space-x-2.5 shrink-0">
           {hasActiveFilters && (
             <button
               onClick={handleResetFilters}
-              className="flex items-center space-x-2 px-3 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 bg-slate-900 border border-slate-800 rounded-lg hover:border-slate-700 transition-colors"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-[#64748B] hover:text-[#172033] bg-white border border-[#E2E8F0] rounded-lg hover:bg-[#F1F5F9] transition-colors shadow-2xs"
             >
-              <RotateCcw className="h-3.5 w-3.5" />
-              <span>Restablecer filtros</span>
+              <RotateCcw className="h-3 w-3" />
+              <span>Restablecer</span>
             </button>
           )}
-          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-800 text-xs text-slate-400">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+          <div className="flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-[#F8FAFC] border border-[#E2E8F0] text-[11px] text-[#64748B]">
+            <span className="h-1.5 w-1.5 rounded-full bg-[#059669] animate-pulse" />
             <span>Tiempo real activo</span>
           </div>
         </div>
       </div>
 
       {/* Filter Control Bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl space-y-4">
+      <div className="bg-white border border-[#E2E8F0] rounded-xl p-3 sm:p-3.5 shadow-2xs space-y-2.5">
         <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2 text-slate-300 font-medium text-sm">
-            <Filter className="h-4 w-4 text-emerald-400" />
+          <div className="flex items-center space-x-1.5 text-[#172033] font-semibold text-xs">
+            <Filter className="h-3.5 w-3.5 text-[#059669]" />
             <span>Filtros de Análisis Comercial</span>
           </div>
-          <label className="flex items-center space-x-2 text-xs text-slate-400 cursor-pointer select-none">
+          <label className="flex items-center space-x-1.5 text-[11px] text-[#64748B] cursor-pointer select-none">
             <input
               type="checkbox"
               checked={compareWithPrevious}
               onChange={(e) => setCompareWithPrevious(e.target.checked)}
-              className="rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500/20"
+              className="rounded border-[#E2E8F0] text-[#059669] focus:ring-emerald-500/20"
             />
             <span>Comparar con periodo anterior</span>
           </label>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-2.5">
           {/* Period Selector */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
-              <Calendar className="h-3.5 w-3.5 text-emerald-400" />
+            <label className="block text-[11px] font-medium text-[#64748B] mb-1 flex items-center space-x-1">
+              <Calendar className="h-3 w-3 text-[#059669]" />
               <span>Periodo</span>
             </label>
             <select
               value={periodo}
               onChange={(e) => setPeriodo(e.target.value as PeriodoVenta)}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#059669] transition-colors"
             >
               <option value="esta_semana">Esta semana</option>
               <option value="mes_actual">Mes actual</option>
@@ -614,14 +614,14 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
 
           {/* Warehouse Filter */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
-              <Warehouse className="h-3.5 w-3.5 text-emerald-400" />
+            <label className="block text-[11px] font-medium text-[#64748B] mb-1 flex items-center space-x-1">
+              <Warehouse className="h-3 w-3 text-[#059669]" />
               <span>Almacén</span>
             </label>
             <select
               value={selectedAlmacen}
               onChange={(e) => setSelectedAlmacen(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#059669] transition-colors"
             >
               <option value="all">Todos los almacenes</option>
               {almacenes.map(alm => (
@@ -634,14 +634,14 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
 
           {/* Product Filter */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
-              <Package className="h-3.5 w-3.5 text-emerald-400" />
+            <label className="block text-[11px] font-medium text-[#64748B] mb-1 flex items-center space-x-1">
+              <Package className="h-3 w-3 text-[#059669]" />
               <span>Producto</span>
             </label>
             <select
               value={selectedSku}
               onChange={(e) => setSelectedSku(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#059669] transition-colors"
             >
               <option value="all">Todos los productos</option>
               {productos.map(p => (
@@ -654,14 +654,14 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
 
           {/* Category Filter */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5 flex items-center space-x-1">
-              <Layers className="h-3.5 w-3.5 text-emerald-400" />
+            <label className="block text-[11px] font-medium text-[#64748B] mb-1 flex items-center space-x-1">
+              <Layers className="h-3 w-3 text-[#059669]" />
               <span>Categoría</span>
             </label>
             <select
               value={selectedCategoria}
               onChange={(e) => setSelectedCategoria(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg px-2.5 py-1.5 text-xs focus:outline-none focus:border-[#059669] transition-colors"
             >
               <option value="all">Todas las categorías</option>
               {categorias.map(cat => (
@@ -675,24 +675,24 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
 
         {/* Custom Date Range picker if "personalizado" */}
         {periodo === "personalizado" && (
-          <div className="pt-3 border-t border-slate-800/80 flex flex-col sm:flex-row items-center gap-4 text-xs text-slate-300">
-            <span className="font-semibold text-slate-400">Rango personalizado:</span>
+          <div className="pt-2 border-t border-[#E2E8F0] flex flex-col sm:flex-row items-center gap-3 text-xs text-[#172033]">
+            <span className="font-semibold text-[#64748B] text-[11px]">Rango:</span>
             <div className="flex items-center space-x-2">
-              <span className="text-slate-500">Desde:</span>
+              <span className="text-[#64748B] text-[11px]">Desde:</span>
               <input
                 type="date"
                 value={customStartDate}
                 onChange={(e) => setCustomStartDate(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none"
+                className="bg-white border border-[#E2E8F0] rounded-md px-2 py-1 text-[#172033] text-xs focus:border-[#059669] focus:outline-none"
               />
             </div>
             <div className="flex items-center space-x-2">
-              <span className="text-slate-500">Hasta:</span>
+              <span className="text-[#64748B] text-[11px]">Hasta:</span>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={(e) => setCustomEndDate(e.target.value)}
-                className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-200 text-xs focus:border-emerald-500 focus:outline-none"
+                className="bg-white border border-[#E2E8F0] rounded-md px-2 py-1 text-[#172033] text-xs focus:border-[#059669] focus:outline-none"
               />
             </div>
           </div>
@@ -701,423 +701,435 @@ export default function AnalisisVentas({ almacenes, productos, onNavigateToHisto
 
       {/* Loading & Error States */}
       {loading ? (
-        <div className="py-20 text-center text-slate-400">
-          <span className="h-9 w-9 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block mb-3" />
-          <p className="text-sm font-medium">Calculando métricas y análisis de ventas...</p>
+        <div className="py-14 text-center text-[#64748B]">
+          <span className="h-6 w-6 border-2 border-[#059669] border-t-transparent rounded-full animate-spin inline-block mb-2" />
+          <p className="text-xs font-medium">Calculando métricas y análisis de ventas...</p>
         </div>
       ) : error ? (
-        <div className="p-6 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-center">
-          <p className="text-sm font-semibold">{error}</p>
+        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-center">
+          <p className="text-xs font-semibold">{error}</p>
         </div>
       ) : (
         <>
           {/* Key Metric Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2.5 sm:gap-3">
             {/* Card 1: Total Units Sold */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg relative overflow-hidden flex flex-col justify-between">
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 shadow-2xs relative overflow-hidden flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">Unidades vendidas</span>
-                  <ShoppingBag className="h-4 w-4 text-emerald-400" />
+                <div className="flex items-center justify-between text-[#64748B] mb-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Unidades vendidas</span>
+                  <ShoppingBag className="h-3.5 w-3.5 text-[#059669]" />
                 </div>
-                <div className="text-3xl font-extrabold text-white tracking-tight">
-                  {metrics.totalUnitsCurrent} <span className="text-sm font-medium text-slate-400">uds</span>
+                <div className="text-2xl font-bold text-[#172033] tracking-tight">
+                  {metrics.totalUnitsCurrent} <span className="text-xs font-medium text-[#64748B]">uds</span>
                 </div>
               </div>
-              <div className="mt-3 text-xs text-slate-400 pt-2 border-t border-slate-800/60 flex items-center justify-between">
+              <div className="mt-2 text-[11px] text-[#64748B] pt-1.5 border-t border-[#E2E8F0] flex items-center justify-between">
                 <span>Total salidas</span>
-                <span className="font-mono text-slate-300">{salesCurrentPeriod.length} regs</span>
+                <span className="font-mono text-[#172033] font-medium">{salesCurrentPeriod.length} regs</span>
               </div>
             </div>
 
             {/* Card 2: Variation vs Previous Period */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">Variación vs anterior</span>
+                <div className="flex items-center justify-between text-[#64748B] mb-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Variación vs anterior</span>
                   {metrics.isPositive ? (
-                    <TrendingUp className="h-4 w-4 text-emerald-400" />
+                    <TrendingUp className="h-3.5 w-3.5 text-[#059669]" />
                   ) : metrics.isNegative ? (
-                    <TrendingDown className="h-4 w-4 text-rose-400" />
+                    <TrendingDown className="h-3.5 w-3.5 text-rose-600" />
                   ) : (
-                    <Minus className="h-4 w-4 text-slate-400" />
+                    <Minus className="h-3.5 w-3.5 text-[#64748B]" />
                   )}
                 </div>
                 <div className="flex items-baseline space-x-2">
                   <span
-                    className={`text-2xl font-bold tracking-tight ${
+                    className={`text-xl font-bold tracking-tight ${
                       metrics.isPositive
-                        ? "text-emerald-400"
+                        ? "text-[#059669]"
                         : metrics.isNegative
-                        ? "text-rose-400"
-                        : "text-slate-300"
+                        ? "text-rose-600"
+                        : "text-[#172033]"
                     }`}
                   >
                     {metrics.variationLabel}
                   </span>
                 </div>
               </div>
-              <div className="mt-3 text-xs text-slate-400 pt-2 border-t border-slate-800/60 flex items-center justify-between">
+              <div className="mt-2 text-[11px] text-[#64748B] pt-1.5 border-t border-[#E2E8F0] flex items-center justify-between">
                 <span>Diferencia neta:</span>
-                <span className="font-mono text-slate-300">
+                <span className="font-mono text-[#172033] font-medium">
                   {metrics.unitDifference > 0 ? `+${metrics.unitDifference}` : metrics.unitDifference} uds
                 </span>
               </div>
             </div>
 
             {/* Card 3: Top Selling Product */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">Producto más vendido</span>
-                  <Package className="h-4 w-4 text-indigo-400" />
+                <div className="flex items-center justify-between text-[#64748B] mb-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Producto líder</span>
+                  <Package className="h-3.5 w-3.5 text-indigo-600" />
                 </div>
                 <div className="truncate">
-                  <div className="text-lg font-bold text-white truncate" title={metrics.topProduct?.nombre || "Sin ventas"}>
+                  <div className="text-sm font-bold text-[#172033] truncate" title={metrics.topProduct?.nombre || "Sin ventas"}>
                     {metrics.topProduct ? metrics.topProduct.nombre : "Sin ventas"}
                   </div>
-                  <div className="text-xs font-mono text-emerald-400">
+                  <div className="text-[11px] font-mono text-[#059669] font-medium">
                     {metrics.topProductSku || "—"}
                   </div>
                 </div>
               </div>
-              <div className="mt-3 text-xs text-slate-400 pt-2 border-t border-slate-800/60 flex items-center justify-between">
+              <div className="mt-2 text-[11px] text-[#64748B] pt-1.5 border-t border-[#E2E8F0] flex items-center justify-between">
                 <span>Volumen:</span>
-                <span className="font-mono font-semibold text-slate-200">{metrics.topProductUnits} uds</span>
+                <span className="font-mono font-semibold text-[#172033]">{metrics.topProductUnits} uds</span>
               </div>
             </div>
 
             {/* Card 4: Top Warehouse */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">Almacén líder</span>
-                  <Building2 className="h-4 w-4 text-cyan-400" />
+                <div className="flex items-center justify-between text-[#64748B] mb-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Almacén líder</span>
+                  <Building2 className="h-3.5 w-3.5 text-cyan-600" />
                 </div>
                 <div className="truncate">
-                  <div className="text-lg font-bold text-white truncate" title={metrics.topWarehouse?.nombre || "Sin ventas"}>
+                  <div className="text-sm font-bold text-[#172033] truncate" title={metrics.topWarehouse?.nombre || "Sin ventas"}>
                     {metrics.topWarehouse ? metrics.topWarehouse.nombre : "Sin ventas"}
                   </div>
-                  <div className="text-xs text-slate-400">
+                  <div className="text-[11px] text-[#64748B] truncate">
                     {metrics.topWarehouse ? metrics.topWarehouse.ubicacion : "—"}
                   </div>
                 </div>
               </div>
-              <div className="mt-3 text-xs text-slate-400 pt-2 border-t border-slate-800/60 flex items-center justify-between">
-                <span>Despachos:</span>
-                <span className="font-mono font-semibold text-slate-200">{metrics.topWarehouseUnits} uds</span>
+              <div className="mt-2 text-[11px] text-[#64748B] pt-1.5 border-t border-[#E2E8F0] flex items-center justify-between">
+                <span>Unidades vendidas:</span>
+                <span className="font-mono font-semibold text-[#172033]">{metrics.topWarehouseUnits} uds</span>
               </div>
             </div>
 
             {/* Card 5: Daily Average */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg flex flex-col justify-between">
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 shadow-2xs flex flex-col justify-between">
               <div>
-                <div className="flex items-center justify-between text-slate-400 mb-2">
-                  <span className="text-xs font-semibold uppercase tracking-wider">Promedio diario</span>
-                  <CalendarDays className="h-4 w-4 text-amber-400" />
+                <div className="flex items-center justify-between text-[#64748B] mb-1.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider">Promedio diario</span>
+                  <CalendarDays className="h-3.5 w-3.5 text-amber-600" />
                 </div>
-                <div className="text-3xl font-extrabold text-white tracking-tight">
-                  {metrics.dailyAverage.toFixed(1)} <span className="text-sm font-medium text-slate-400">uds/día</span>
+                <div className="text-2xl font-bold text-[#172033] tracking-tight">
+                  {metrics.dailyAverage.toFixed(1)} <span className="text-xs font-medium text-[#64748B]">uds/d</span>
                 </div>
               </div>
-              <div className="mt-3 text-xs text-slate-400 pt-2 border-t border-slate-800/60 flex items-center justify-between">
+              <div className="mt-2 text-[11px] text-[#64748B] pt-1.5 border-t border-[#E2E8F0] flex items-center justify-between">
                 <span>Días evaluados:</span>
-                <span className="font-mono text-slate-300">{metrics.daysElapsed} d</span>
+                <span className="font-mono text-[#172033] font-medium">{metrics.daysElapsed} d</span>
               </div>
             </div>
           </div>
 
           {/* Automated Data Summary Card */}
-          <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-slate-950 border border-slate-800 rounded-2xl p-5 shadow-lg">
-            <div className="flex items-start space-x-3">
-              <div className="p-2 rounded-lg bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 shrink-0 mt-0.5">
-                <Sparkles className="h-4 w-4" />
+          <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 shadow-2xs">
+            <div className="flex items-start space-x-2.5">
+              <div className="p-1.5 rounded-lg bg-[#ECFDF5] border border-emerald-200 text-[#059669] shrink-0 mt-0.5">
+                <Sparkles className="h-3.5 w-3.5" />
               </div>
-              <div className="space-y-1">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
+              <div className="space-y-0.5">
+                <h3 className="text-[11px] font-bold uppercase tracking-wider text-[#059669]">
                   Resumen de Comportamiento Comercial
                 </h3>
-                <p className="text-sm text-slate-300 leading-relaxed">
+                <p className="text-xs text-[#172033] leading-relaxed">
                   {automatedSummary}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Main Charts Section */}
-          <div className="space-y-6">
-            {/* Chart 1: Ventas por día (Arriba, ocupando todo el ancho) */}
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-              <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                    <LineChartIcon className="h-4 w-4 text-emerald-400" />
-                    <span>Ventas por día</span>
-                  </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
-                    {compareWithPrevious ? "Comparativa contra periodo anterior" : "Evolución de salidas diarias"}
-                  </p>
-                </div>
-              </div>
-
-              <div className="h-72 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <AreaChart data={salesByDayData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="currentPeriodGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#10b981" stopOpacity={0.0} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                    <XAxis dataKey="dia" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                    <YAxis stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
-                    <Tooltip
-                      contentStyle={{
-                        backgroundColor: "#0f172a",
-                        borderColor: "#334155",
-                        borderRadius: "0.75rem",
-                        color: "#f8fafc",
-                        fontSize: "12px",
-                        boxShadow: "0 10px 15px -3px rgba(0, 0, 0, 0.5)"
-                      }}
-                      formatter={(val: any) => [`${val} unidades`, ""]}
-                    />
-                    <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
-                    <Area
-                      type="monotone"
-                      dataKey="Periodo actual"
-                      stroke="#10b981"
-                      strokeWidth={2.5}
-                      fillOpacity={1}
-                      fill="url(#currentPeriodGradient)"
-                    />
-                    {compareWithPrevious && (
-                      <Line
-                        type="monotone"
-                        dataKey="Periodo anterior"
-                        stroke="#64748b"
-                        strokeWidth={2}
-                        strokeDasharray="4 4"
-                        dot={{ r: 3, fill: "#64748b" }}
-                      />
-                    )}
-                  </AreaChart>
-                </ResponsiveContainer>
-              </div>
+          {/* Main Charts Section or Empty State */}
+          {metrics.totalUnitsCurrent === 0 && (!compareWithPrevious || metrics.totalUnitsPrevious === 0) ? (
+            <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 text-center text-[#64748B] shadow-2xs">
+              <ShoppingBag className="h-10 w-10 mx-auto text-slate-300 mb-2" />
+              <p className="text-sm font-semibold text-[#172033]">Sin ventas registradas en este periodo</p>
+              <p className="text-xs text-[#64748B] mt-1 max-w-md mx-auto">
+                No se encontraron salidas comerciales de mercancía durante el rango de fechas seleccionado.
+              </p>
             </div>
-
-            {/* Sub-grid for Chart 2 & Chart 3 (Abajo en dos columnas iguales, apiladas en móviles) */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Chart 2: Ventas por producto */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-4">
+          ) : (
+            <div className="space-y-3.5">
+              {/* Chart 1: Ventas por día */}
+              <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-2xs flex flex-col justify-between">
+                <div className="flex items-center justify-between mb-2.5">
                   <div>
-                    <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                      <BarChart3 className="h-4 w-4 text-emerald-400" />
-                      <span>Ventas por producto</span>
+                    <h3 className="text-sm font-bold text-[#172033] flex items-center space-x-1.5">
+                      <LineChartIcon className="h-4 w-4 text-[#059669]" />
+                      <span>Ventas por día</span>
                     </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Ranking de unidades vendidas (clic en una barra para filtrar)
+                    <p className="text-[11px] text-[#64748B] mt-0.5">
+                      {compareWithPrevious ? "Comparativa contra periodo anterior" : "Evolución de salidas diarias"}
                     </p>
                   </div>
                 </div>
 
-                <div className="h-64 w-full overflow-y-auto">
-                  <ResponsiveContainer width="100%" height={Math.max(240, salesByProductData.length * 40)}>
-                    <BarChart
-                      layout="vertical"
-                      data={salesByProductData}
-                      margin={{ top: 5, right: 20, left: 40, bottom: 5 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                      <XAxis type="number" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
-                      <YAxis
-                        type="category"
-                        dataKey="sku"
-                        stroke="#64748b"
-                        tick={{ fill: "#cbd5e1", fontSize: 11, fontWeight: 500 }}
-                        width={70}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "#0f172a",
-                          borderColor: "#334155",
-                          borderRadius: "0.75rem",
-                          color: "#f8fafc",
-                          fontSize: "12px"
-                        }}
-                        formatter={(val: any, name: any, item: any) => [
-                          `${val} unidades (${item.payload.nombre})`,
-                          "Ventas"
-                        ]}
-                      />
-                      <Bar
-                        dataKey="unidades"
-                        radius={[0, 6, 6, 0]}
-                        cursor="pointer"
-                        onClick={(data: any) => {
-                          if (data && data.sku) {
-                            handleSelectProductFromChart(data.sku);
-                          }
-                        }}
-                      >
-                        {salesByProductData.map((entry) => (
-                          <Cell
-                            key={`cell-${entry.sku}`}
-                            fill={selectedSku === entry.sku ? "#34d399" : "#10b981"}
-                            opacity={selectedSku !== "all" && selectedSku !== entry.sku ? 0.35 : 1}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              </div>
-
-              {/* Chart 3: Ventas por almacén */}
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col justify-between">
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                      <Building2 className="h-4 w-4 text-cyan-400" />
-                      <span>Ventas por almacén</span>
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-0.5">
-                      Distribución de salidas por centro logístico (clic para filtrar)
-                    </p>
-                  </div>
-                </div>
-
-                <div className="h-64 w-full">
+                <div className="h-56 w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={salesByWarehouseData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
-                      <XAxis dataKey="nombre" stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} />
-                      <YAxis stroke="#64748b" tick={{ fill: "#94a3b8", fontSize: 11 }} allowDecimals={false} />
+                    <AreaChart data={salesByDayData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                      <defs>
+                        <linearGradient id="currentPeriodGradient" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#059669" stopOpacity={0.25} />
+                          <stop offset="95%" stopColor="#059669" stopOpacity={0.0} />
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                      <XAxis dataKey="dia" stroke="#94A3B8" tick={{ fill: "#64748B", fontSize: 10 }} />
+                      <YAxis stroke="#94A3B8" tick={{ fill: "#64748B", fontSize: 10 }} allowDecimals={false} />
                       <Tooltip
                         contentStyle={{
-                          backgroundColor: "#0f172a",
-                          borderColor: "#334155",
-                          borderRadius: "0.75rem",
-                          color: "#f8fafc",
-                          fontSize: "12px"
+                          backgroundColor: "#FFFFFF",
+                          borderColor: "#E2E8F0",
+                          borderRadius: "0.5rem",
+                          color: "#172033",
+                          boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                          fontSize: "11px"
                         }}
                         formatter={(val: any) => [`${val} unidades`, ""]}
                       />
-                      <Legend wrapperStyle={{ fontSize: "12px", paddingTop: "8px" }} />
-                      <Bar
-                        dataKey="unidades"
-                        name="Periodo actual"
-                        fill="#06b6d4"
-                        radius={[6, 6, 0, 0]}
-                        cursor="pointer"
-                        onClick={(data: any) => {
-                          if (data && data.id) {
-                            handleSelectWarehouseFromChart(data.id);
-                          }
-                        }}
-                      >
-                        {salesByWarehouseData.map((entry) => (
-                          <Cell
-                            key={`alm-${entry.id}`}
-                            fill={selectedAlmacen === entry.id ? "#22d3ee" : "#06b6d4"}
-                            opacity={selectedAlmacen !== "all" && selectedAlmacen !== entry.id ? 0.35 : 1}
-                          />
-                        ))}
-                      </Bar>
+                      <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }} />
+                      <Area
+                        type="monotone"
+                        dataKey="Periodo actual"
+                        stroke="#059669"
+                        strokeWidth={2}
+                        fillOpacity={1}
+                        fill="url(#currentPeriodGradient)"
+                      />
                       {compareWithPrevious && (
-                        <Bar
-                          dataKey="unidadesAnterior"
-                          name="Periodo anterior"
-                          fill="#475569"
-                          radius={[6, 6, 0, 0]}
+                        <Line
+                          type="monotone"
+                          dataKey="Periodo anterior"
+                          stroke="#94A3B8"
+                          strokeWidth={1.5}
+                          strokeDasharray="4 4"
+                          dot={{ r: 2.5, fill: "#94A3B8" }}
                         />
                       )}
-                    </BarChart>
+                    </AreaChart>
                   </ResponsiveContainer>
                 </div>
               </div>
+
+              {/* Sub-grid for Chart 2 & Chart 3 */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-3.5">
+                {/* Chart 2: Ventas por producto */}
+                <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#172033] flex items-center space-x-1.5">
+                        <BarChart3 className="h-4 w-4 text-[#059669]" />
+                        <span>Ventas por producto</span>
+                      </h3>
+                      <p className="text-[11px] text-[#64748B] mt-0.5">
+                        Ranking de unidades vendidas (clic en una barra para filtrar)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-52 w-full overflow-y-auto">
+                    <ResponsiveContainer width="100%" height={Math.max(200, salesByProductData.length * 34)}>
+                      <BarChart
+                        layout="vertical"
+                        data={salesByProductData}
+                        margin={{ top: 5, right: 15, left: 35, bottom: 5 }}
+                      >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" horizontal={false} />
+                        <XAxis type="number" stroke="#94A3B8" tick={{ fill: "#64748B", fontSize: 10 }} allowDecimals={false} />
+                        <YAxis
+                          type="category"
+                          dataKey="sku"
+                          stroke="#94A3B8"
+                          tick={{ fill: "#172033", fontSize: 10, fontWeight: 500 }}
+                          width={65}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#FFFFFF",
+                            borderColor: "#E2E8F0",
+                            borderRadius: "0.5rem",
+                            color: "#172033",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                            fontSize: "11px"
+                          }}
+                          formatter={(val: any, name: any, item: any) => [
+                            `${val} unidades (${item.payload.nombre})`,
+                            "Ventas"
+                          ]}
+                        />
+                        <Bar
+                          dataKey="unidades"
+                          radius={[0, 4, 4, 0]}
+                          cursor="pointer"
+                          onClick={(data: any) => {
+                            if (data && data.sku) {
+                              handleSelectProductFromChart(data.sku);
+                            }
+                          }}
+                        >
+                          {salesByProductData.map((entry) => (
+                            <Cell
+                              key={`cell-${entry.sku}`}
+                              fill={selectedSku === entry.sku ? "#059669" : "#10b981"}
+                              opacity={selectedSku !== "all" && selectedSku !== entry.sku ? 0.35 : 1}
+                            />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+
+                {/* Chart 3: Ventas por almacén */}
+                <div className="bg-white border border-[#E2E8F0] rounded-xl p-4 shadow-2xs flex flex-col justify-between">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <div>
+                      <h3 className="text-sm font-bold text-[#172033] flex items-center space-x-1.5">
+                        <Building2 className="h-4 w-4 text-cyan-600" />
+                        <span>Ventas por almacén</span>
+                      </h3>
+                      <p className="text-[11px] text-[#64748B] mt-0.5">
+                        Distribución de salidas por centro logístico (clic para filtrar)
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="h-52 w-full">
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={salesByWarehouseData} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+                        <XAxis dataKey="nombre" stroke="#94A3B8" tick={{ fill: "#64748B", fontSize: 10 }} />
+                        <YAxis stroke="#94A3B8" tick={{ fill: "#64748B", fontSize: 10 }} allowDecimals={false} />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "#FFFFFF",
+                            borderColor: "#E2E8F0",
+                            borderRadius: "0.5rem",
+                            color: "#172033",
+                            boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+                            fontSize: "11px"
+                          }}
+                          formatter={(val: any) => [`${val} unidades`, ""]}
+                        />
+                        <Legend wrapperStyle={{ fontSize: "11px", paddingTop: "6px" }} />
+                        <Bar
+                          dataKey="unidades"
+                          name="Periodo actual"
+                          fill="#0891b2"
+                          radius={[4, 4, 0, 0]}
+                          cursor="pointer"
+                          onClick={(data: any) => {
+                            if (data && data.id) {
+                              handleSelectWarehouseFromChart(data.id);
+                            }
+                          }}
+                        >
+                          {salesByWarehouseData.map((entry) => (
+                            <Cell
+                              key={`alm-${entry.id}`}
+                              fill={selectedAlmacen === entry.id ? "#0e7490" : "#0891b2"}
+                              opacity={selectedAlmacen !== "all" && selectedAlmacen !== entry.id ? 0.35 : 1}
+                            />
+                          ))}
+                        </Bar>
+                        {compareWithPrevious && (
+                          <Bar
+                            dataKey="unidadesAnterior"
+                            name="Periodo anterior"
+                            fill="#CBD5E1"
+                            radius={[4, 4, 0, 0]}
+                          />
+                        )}
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Related Sales Movements Detail Table */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-xl overflow-hidden">
-            <div className="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-2xs overflow-hidden">
+            <div className="p-3 sm:p-3.5 border-b border-[#E2E8F0] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5">
               <div>
-                <h3 className="text-base font-bold text-slate-100 flex items-center space-x-2">
-                  <ShoppingBag className="h-4 w-4 text-emerald-400" />
+                <h3 className="text-sm font-bold text-[#172033] flex items-center space-x-1.5">
+                  <ShoppingBag className="h-4 w-4 text-[#059669]" />
                   <span>Detalle de Movimientos de Ventas (Salidas)</span>
                 </h3>
-                <p className="text-xs text-slate-400 mt-0.5">
+                <p className="text-[11px] text-[#64748B] mt-0.5">
                   Registros correspondientes a los filtros de periodo, producto y almacén actuales
                 </p>
               </div>
-              <div className="flex items-center space-x-3">
-                <span className="text-xs font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+              <div className="flex items-center space-x-2.5">
+                <span className="text-[11px] font-mono text-[#64748B] bg-[#F8FAFC] px-2 py-0.5 rounded border border-[#E2E8F0]">
                   {salesCurrentPeriod.length} movimientos
                 </span>
                 {onNavigateToHistory && (
                   <button
                     onClick={() => onNavigateToHistory(selectedSku !== "all" ? selectedSku : undefined)}
-                    className="text-xs text-emerald-400 hover:text-emerald-300 font-medium flex items-center space-x-1 transition-colors"
+                    className="text-xs text-[#059669] hover:text-[#047857] font-semibold flex items-center space-x-1 transition-colors"
                   >
-                    <span>Ver en Historial General</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
+                    <span>Ver en Historial</span>
+                    <ChevronRight className="h-3 w-3" />
                   </button>
                 )}
               </div>
             </div>
 
             {salesCurrentPeriod.length === 0 ? (
-              <div className="py-16 text-center text-slate-500">
-                <Info className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                <p className="text-sm font-medium">No hay salidas/ventas registradas en este periodo con los filtros activos.</p>
+              <div className="py-12 text-center text-[#64748B]">
+                <Info className="h-6 w-6 mx-auto mb-1.5 opacity-50" />
+                <p className="text-xs font-medium">No hay salidas/ventas registradas en este periodo con los filtros activos.</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="bg-slate-950 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
-                      <th className="py-3.5 px-6">Folio</th>
-                      <th className="py-3.5 px-6">Fecha y Hora</th>
-                      <th className="py-3.5 px-6">Producto y SKU</th>
-                      <th className="py-3.5 px-6">Almacén</th>
-                      <th className="py-3.5 px-6 text-right">Cantidad vendida</th>
-                      <th className="py-3.5 px-6">Referencia</th>
+                    <tr className="bg-[#F8FAFC] text-[#64748B] text-[11px] font-semibold uppercase tracking-wider border-b border-[#E2E8F0]">
+                      <th className="py-2.5 px-3.5">Folio</th>
+                      <th className="py-2.5 px-3">Fecha y Hora</th>
+                      <th className="py-2.5 px-3">Producto y SKU</th>
+                      <th className="py-2.5 px-3">Almacén</th>
+                      <th className="py-2.5 px-3 text-right">Cantidad</th>
+                      <th className="py-2.5 px-3.5">Referencia</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-800/60 text-sm">
+                  <tbody className="divide-y divide-[#E2E8F0] text-xs sm:text-sm">
                     {salesCurrentPeriod.map((mov) => {
                       const mDate = normalizeDate(mov.fecha);
                       const prod = productosMap.get((mov.sku || "").toUpperCase());
                       const alm = almacenesMap.get(mov.almacen_id);
 
                       return (
-                        <tr key={mov.id || `${mov.sku}_${mDate.getTime()}`} className="hover:bg-slate-800/20 transition-colors">
-                          <td className="py-3.5 px-6 whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-slate-950 border border-slate-800 text-emerald-400">
+                        <tr key={mov.id || `${mov.sku}_${mDate.getTime()}`} className="hover:bg-[#F1F5F9] transition-colors">
+                          <td className="py-2.5 px-3.5 whitespace-nowrap">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#F8FAFC] border border-[#E2E8F0] text-[#059669]">
                               {mov.folio || "—"}
                             </span>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap text-slate-400 text-xs">
-                            <div>{mDate.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}</div>
-                            <div className="text-slate-500 font-mono">{mDate.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</div>
+                          <td className="py-2.5 px-3 whitespace-nowrap text-[#64748B] text-xs">
+                            <div className="text-[#172033] font-medium">{mDate.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}</div>
+                            <div className="text-[#64748B] font-mono text-[10px]">{mDate.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}</div>
                           </td>
-                          <td className="py-3.5 px-6">
-                            <div className="font-semibold text-slate-200">{prod ? prod.nombre : mov.sku}</div>
-                            <div className="text-xs font-mono text-emerald-400">{mov.sku}</div>
+                          <td className="py-2.5 px-3">
+                            <div className="font-semibold text-[#172033] leading-tight">{prod ? prod.nombre : mov.sku}</div>
+                            <div className="text-[11px] font-mono text-[#059669] font-medium">{mov.sku}</div>
                           </td>
-                          <td className="py-3.5 px-6 whitespace-nowrap">
-                            <div className="font-medium text-slate-300">{alm ? alm.nombre : mov.almacen_id}</div>
-                            <div className="text-xs text-slate-500">{alm ? alm.ubicacion : ""}</div>
+                          <td className="py-2.5 px-3 whitespace-nowrap">
+                            <div className="font-medium text-[#172033] text-xs">{alm ? alm.nombre : mov.almacen_id}</div>
+                            <div className="text-[10px] text-[#64748B]">{alm ? alm.ubicacion : ""}</div>
                           </td>
-                          <td className="py-3.5 px-6 text-right whitespace-nowrap">
-                            <span className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-mono font-bold bg-rose-500/10 border border-rose-500/20 text-rose-400">
+                          <td className="py-2.5 px-3 text-right whitespace-nowrap">
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-mono font-bold bg-rose-50 border border-rose-200 text-rose-700">
                               -{mov.cantidad} uds
                             </span>
                           </td>
-                          <td className="py-3.5 px-6 text-slate-400 text-xs max-w-xs truncate" title={mov.referencia}>
+                          <td className="py-2.5 px-3.5 text-[#64748B] text-xs max-w-xs truncate" title={mov.referencia}>
                             {mov.referencia || "—"}
                           </td>
                         </tr>

@@ -106,32 +106,35 @@ export default function Historial({
   });
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="historial-container">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-5 lg:px-6 py-5" id="historial-container">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">Historial de Auditoría</h1>
-          <p className="text-sm text-slate-400 mt-1">
-            Registro inmutable de transacciones físicas, compras, ventas y conciliaciones.
+          <h1 className="text-2xl font-bold text-[#172033] tracking-tight leading-tight">
+            Historial de Auditoría
+          </h1>
+          <p className="text-xs text-[#64748B] mt-0.5">
+            Registro auditable de transacciones, compras, ventas y transferencias entre almacenes.
           </p>
         </div>
-        <div className="mt-4 md:mt-0">
+        <div className="shrink-0">
           <button
             onClick={loadMovimientos}
-            className="text-xs bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 font-medium px-4 py-2.5 rounded-xl transition-colors inline-flex items-center space-x-2"
+            className="text-xs bg-white border border-[#E2E8F0] hover:bg-[#F1F5F9] text-[#172033] font-medium px-3 py-1.5 rounded-lg transition-colors inline-flex items-center space-x-1.5 shadow-xs"
+            title="Refrescar registro de auditoría"
           >
-            <History className="h-4 w-4" />
+            <History className="h-3.5 w-3.5 text-[#059669]" />
             <span>Refrescar Registro</span>
           </button>
         </div>
       </div>
 
       {/* Main filters bar */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 mb-6 shadow-sm">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3 mb-4">
-          <h3 className="text-sm font-semibold text-slate-300 uppercase tracking-wider flex items-center">
-            <SlidersHorizontal className="h-4 w-4 mr-2 text-slate-400" />
-            Búsqueda e Histórico
+      <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 sm:p-4 mb-4 shadow-xs">
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] pb-2 mb-3">
+          <h3 className="text-xs font-semibold text-[#172033] uppercase tracking-wider flex items-center">
+            <SlidersHorizontal className="h-3.5 w-3.5 mr-1.5 text-[#64748B]" />
+            Filtros de Auditoría
           </h3>
           {(skuFilter || warehouseFilter !== "all" || tipoFilter !== "all") && (
             <button
@@ -141,7 +144,7 @@ export default function Historial({
                 setTipoFilter("all");
                 if (onClearPreselectedSku) onClearPreselectedSku();
               }}
-              className="text-xs text-rose-400 hover:text-rose-300 transition-colors flex items-center"
+              className="text-xs text-rose-600 hover:text-rose-700 transition-colors flex items-center font-medium"
             >
               <X className="h-3 w-3 mr-1" />
               Limpiar filtros
@@ -149,18 +152,18 @@ export default function Historial({
           )}
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-2.5 sm:gap-3">
           {/* SKU Filter */}
-          <div className="relative">
-            <span className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
-              <Search className="h-4 w-4 text-slate-500" />
+          <div className="relative flex items-center">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-[#64748B]">
+              <Search className="h-3.5 w-3.5" />
             </span>
             <input
               type="text"
               placeholder="Buscar por Folio, SKU o referencia..."
               value={skuFilter}
               onChange={(e) => setSkuFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-200 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:outline-none focus:border-emerald-500 transition-colors placeholder:text-slate-600"
+              className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 pl-8 pr-8 text-xs sm:text-sm focus:outline-none focus:border-[#059669] transition-colors placeholder:text-slate-400"
             />
             {skuFilter && (
               <button
@@ -168,75 +171,82 @@ export default function Historial({
                   setSkuFilter("");
                   if (onClearPreselectedSku) onClearPreselectedSku();
                 }}
-                className="absolute right-3.5 inset-y-0 flex items-center text-slate-500 hover:text-slate-300"
+                className="absolute right-2.5 inset-y-0 flex items-center text-[#64748B] hover:text-[#172033]"
+                title="Limpiar búsqueda"
               >
-                <X className="h-4 w-4" />
+                <X className="h-3.5 w-3.5" />
               </button>
             )}
           </div>
 
           {/* Warehouse Filter */}
-          <div>
+          <div className="relative flex items-center">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-[#64748B]">
+              <History className="h-3.5 w-3.5" />
+            </span>
             <select
               value={warehouseFilter}
               onChange={(e) => setWarehouseFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 pl-8 pr-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] transition-colors"
             >
-              <option value="all">🏢 Todos los almacenes</option>
+              <option value="all">Todos los almacenes</option>
               {almacenes.map(alm => (
                 <option key={alm.id} value={alm.id}>
-                  🏢 {alm.nombre}
+                  {alm.nombre}
                 </option>
               ))}
             </select>
           </div>
 
           {/* Transaction Type Filter */}
-          <div>
+          <div className="relative flex items-center">
+            <span className="absolute inset-y-0 left-0 flex items-center pl-2.5 pointer-events-none text-[#64748B]">
+              <ArrowRightLeft className="h-3.5 w-3.5" />
+            </span>
             <select
               value={tipoFilter}
               onChange={(e) => setTipoFilter(e.target.value)}
-              className="w-full bg-slate-950 border border-slate-800 text-slate-300 rounded-xl py-2.5 px-3.5 text-sm focus:outline-none focus:border-emerald-500 transition-colors"
+              className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 pl-8 pr-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] transition-colors"
             >
-              <option value="all">📁 Todos los tipos</option>
-              <option value="entrada">📥 Compras (Entradas)</option>
-              <option value="salida">📤 Ventas (Salidas)</option>
-              <option value="transferencia">🔄 Transferencias Internas</option>
+              <option value="all">Todos los tipos de transacción</option>
+              <option value="entrada">Entradas (Compras / Ingresos)</option>
+              <option value="salida">Salidas (Ventas / Despachos)</option>
+              <option value="transferencia">Transferencias Internas</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Main Table */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+      <div className="bg-white border border-[#E2E8F0] rounded-xl overflow-hidden shadow-xs">
         {loading ? (
-          <div className="py-20 text-center text-slate-400">
-            <span className="h-8 w-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block mb-3" />
-            <p>Buscando registros...</p>
+          <div className="py-14 text-center text-[#64748B]">
+            <span className="h-6 w-6 border-2 border-[#059669] border-t-transparent rounded-full animate-spin inline-block mb-2" />
+            <p className="text-xs">Buscando registros...</p>
           </div>
         ) : filteredMovimientos.length === 0 ? (
-          <div className="py-20 text-center text-slate-500">
-            <FileSpreadsheet className="h-12 w-12 mx-auto text-slate-700 mb-3" />
-            <p className="text-base font-semibold text-slate-400">Sin movimientos para mostrar</p>
-            <p className="text-sm mt-1">No hay transacciones registradas que coincidan con estos filtros.</p>
+          <div className="py-14 text-center text-[#64748B]">
+            <FileSpreadsheet className="h-10 w-10 mx-auto text-slate-300 mb-2" />
+            <p className="text-sm font-semibold text-[#172033]">Sin movimientos para mostrar</p>
+            <p className="text-xs mt-0.5">No hay transacciones registradas que coincidan con estos filtros.</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse" id="audit-log-table">
               <thead>
-                <tr className="bg-slate-950 text-slate-400 text-xs font-semibold uppercase tracking-wider border-b border-slate-800">
-                  <th className="py-4 px-6">Folio</th>
-                  <th className="py-4 px-6">Fecha / Hora</th>
-                  <th className="py-4 px-6">SKU / Producto</th>
-                  <th className="py-4 px-6">Almacén Origen</th>
-                  <th className="py-4 px-6">Transacción</th>
-                  <th className="py-4 px-6 text-center">Cantidad</th>
-                  <th className="py-4 px-6">Referencia / Glosa</th>
-                  <th className="py-4 px-6">Responsable</th>
-                  <th className="py-4 px-6 text-right">Acción</th>
+                <tr className="bg-[#F8FAFC] text-[#64748B] text-[11px] font-semibold uppercase tracking-wider border-b border-[#E2E8F0]">
+                  <th className="py-2.5 px-3">Folio</th>
+                  <th className="py-2.5 px-3">Fecha / Hora</th>
+                  <th className="py-2.5 px-3">SKU / Producto</th>
+                  <th className="py-2.5 px-3">Almacén Origen</th>
+                  <th className="py-2.5 px-3">Transacción</th>
+                  <th className="py-2.5 px-3 text-center">Cantidad</th>
+                  <th className="py-2.5 px-3">Referencia / Glosa</th>
+                  <th className="py-2.5 px-3">Responsable</th>
+                  <th className="py-2.5 px-3 text-right">Acción</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800 text-slate-300 text-sm">
+              <tbody className="divide-y divide-[#E2E8F0] text-[#172033] text-xs sm:text-sm">
                 {filteredMovimientos.map((mov) => {
                   const dateStr = mov.fecha instanceof Date 
                     ? mov.fecha.toLocaleString("es-ES", {
@@ -255,101 +265,101 @@ export default function Historial({
 
                   switch (mov.tipo) {
                     case "entrada":
-                      badgeColorClass = "bg-emerald-950 text-emerald-400 border border-emerald-800";
+                      badgeColorClass = "bg-emerald-50 text-emerald-700 border border-emerald-200";
                       typeLabel = "Entrada";
                       qtyPrefix = "+";
-                      qtyColorClass = "text-emerald-400 font-bold";
+                      qtyColorClass = "text-[#059669] font-bold";
                       break;
                     case "salida":
-                      badgeColorClass = "bg-rose-950 text-rose-400 border border-rose-800";
+                      badgeColorClass = "bg-rose-50 text-rose-700 border border-rose-200";
                       typeLabel = "Salida";
                       qtyPrefix = "-";
-                      qtyColorClass = "text-rose-400 font-bold";
+                      qtyColorClass = "text-rose-600 font-bold";
                       break;
                     case "transferencia":
-                      badgeColorClass = "bg-blue-950 text-blue-400 border border-blue-800";
+                      badgeColorClass = "bg-sky-50 text-sky-700 border border-sky-200";
                       typeLabel = "Transferencia";
                       qtyPrefix = "⇆";
-                      qtyColorClass = "text-blue-400 font-semibold";
+                      qtyColorClass = "text-sky-600 font-semibold";
                       break;
                   }
 
                   return (
-                    <tr key={mov.id} className="hover:bg-slate-800/10 transition-colors">
+                    <tr key={mov.id} className="hover:bg-[#F1F5F9] transition-colors">
                       {/* Folio */}
-                      <td className="py-4 px-6 whitespace-nowrap">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-mono font-bold bg-slate-950 border border-slate-800 text-emerald-400">
+                      <td className="py-2.5 px-3 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-[#ECFDF5] border border-emerald-200 text-[#059669]">
                           {mov.folio || "—"}
                         </span>
                       </td>
 
                       {/* Date & Time */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2.5 text-slate-400">
-                          <Calendar className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center space-x-1.5 text-[#64748B] text-xs">
+                          <Calendar className="h-3 w-3 text-[#64748B] shrink-0" />
                           <span className="font-medium whitespace-nowrap">{dateStr}</span>
                         </div>
                       </td>
 
                       {/* Product details */}
-                      <td className="py-4 px-6">
-                        <div className="font-semibold text-slate-200">
+                      <td className="py-2.5 px-3">
+                        <div className="font-semibold text-[#172033] leading-tight">
                           {getProductName(mov.sku)}
                         </div>
-                        <div className="font-mono text-xs text-slate-500 mt-0.5">
+                        <div className="font-mono text-[11px] text-[#64748B] mt-0.5">
                           {mov.sku}
                         </div>
                       </td>
 
                       {/* Origin warehouse */}
-                      <td className="py-4 px-6">
-                        <div className="font-medium text-slate-300">
+                      <td className="py-2.5 px-3">
+                        <div className="font-medium text-[#172033] text-xs">
                           {getWarehouseName(mov.almacen_id)}
                         </div>
                         {mov.tipo === "transferencia" && mov.almacen_destino_id && (
-                          <div className="text-[11px] text-emerald-400 font-medium flex items-center mt-1">
+                          <div className="text-[10px] text-[#059669] font-medium flex items-center mt-0.5">
                             <span>Destino: {getWarehouseName(mov.almacen_destino_id)}</span>
                           </div>
                         )}
                       </td>
 
                       {/* Movement Type */}
-                      <td className="py-4 px-6">
-                        <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold ${badgeColorClass}`}>
+                      <td className="py-2.5 px-3">
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold ${badgeColorClass}`}>
                           {typeLabel}
                         </span>
                       </td>
 
                       {/* Amount */}
-                      <td className={`py-4 px-6 text-center font-mono ${qtyColorClass}`}>
+                      <td className={`py-2.5 px-3 text-center font-mono ${qtyColorClass}`}>
                         {qtyPrefix} {mov.cantidad}
                       </td>
 
                       {/* Reference string */}
-                      <td className="py-4 px-6 text-slate-300 italic max-w-xs truncate" title={mov.referencia}>
+                      <td className="py-2.5 px-3 text-[#64748B] italic text-xs max-w-xs truncate" title={mov.referencia}>
                         {mov.referencia}
                       </td>
 
                       {/* Authorized by */}
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-2 text-xs text-slate-400">
-                          <User className="h-3 w-3 text-slate-500" />
-                          <span className="truncate max-w-[140px]" title={mov.usuario}>
+                      <td className="py-2.5 px-3">
+                        <div className="flex items-center space-x-1.5 text-xs text-[#64748B]">
+                          <User className="h-3 w-3 text-[#64748B]" />
+                          <span className="truncate max-w-[120px]" title={mov.usuario}>
                             {mov.usuario.split("@")[0]}
                           </span>
                         </div>
                       </td>
 
                       {/* Action Delete */}
-                      <td className="py-4 px-6 text-right">
+                      <td className="py-2.5 px-3 text-right">
                         <button
                           type="button"
                           id={`btn-delete-mov-${mov.id}`}
                           onClick={() => setMovToDelete(mov)}
                           title="Eliminar movimiento del historial"
-                          className="p-2 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded-lg transition-colors border border-transparent hover:border-rose-900/50 inline-flex items-center gap-1 text-xs font-medium"
+                          className="p-1.5 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors border border-transparent hover:border-rose-200 inline-flex items-center gap-1 text-[11px] font-medium"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Trash2 className="h-3.5 w-3.5" />
                           <span className="hidden sm:inline">Eliminar</span>
                         </button>
                       </td>
@@ -362,62 +372,62 @@ export default function Historial({
         )}
       </div>
 
-      <div className="mt-4 text-xs text-slate-500 flex justify-between px-2">
+      <div className="mt-3 text-[11px] text-[#64748B] flex justify-between px-1">
         <p>Mostrando {filteredMovimientos.length} de {movimientos.length} transacciones registradas.</p>
         <p>Los movimientos pueden ser eliminados individualmente para correcciones de registro.</p>
       </div>
 
       {/* Confirmation Modal */}
       {movToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fade-in">
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-4">
-            <div className="flex items-center space-x-3 text-rose-400">
-              <div className="p-3 bg-rose-950/60 border border-rose-800 rounded-xl">
-                <AlertTriangle className="h-6 w-6 text-rose-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white border border-[#E2E8F0] rounded-2xl max-w-md w-full p-5 sm:p-6 shadow-xl space-y-4">
+            <div className="flex items-center space-x-3 text-rose-600">
+              <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl">
+                <AlertTriangle className="h-5 w-5 text-rose-600" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-slate-100">¿Eliminar Movimiento?</h3>
-                <p className="text-xs text-slate-400">Esta acción removerá el registro del historial.</p>
+                <h3 className="text-base font-bold text-[#172033]">¿Eliminar Movimiento?</h3>
+                <p className="text-xs text-[#64748B]">Esta acción removerá el registro del historial.</p>
               </div>
             </div>
 
-            <div className="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2 text-sm text-slate-300">
+            <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 space-y-2 text-xs text-[#172033]">
               {movToDelete.folio && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Folio:</span>
-                  <span className="font-mono font-bold text-emerald-400">{movToDelete.folio}</span>
+                  <span className="text-[#64748B]">Folio:</span>
+                  <span className="font-mono font-bold text-[#059669]">{movToDelete.folio}</span>
                 </div>
               )}
               <div className="flex justify-between">
-                <span className="text-slate-500">Producto:</span>
-                <span className="font-semibold text-slate-200">{getProductName(movToDelete.sku)}</span>
+                <span className="text-[#64748B]">Producto:</span>
+                <span className="font-semibold text-[#172033]">{getProductName(movToDelete.sku)}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">SKU:</span>
-                <span className="font-mono text-slate-300">{movToDelete.sku}</span>
+                <span className="text-[#64748B]">SKU:</span>
+                <span className="font-mono text-[#64748B]">{movToDelete.sku}</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Tipo / Cantidad:</span>
-                <span className="capitalize font-semibold text-slate-200">{movToDelete.tipo} ({movToDelete.cantidad} uds)</span>
+                <span className="text-[#64748B]">Tipo / Cantidad:</span>
+                <span className="capitalize font-semibold text-[#172033]">{movToDelete.tipo} ({movToDelete.cantidad} uds)</span>
               </div>
               <div className="flex justify-between">
-                <span className="text-slate-500">Almacén:</span>
+                <span className="text-[#64748B]">Almacén:</span>
                 <span>{getWarehouseName(movToDelete.almacen_id)}</span>
               </div>
               {movToDelete.referencia && (
                 <div className="flex justify-between">
-                  <span className="text-slate-500">Referencia:</span>
-                  <span className="italic text-slate-400 truncate max-w-[200px]">{movToDelete.referencia}</span>
+                  <span className="text-[#64748B]">Referencia:</span>
+                  <span className="italic text-[#64748B] truncate max-w-[200px]">{movToDelete.referencia}</span>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center justify-end space-x-3 pt-2">
+            <div className="flex items-center justify-end space-x-2.5 pt-2">
               <button
                 type="button"
                 onClick={() => setMovToDelete(null)}
                 disabled={isDeleting}
-                className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-xl transition-colors"
+                className="px-3.5 py-1.5 text-xs font-semibold text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] border border-[#E2E8F0] rounded-lg transition-colors"
               >
                 Cancelar
               </button>
@@ -426,11 +436,11 @@ export default function Historial({
                 id="btn-confirm-delete-mov"
                 onClick={handleConfirmDelete}
                 disabled={isDeleting}
-                className="px-4 py-2 text-xs font-semibold bg-rose-600 hover:bg-rose-500 text-white rounded-xl transition-colors inline-flex items-center space-x-2 shadow-lg shadow-rose-950/30 disabled:opacity-50"
+                className="px-3.5 py-1.5 text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white rounded-lg transition-colors inline-flex items-center space-x-1.5 shadow-xs disabled:opacity-50"
               >
                 {isDeleting ? (
                   <>
-                    <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>Eliminando...</span>
                   </>
                 ) : (

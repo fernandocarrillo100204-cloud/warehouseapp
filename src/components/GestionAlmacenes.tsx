@@ -167,45 +167,47 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
   };
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" id="gestion-almacenes-view">
+    <div className="max-w-7xl mx-auto px-3.5 sm:px-5 lg:px-6 py-5" id="gestion-almacenes-view">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 space-y-4 md:space-y-0">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-100 tracking-tight">Gestión de Almacenes</h1>
-          <p className="text-sm text-slate-400 mt-1">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#172033] tracking-tight leading-tight">
+            Gestión de Almacenes
+          </h1>
+          <p className="text-xs text-[#64748B] mt-0.5">
             Administra las sedes físicas, ubicaciones y puntos de distribución de la empresa.
           </p>
         </div>
-        <div>
+        <div className="shrink-0">
           <button
             onClick={() => openFormModal(null)}
-            className="w-full md:w-auto bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-semibold px-5 py-2.5 rounded-xl transition-all shadow-lg shadow-emerald-500/10 flex items-center justify-center space-x-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500"
+            className="w-full md:w-auto bg-[#059669] hover:bg-[#047857] text-white font-semibold px-3.5 py-2 rounded-lg transition-all shadow-xs flex items-center justify-center space-x-1.5 text-xs focus:outline-none"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3.5 w-3.5" />
             <span>Agregar almacén</span>
           </button>
         </div>
       </div>
 
       {/* Search & Filters */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 mb-8">
+      <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 mb-4 shadow-xs">
         <div className="relative max-w-md">
-          <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-            <Search className="h-4 w-4 text-slate-500" />
+          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+            <Search className="h-3.5 w-3.5 text-[#64748B]" />
           </div>
           <input
             type="text"
             placeholder="Buscar por nombre o ubicación..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 bg-slate-950 border border-slate-800 focus:border-slate-700 text-slate-200 text-sm rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-700 transition-all placeholder:text-slate-600"
+            className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#E2E8F0] text-[#172033] text-xs sm:text-sm rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery("")} 
-              className="absolute inset-y-0 right-0 pr-3 flex items-center text-slate-500 hover:text-slate-300"
+              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#64748B] hover:text-[#172033]"
             >
-              <X className="h-4 w-4" />
+              <X className="h-3.5 w-3.5" />
             </button>
           )}
         </div>
@@ -213,86 +215,82 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
 
       {/* Warehouse Listing */}
       {loading ? (
-        <div className="py-24 text-center text-slate-400">
-          <span className="h-8 w-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin inline-block mb-3" />
-          <p className="text-sm font-medium">Cargando catálogo de almacenes...</p>
+        <div className="py-14 text-center text-[#64748B]">
+          <span className="h-6 w-6 border-2 border-[#059669] border-t-transparent rounded-full animate-spin inline-block mb-2" />
+          <p className="text-xs font-medium">Cargando catálogo de almacenes...</p>
         </div>
       ) : filteredAlmacenes.length === 0 ? (
-        <div className="bg-slate-900/50 border border-slate-850 rounded-2xl p-12 text-center">
-          <div className="bg-slate-950 inline-flex p-4 rounded-full text-slate-600 mb-4">
-            <Warehouse className="h-8 w-8" />
+        <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 text-center shadow-xs">
+          <div className="bg-[#F8FAFC] inline-flex p-3 rounded-full text-slate-400 mb-2.5">
+            <Warehouse className="h-6 w-6" />
           </div>
-          <h3 className="text-lg font-semibold text-slate-200 mb-1">No se encontraron almacenes</h3>
-          <p className="text-sm text-slate-500 max-w-sm mx-auto">
+          <h3 className="text-base font-semibold text-[#172033] mb-0.5">No se encontraron almacenes</h3>
+          <p className="text-xs text-[#64748B] max-w-sm mx-auto">
             {searchQuery ? "Prueba a cambiar los términos de búsqueda o agrega un nuevo almacén." : "Comienza agregando tu primer almacén físico para registrar stock."}
           </p>
         </div>
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden md:block overflow-hidden bg-slate-900 border border-slate-800 rounded-2xl">
+          <div className="hidden md:block overflow-hidden bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-slate-800 bg-slate-950/40 text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                  <th className="py-4 px-6">Identificador</th>
-                  <th className="py-4 px-6">Nombre de Almacén</th>
-                  <th className="py-4 px-6">Ubicación</th>
-                  <th className="py-4 px-6">Estado de Stock</th>
-                  <th className="py-4 px-6 text-right">Acciones</th>
+                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                  <th className="py-2.5 px-4">Nombre de Almacén</th>
+                  <th className="py-2.5 px-4">Ubicación</th>
+                  <th className="py-2.5 px-4">Estado de Stock</th>
+                  <th className="py-2.5 px-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800/60">
+              <tbody className="divide-y divide-[#E2E8F0] text-xs sm:text-sm">
                 {filteredAlmacenes.map((alm) => {
                   const { hasStock, totalUnits, uniqueItemsCount } = getWarehouseStockStatus(alm.id);
                   return (
-                    <tr key={alm.id} className="hover:bg-slate-850/35 transition-colors group">
-                      <td className="py-4 px-6 font-mono text-xs text-slate-500 font-medium">
-                        {alm.id}
-                      </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-3">
-                          <div className="bg-slate-950 p-2 rounded-lg text-emerald-400 border border-slate-800">
-                            <Warehouse className="h-4 w-4" />
+                    <tr key={alm.id} className="hover:bg-[#F1F5F9] transition-colors group">
+                      <td className="py-2.5 px-4">
+                        <div className="flex items-center space-x-2">
+                          <div className="bg-[#ECFDF5] p-1.5 rounded-md text-[#059669] border border-emerald-200">
+                            <Warehouse className="h-3.5 w-3.5" />
                           </div>
-                          <span className="font-semibold text-slate-200 group-hover:text-emerald-400 transition-colors">
+                          <span className="font-semibold text-[#172033] group-hover:text-[#059669] transition-colors">
                             {alm.nombre}
                           </span>
                         </div>
                       </td>
-                      <td className="py-4 px-6">
-                        <div className="flex items-center space-x-1.5 text-slate-300 text-sm">
-                          <MapPin className="h-3.5 w-3.5 text-slate-500 shrink-0" />
+                      <td className="py-2.5 px-4">
+                        <div className="flex items-center space-x-1.5 text-[#64748B] text-xs">
+                          <MapPin className="h-3 w-3 text-[#64748B] shrink-0" />
                           <span>{alm.ubicacion}</span>
                         </div>
                       </td>
-                      <td className="py-4 px-6">
+                      <td className="py-2.5 px-4">
                         {hasStock ? (
-                          <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">
-                            <span className="h-1.5 w-1.5 bg-emerald-500 rounded-full" />
-                            <span>{totalUnits} uds ({uniqueItemsCount} items)</span>
+                          <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            <span className="h-1.5 w-1.5 bg-[#059669] rounded-full" />
+                            <span>{totalUnits} {totalUnits === 1 ? "unidad" : "unidades"} · {uniqueItemsCount} {uniqueItemsCount === 1 ? "producto" : "productos"}</span>
                           </div>
                         ) : (
-                          <div className="inline-flex items-center space-x-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-slate-950 text-slate-500 border border-slate-800/60">
-                            <span className="h-1.5 w-1.5 bg-slate-700 rounded-full" />
-                            <span>Sin Stock</span>
+                          <div className="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]">
+                            <span className="h-1.5 w-1.5 bg-slate-400 rounded-full" />
+                            <span>Sin stock</span>
                           </div>
                         )}
                       </td>
-                      <td className="py-4 px-6 text-right">
-                        <div className="flex items-center justify-end space-x-2">
+                      <td className="py-2.5 px-4 text-right">
+                        <div className="flex items-center justify-end space-x-1">
                           <button
                             onClick={() => openFormModal(alm)}
-                            className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-slate-700"
+                            className="p-1.5 text-[#64748B] hover:text-[#059669] hover:bg-[#F1F5F9] rounded-md transition-colors"
                             title="Editar Almacén"
                           >
-                            <Edit2 className="h-4 w-4" />
+                            <Edit2 className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => openDeleteModal(alm)}
-                            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors focus:outline-none focus:ring-1 focus:ring-slate-700"
+                            className="p-1.5 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
                             title="Eliminar Almacén"
                           >
-                            <Trash2 className="h-4 w-4" />
+                            <Trash2 className="h-3.5 w-3.5" />
                           </button>
                         </div>
                       </td>
@@ -304,51 +302,52 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
           </div>
 
           {/* Mobile Grid/Card View */}
-          <div className="grid grid-cols-1 gap-4 md:hidden">
+          <div className="grid grid-cols-1 gap-3 md:hidden">
             {filteredAlmacenes.map((alm) => {
               const { hasStock, totalUnits, uniqueItemsCount } = getWarehouseStockStatus(alm.id);
               return (
-                <div key={alm.id} className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
+                <div key={alm.id} className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 space-y-2.5 shadow-xs">
                   <div className="flex items-start justify-between">
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-slate-950 p-2.5 rounded-xl text-emerald-400 border border-slate-850">
-                        <Warehouse className="h-5 w-5" />
+                    <div className="flex items-center space-x-2.5">
+                      <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+                        <Warehouse className="h-4 w-4" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-slate-200 text-base">{alm.nombre}</h4>
-                        <span className="font-mono text-[10px] text-slate-500">{alm.id}</span>
+                        <h4 className="font-semibold text-[#172033] text-sm">{alm.nombre}</h4>
                       </div>
                     </div>
                     <div className="flex space-x-1">
                       <button
                         onClick={() => openFormModal(alm)}
-                        className="p-2 text-slate-400 hover:text-emerald-400 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-1.5 text-[#64748B] hover:text-[#059669] hover:bg-[#F1F5F9] rounded-md transition-colors"
+                        title="Editar Almacén"
                       >
-                        <Edit2 className="h-4 w-4" />
+                        <Edit2 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => openDeleteModal(alm)}
-                        className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-800 rounded-lg transition-colors"
+                        className="p-1.5 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                        title="Eliminar Almacén"
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="h-3.5 w-3.5" />
                       </button>
                     </div>
                   </div>
 
-                  <div className="flex items-center space-x-1.5 text-slate-300 text-sm">
-                    <MapPin className="h-4 w-4 text-slate-500 shrink-0" />
+                  <div className="flex items-center space-x-1.5 text-[#64748B] text-xs">
+                    <MapPin className="h-3.5 w-3.5 text-[#64748B] shrink-0" />
                     <span>{alm.ubicacion}</span>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800 flex justify-between items-center text-xs">
-                    <span className="text-slate-500">Estado de inventario:</span>
+                  <div className="pt-2 border-t border-[#E2E8F0] flex justify-between items-center text-[11px]">
+                    <span className="text-[#64748B]">Estado:</span>
                     {hasStock ? (
-                      <span className="px-2.5 py-1 rounded-full font-semibold bg-emerald-950/50 text-emerald-400 border border-emerald-900/40">
-                        {totalUnits} unidades de stock
+                      <span className="px-2 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                        {totalUnits} {totalUnits === 1 ? "unidad" : "unidades"} · {uniqueItemsCount} {uniqueItemsCount === 1 ? "producto" : "productos"}
                       </span>
                     ) : (
-                      <span className="px-2.5 py-1 rounded-full font-semibold bg-slate-950 text-slate-500 border border-slate-800/60">
-                        Vacio (0 uds)
+                      <span className="px-2 py-0.5 rounded-full font-medium bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]">
+                        Sin stock
                       </span>
                     )}
                   </div>
@@ -369,7 +368,7 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsFormOpen(false)}
-              className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
             />
 
             {/* Modal Body */}
@@ -377,44 +376,41 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-xl overflow-hidden"
             >
-              {/* Decorative border bar */}
-              <div className="absolute top-0 inset-x-0 h-1 bg-emerald-500" />
-
               {/* Close Button */}
               <button
                 onClick={() => setIsFormOpen(false)}
-                className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all"
+                className="absolute top-3.5 right-3.5 p-1 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-md transition-all"
               >
-                <X className="h-5 w-5" />
+                <X className="h-4 w-4" />
               </button>
 
-              <div className="mb-6 flex items-center space-x-3">
-                <div className="bg-emerald-500/10 p-2.5 rounded-xl text-emerald-400 border border-emerald-500/10">
-                  <Warehouse className="h-6 w-6" />
+              <div className="mb-4 flex items-center space-x-2.5">
+                <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+                  <Warehouse className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-100">
+                  <h3 className="text-base font-bold text-[#172033]">
                     {selectedAlmacen ? "Editar Almacén" : "Nuevo Almacén Físico"}
                   </h3>
-                  <p className="text-xs text-slate-400">
+                  <p className="text-[11px] text-[#64748B]">
                     Ingresa los datos correspondientes para la sucursal de inventario.
                   </p>
                 </div>
               </div>
 
-              <form onSubmit={handleFormSubmit} className="space-y-4">
+              <form onSubmit={handleFormSubmit} className="space-y-3.5">
                 {formError && (
-                  <div className="bg-rose-950/40 border border-rose-800 text-rose-300 px-4 py-3 rounded-xl flex items-start space-x-2 text-xs">
-                    <AlertCircle className="h-4 w-4 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
+                    <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
                     <span>{formError}</span>
                   </div>
                 )}
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Nombre del Almacén <span className="text-emerald-400">*</span>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
+                    Nombre del Almacén <span className="text-[#059669]">*</span>
                   </label>
                   <input
                     type="text"
@@ -422,13 +418,13 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
                     placeholder="Ej. Almacén Poniente"
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-slate-700 text-slate-200 text-sm rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-700 transition-all placeholder:text-slate-650"
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] text-[#172033] text-xs sm:text-sm rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400"
                   />
                 </div>
 
-                <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
-                    Ubicación Física <span className="text-emerald-400">*</span>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
+                    Ubicación Física <span className="text-[#059669]">*</span>
                   </label>
                   <input
                     type="text"
@@ -436,25 +432,25 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
                     placeholder="Ej. Barcelona, España"
                     value={ubicacion}
                     onChange={(e) => setUbicacion(e.target.value)}
-                    className="w-full px-4 py-3 bg-slate-950 border border-slate-800 focus:border-slate-700 text-slate-200 text-sm rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-700 transition-all placeholder:text-slate-650"
+                    className="w-full px-3 py-2 bg-white border border-[#E2E8F0] text-[#172033] text-xs sm:text-sm rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400"
                   />
                 </div>
 
-                <div className="pt-4 flex items-center justify-end space-x-3">
+                <div className="pt-2 flex items-center justify-end space-x-2">
                   <button
                     type="button"
                     onClick={() => setIsFormOpen(false)}
-                    className="px-4 py-2.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-250 font-semibold rounded-xl text-xs transition-colors"
+                    className="px-3.5 py-2 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitLoading}
-                    className="px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center space-x-1.5 disabled:opacity-50"
+                    className="px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white font-bold rounded-lg text-xs transition-all flex items-center space-x-1.5 disabled:opacity-50 shadow-xs"
                   >
                     {submitLoading ? (
-                      <span className="h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                      <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     ) : null}
                     <span>{selectedAlmacen ? "Guardar cambios" : "Crear almacén"}</span>
                   </button>
@@ -477,7 +473,7 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setIsDeleteOpen(false)}
-                className="absolute inset-0 bg-slate-950/85 backdrop-blur-sm"
+                className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
               />
 
               {/* Modal Body */}
@@ -485,26 +481,26 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
                 initial={{ scale: 0.95, opacity: 0, y: 10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                className="relative w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl overflow-hidden"
+                className="relative w-full max-w-sm bg-white border border-[#E2E8F0] rounded-2xl p-4 sm:p-5 shadow-xl overflow-hidden"
               >
                 {/* Close Button */}
                 <button
                   onClick={() => setIsDeleteOpen(false)}
-                  className="absolute top-4 right-4 p-1.5 text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-lg transition-all"
+                  className="absolute top-3 right-3 p-1 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-md transition-all"
                 >
-                  <X className="h-5 w-5" />
+                  <X className="h-4 w-4" />
                 </button>
 
-                <div className="flex flex-col items-center text-center p-2">
-                  <div className={`p-3.5 rounded-full mb-4 border ${hasStock ? "bg-amber-950/50 border-amber-800 text-amber-400" : "bg-rose-950/50 border-rose-800 text-rose-400"}`}>
-                    <AlertTriangle className="h-8 w-8" />
+                <div className="flex flex-col items-center text-center p-1">
+                  <div className={`p-2.5 rounded-full mb-3 border ${hasStock ? "bg-amber-50 border-amber-200 text-amber-600" : "bg-rose-50 border-rose-200 text-rose-600"}`}>
+                    <AlertTriangle className="h-6 w-6" />
                   </div>
 
-                  <h3 className="text-lg font-bold text-slate-100">
+                  <h3 className="text-base font-bold text-[#172033]">
                     {hasStock ? "No se puede eliminar el almacén" : "¿Eliminar almacén físico?"}
                   </h3>
                   
-                  <p className="text-slate-400 text-xs mt-2 leading-relaxed">
+                  <p className="text-[#64748B] text-xs mt-1.5 leading-relaxed">
                     {hasStock 
                       ? "Este almacén contiene stock registrado en el sistema. Para evitar la pérdida accidental de datos, primero debes transferir o retirar la mercadería existente de esta sede."
                       : `¿Estás seguro de que deseas eliminar el almacén "${selectedAlmacen.nombre}"? Esta acción no se puede deshacer.`}
@@ -512,24 +508,24 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
 
                   {/* Stock Details Box if blocked */}
                   {hasStock && (
-                    <div className="w-full mt-4 bg-slate-950/60 rounded-xl p-3 border border-slate-800 text-left font-mono text-xs text-slate-400 space-y-1">
-                      <p className="text-amber-400 font-semibold mb-1">Inventario activo detectado:</p>
+                    <div className="w-full mt-3 bg-[#F8FAFC] rounded-lg p-2.5 border border-[#E2E8F0] text-left font-mono text-[11px] text-[#64748B] space-y-1">
+                      <p className="text-amber-700 font-semibold mb-0.5">Inventario activo detectado:</p>
                       <div className="flex justify-between">
                         <span>Items de catálogo:</span>
-                        <span className="text-slate-200">{uniqueItemsCount} distintos</span>
+                        <span className="text-[#172033]">{uniqueItemsCount} distintos</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Unidades totales:</span>
-                        <span className="text-slate-200">{totalUnits} unidades</span>
+                        <span className="text-[#172033]">{totalUnits} unidades</span>
                       </div>
                     </div>
                   )}
 
-                  <div className="w-full mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2.5">
+                  <div className="w-full mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-end gap-2">
                     <button
                       type="button"
                       onClick={() => setIsDeleteOpen(false)}
-                      className="w-full sm:w-auto px-4 py-2.5 bg-slate-950 hover:bg-slate-850 border border-slate-800 text-slate-400 hover:text-slate-250 font-semibold rounded-xl text-xs transition-colors"
+                      className="w-full sm:w-auto px-3.5 py-2 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
                     >
                       {hasStock ? "Entendido" : "Cancelar"}
                     </button>
@@ -538,10 +534,10 @@ export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
                         type="button"
                         onClick={handleDeleteSubmit}
                         disabled={submitLoading}
-                        className="w-full sm:w-auto px-5 py-2.5 bg-rose-500 hover:bg-rose-400 text-slate-950 font-bold rounded-xl text-xs transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50"
+                        className="w-full sm:w-auto px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-lg text-xs transition-all flex items-center justify-center space-x-1.5 disabled:opacity-50 shadow-xs"
                       >
                         {submitLoading ? (
-                          <span className="h-3.5 w-3.5 border-2 border-slate-950 border-t-transparent rounded-full animate-spin" />
+                          <span className="h-3 w-3 border-2 border-white border-t-transparent rounded-full animate-spin" />
                         ) : null}
                         <span>Eliminar Almacén</span>
                       </button>
