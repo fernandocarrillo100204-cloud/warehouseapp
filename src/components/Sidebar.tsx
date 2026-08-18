@@ -14,10 +14,13 @@ import {
   LogOut, 
   Menu, 
   X,
-  User as UserIcon
+  User as UserIcon,
+  Sun,
+  Moon
 } from "lucide-react";
 import { motion, AnimatePresence } from "motion/react";
 import { Usuario, NavigationTab } from "../types";
+import { useTheme } from "../context/ThemeContext";
 
 interface SidebarProps {
   user: Usuario;
@@ -43,6 +46,7 @@ const NAV_ITEMS: NavItem[] = [
 
 export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: SidebarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
+  const { theme, toggleTheme } = useTheme();
 
   const handleSelectTab = (tab: NavigationTab) => {
     setActiveTab(tab);
@@ -55,11 +59,11 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
       {/* Top Branding & Navigation */}
       <div className="flex flex-col">
         {/* Brand Header */}
-        <div className="px-3.5 py-3 border-b border-[#E2E8F0]">
-          <h1 className="text-base font-bold tracking-tight text-[#172033] leading-tight">
+        <div className="px-3.5 py-3 border-b border-[#E2E8F0] dark:border-[#263449]">
+          <h1 className="text-base font-bold tracking-tight text-[#172033] dark:text-[#F8FAFC] leading-tight">
             StockMaster
           </h1>
-          <p className="text-[11px] text-[#64748B] font-medium leading-tight mt-0.5">
+          <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] font-medium leading-tight mt-0.5">
             Metálicos y Plásticos Polo
           </p>
         </div>
@@ -77,11 +81,11 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
                 onClick={() => handleSelectTab(item.id)}
                 className={`w-full flex items-center space-x-2.5 px-2.5 py-1.5 rounded-lg text-sm transition-all text-left ${
                   isActive
-                    ? "bg-[#ECFDF5] text-[#059669] font-semibold border-l-2 border-[#059669] pl-2"
-                    : "text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] font-normal"
+                    ? "bg-[#ECFDF5] dark:bg-emerald-950/40 text-[#059669] dark:text-emerald-400 font-semibold border-l-2 border-[#059669] dark:border-emerald-500 pl-2"
+                    : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#111827] font-normal"
                 }`}
               >
-                <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#059669]" : "text-[#64748B]"}`} />
+                <Icon className={`h-4 w-4 shrink-0 ${isActive ? "text-[#059669] dark:text-emerald-400" : "text-[#64748B] dark:text-[#94A3B8]"}`} />
                 <span className="truncate">{item.label}</span>
               </button>
             );
@@ -89,35 +93,62 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
         </nav>
       </div>
 
-      {/* Bottom User Profile & Logout */}
-      <div className="p-3 border-t border-[#E2E8F0] bg-white/80">
-        <div className="flex items-center space-x-2 mb-2 px-1">
-          <div className="h-7 w-7 rounded-md bg-[#ECFDF5] border border-emerald-200/80 flex items-center justify-center text-[#059669] shrink-0">
-            <UserIcon className="h-3.5 w-3.5 text-[#059669]" />
-          </div>
-          <div className="min-w-0 flex-1">
-            <p className="text-[10px] text-[#64748B] font-medium leading-none">Usuario</p>
-            <p 
-              className="text-xs font-semibold text-[#172033] truncate mt-0.5" 
-              title={user.email}
-            >
-              {user.email}
-            </p>
-          </div>
+      {/* Bottom Section: Theme Toggle & User Profile & Logout */}
+      <div className="flex flex-col border-t border-[#E2E8F0] dark:border-[#263449] bg-white/80 dark:bg-[#111827]">
+        {/* Theme Mode Selector (above user profile) */}
+        <div className="p-2.5 pb-2 border-b border-[#E2E8F0]/70 dark:border-[#263449]/70">
+          <button
+            type="button"
+            id="theme-toggle-btn"
+            onClick={toggleTheme}
+            aria-label={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            title={theme === "dark" ? "Cambiar a modo claro" : "Cambiar a modo oscuro"}
+            className="w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs font-medium text-[#64748B] hover:text-[#172033] dark:text-[#94A3B8] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#0F172A] transition-all focus:outline-none focus:ring-2 focus:ring-[#059669]"
+          >
+            <div className="flex items-center space-x-2">
+              {theme === "dark" ? (
+                <Sun className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+              ) : (
+                <Moon className="h-3.5 w-3.5 text-slate-600 shrink-0" />
+              )}
+              <span>{theme === "dark" ? "Modo claro" : "Modo oscuro"}</span>
+            </div>
+            <span className="text-[10px] font-semibold text-[#64748B] dark:text-[#94A3B8]">
+              {theme === "dark" ? "Oscuro" : "Claro"}
+            </span>
+          </button>
         </div>
 
-        <button
-          type="button"
-          id="sidebar-logout-btn"
-          onClick={() => {
-            setMobileOpen(false);
-            onLogout();
-          }}
-          className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-[#64748B] hover:text-rose-600 hover:bg-rose-50 border border-[#E2E8F0] hover:border-rose-200 rounded-lg transition-all"
-        >
-          <LogOut className="h-3.5 w-3.5" />
-          <span>Cerrar sesión</span>
-        </button>
+        {/* User Info & Logout */}
+        <div className="p-3 pt-2.5">
+          <div className="flex items-center space-x-2 mb-2 px-1">
+            <div className="h-7 w-7 rounded-md bg-[#ECFDF5] dark:bg-emerald-950/60 border border-emerald-200/80 dark:border-emerald-800/70 flex items-center justify-center text-[#059669] dark:text-emerald-400 shrink-0">
+              <UserIcon className="h-3.5 w-3.5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] font-medium leading-none">Usuario</p>
+              <p 
+                className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC] truncate mt-0.5" 
+                title={user.email}
+              >
+                {user.email}
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            id="sidebar-logout-btn"
+            onClick={() => {
+              setMobileOpen(false);
+              onLogout();
+            }}
+            className="w-full flex items-center justify-center space-x-1.5 px-2.5 py-1.5 text-xs font-medium text-[#64748B] dark:text-[#94A3B8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 border border-[#E2E8F0] dark:border-[#263449] hover:border-rose-200 dark:hover:border-rose-900/50 rounded-lg transition-all focus:outline-none"
+          >
+            <LogOut className="h-3.5 w-3.5" />
+            <span>Cerrar sesión</span>
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -128,7 +159,7 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
       {/* DESKTOP PERMANENT SIDEBAR (~224px) */}
       {/* ---------------------------------------------------- */}
       <aside 
-        className="hidden md:flex fixed inset-y-0 left-0 z-40 w-[224px] bg-[#F8FAFC] border-r border-[#E2E8F0] flex-col justify-between"
+        className="hidden md:flex fixed inset-y-0 left-0 z-40 w-[224px] bg-[#F8FAFC] dark:bg-[#182235] border-r border-[#E2E8F0] dark:border-[#263449] flex-col justify-between transition-colors duration-200"
         id="desktop-sidebar"
       >
         <NavContent />
@@ -138,19 +169,19 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
       {/* MOBILE TOP BAR WITH MENU TOGGLE */}
       {/* ---------------------------------------------------- */}
       <header 
-        className="md:hidden sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-[#E2E8F0] px-3.5 py-2.5 flex items-center justify-between"
+        className="md:hidden sticky top-0 z-30 bg-white/95 dark:bg-[#111827]/95 backdrop-blur-md border-b border-[#E2E8F0] dark:border-[#263449] px-3.5 py-2.5 flex items-center justify-between transition-colors duration-200"
         id="mobile-top-header"
       >
         <div>
-          <span className="font-bold text-base text-[#172033] tracking-tight">StockMaster</span>
-          <p className="text-[10px] text-[#64748B] font-medium -mt-0.5">Metálicos y Plásticos Polo</p>
+          <span className="font-bold text-base text-[#172033] dark:text-[#F8FAFC] tracking-tight">StockMaster</span>
+          <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] font-medium -mt-0.5">Metálicos y Plásticos Polo</p>
         </div>
 
         <button
           type="button"
           id="mobile-menu-toggle-btn"
           onClick={() => setMobileOpen(true)}
-          className="p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-colors focus:outline-none"
+          className="p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-colors focus:outline-none"
           aria-label="Abrir menú de navegación"
           title="Abrir menú"
         >
@@ -170,7 +201,7 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              className="fixed inset-0 bg-slate-900/30 backdrop-blur-xs"
+              className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs"
               onClick={() => setMobileOpen(false)}
               aria-hidden="true"
             />
@@ -181,14 +212,14 @@ export default function Sidebar({ user, activeTab, setActiveTab, onLogout }: Sid
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 260 }}
-              className="relative w-[224px] max-w-[80vw] bg-[#F8FAFC] border-r border-[#E2E8F0] flex flex-col justify-between shadow-xl z-10"
+              className="relative w-[224px] max-w-[80vw] bg-[#F8FAFC] dark:bg-[#182235] border-r border-[#E2E8F0] dark:border-[#263449] flex flex-col justify-between shadow-xl z-10"
               id="mobile-drawer-sidebar"
             >
               {/* Close Button Inside Drawer */}
               <button
                 type="button"
                 onClick={() => setMobileOpen(false)}
-                className="absolute top-3 right-3 p-1 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-colors z-20"
+                className="absolute top-3 right-3 p-1 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#111827] rounded-lg transition-colors z-20"
                 aria-label="Cerrar menú"
                 title="Cerrar menú"
               >

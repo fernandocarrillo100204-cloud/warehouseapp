@@ -646,13 +646,13 @@ export default function GestionProductos({
 
   return (
     <div className="max-w-7xl mx-auto px-3.5 sm:px-5 lg:px-6 py-5" id="gestion-productos-view">
-      {/* Header */}
+      {/* Page Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-5 gap-3">
         <div>
-          <h1 className="text-2xl sm:text-[28px] font-bold text-[#172033] tracking-tight leading-tight">
+          <h1 className="text-2xl sm:text-[28px] font-bold text-[#172033] dark:text-[#F8FAFC] tracking-tight leading-tight">
             Catálogo de Productos
           </h1>
-          <p className="text-xs text-[#64748B] mt-0.5">
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-0.5">
             Gestiona la lista maestra de productos, categorías, unidades de medida y alertas de stock mínimo por almacén.
           </p>
         </div>
@@ -663,17 +663,17 @@ export default function GestionProductos({
               setCsvFile(null);
               setIsImportOpen(true);
             }}
-            className="flex-1 sm:flex-initial bg-white hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] font-semibold px-3 py-2 rounded-lg transition-all flex items-center justify-center space-x-1.5 text-xs focus:outline-none shadow-xs"
+            className="flex-1 sm:flex-initial bg-white dark:bg-[#111827] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] font-semibold px-3 py-2 rounded-lg transition-all flex items-center justify-center space-x-1.5 text-xs focus:outline-none shadow-xs"
           >
-            <Upload className="h-3.5 w-3.5 text-[#64748B]" />
+            <Upload className="h-3.5 w-3.5 text-[#64748B] dark:text-[#94A3B8]" />
             <span>Importar CSV</span>
           </button>
 
           <button
             onClick={() => setIsCatalogosOpen(true)}
-            className="flex-1 sm:flex-initial bg-white hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] font-semibold px-3 py-2 rounded-lg transition-all flex items-center justify-center space-x-1.5 text-xs focus:outline-none shadow-xs"
+            className="flex-1 sm:flex-initial bg-white dark:bg-[#111827] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] font-semibold px-3 py-2 rounded-lg transition-all flex items-center justify-center space-x-1.5 text-xs focus:outline-none shadow-xs"
           >
-            <FolderTree className="h-3.5 w-3.5 text-[#059669]" />
+            <FolderTree className="h-3.5 w-3.5 text-[#059669] dark:text-emerald-400" />
             <span>Administrar catálogos</span>
           </button>
           
@@ -688,22 +688,22 @@ export default function GestionProductos({
       </div>
 
       {/* Search Bar */}
-      <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 mb-4 shadow-xs">
+      <div className="bg-[#F8FAFC] dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 mb-4 shadow-xs">
         <div className="relative max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-3.5 w-3.5 text-[#64748B]" />
+            <Search className="h-3.5 w-3.5 text-[#64748B] dark:text-[#94A3B8]" />
           </div>
           <input
             type="text"
             placeholder="Buscar por SKU, nombre o categoría..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 bg-white border border-[#E2E8F0] text-[#172033] text-xs sm:text-sm rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400"
+            className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] text-xs sm:text-sm rounded-lg focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
           />
           {searchQuery && (
             <button 
               onClick={() => setSearchQuery("")} 
-              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#64748B] hover:text-[#172033]"
+              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
             >
               <X className="h-3.5 w-3.5" />
             </button>
@@ -713,27 +713,27 @@ export default function GestionProductos({
 
       {/* Products list */}
       {loading ? (
-        <div className="py-14 text-center text-[#64748B]">
-          <span className="h-6 w-6 border-2 border-[#059669] border-t-transparent rounded-full animate-spin inline-block mb-2" />
+        <div className="py-14 text-center text-[#64748B] dark:text-[#94A3B8]">
+          <span className="h-6 w-6 border-2 border-[#059669] dark:border-emerald-400 border-t-transparent rounded-full animate-spin inline-block mb-2" />
           <p className="text-xs font-medium">Cargando catálogo de productos...</p>
         </div>
       ) : filteredProductos.length === 0 ? (
-        <div className="bg-white border border-[#E2E8F0] rounded-xl p-8 text-center shadow-xs">
-          <div className="bg-[#F8FAFC] inline-flex p-3 rounded-full text-slate-400 mb-2.5">
+        <div className="bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-8 text-center shadow-xs">
+          <div className="bg-[#F8FAFC] dark:bg-[#182235] inline-flex p-3 rounded-full text-slate-400 dark:text-slate-500 mb-2.5">
             <Package className="h-6 w-6" />
           </div>
-          <h3 className="text-base font-semibold text-[#172033] mb-0.5">Catálogo de productos vacío</h3>
-          <p className="text-xs text-[#64748B] max-w-sm mx-auto">
+          <h3 className="text-base font-semibold text-[#172033] dark:text-[#F8FAFC] mb-0.5">Catálogo de productos vacío</h3>
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] max-w-sm mx-auto">
             {searchQuery ? "No se encontraron productos que coincidan con la búsqueda." : "Crea tu primer producto con el botón 'Crear producto' o importa una lista con archivo CSV."}
           </p>
         </div>
       ) : (
         <>
           {/* Desktop Table View */}
-          <div className="hidden lg:block overflow-hidden bg-white border border-[#E2E8F0] rounded-xl shadow-xs">
+          <div className="hidden lg:block overflow-hidden bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-xl shadow-xs">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="border-b border-[#E2E8F0] bg-[#F8FAFC] text-[11px] font-semibold text-[#64748B] uppercase tracking-wider">
+                <tr className="border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#182235] text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">
                   <th className="py-2.5 px-4">SKU / ID</th>
                   <th className="py-2.5 px-4">Nombre del Producto</th>
                   <th className="py-2.5 px-4">Categoría</th>
@@ -742,32 +742,32 @@ export default function GestionProductos({
                   <th className="py-2.5 px-4 text-right">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E2E8F0] text-xs sm:text-sm">
+              <tbody className="divide-y divide-[#E2E8F0] dark:divide-[#263449] text-xs sm:text-sm">
                 {filteredProductos.map((p) => {
                   return (
-                    <tr key={p.sku} className="hover:bg-[#F1F5F9] transition-colors group">
-                      <td className="py-2.5 px-4 font-mono text-[11px] text-[#64748B] font-semibold">
+                    <tr key={p.sku} className="hover:bg-[#F1F5F9] dark:hover:bg-[#182235] transition-colors group">
+                      <td className="py-2.5 px-4 font-mono text-[11px] text-[#64748B] dark:text-[#94A3B8] font-semibold">
                         {p.sku}
                       </td>
                       <td className="py-2.5 px-4">
                         <div className="flex items-center space-x-2">
-                          <div className="bg-[#ECFDF5] p-1.5 rounded-md text-[#059669] border border-emerald-200">
+                          <div className="bg-[#ECFDF5] dark:bg-emerald-950/50 p-1.5 rounded-md text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                             <Package className="h-3.5 w-3.5" />
                           </div>
-                          <span className="font-semibold text-[#172033] group-hover:text-[#059669] transition-colors">
+                          <span className="font-semibold text-[#172033] dark:text-[#F8FAFC] group-hover:text-[#059669] dark:group-hover:text-emerald-400 transition-colors">
                             {p.nombre}
                           </span>
                         </div>
                       </td>
                       <td className="py-2.5 px-4">
-                        <span className="bg-[#F8FAFC] px-2 py-0.5 text-xs text-[#172033] border border-[#E2E8F0] rounded-md">
+                        <span className="bg-[#F8FAFC] dark:bg-[#182235] px-2 py-0.5 text-xs text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] rounded-md">
                           {p.categoria}
                         </span>
                       </td>
-                      <td className="py-2.5 px-4 text-[#172033] text-xs font-medium capitalize">
+                      <td className="py-2.5 px-4 text-[#172033] dark:text-[#F8FAFC] text-xs font-medium capitalize">
                         {p.unidad}
                       </td>
-                      <td className="py-2.5 px-4 text-[#172033] text-xs">
+                      <td className="py-2.5 px-4 text-[#172033] dark:text-[#F8FAFC] text-xs">
                         {(() => {
                           const configuredAlmacenes = almacenes.filter(alm => (p.stock_minimo_almacenes?.[alm.id] ?? 0) > 0);
                           const totalConfigured = configuredAlmacenes.length;
@@ -779,22 +779,22 @@ export default function GestionProductos({
                           if (totalConfigured > 0) {
                             return (
                               <span 
-                                className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#F8FAFC] border border-[#E2E8F0] text-[#172033] cursor-default"
+                                className="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] cursor-default"
                                 title={tooltipLines}
                               >
-                                <span className="font-semibold text-[#059669] mr-1">{totalConfigured}</span>
+                                <span className="font-semibold text-[#059669] dark:text-emerald-400 mr-1">{totalConfigured}</span>
                                 <span>{totalConfigured === 1 ? "almacén configurado" : "almacenes configurados"}</span>
                               </span>
                             );
                           } else if (p.stock_minimo && p.stock_minimo > 0) {
                             return (
-                              <span className="text-[#172033] text-xs font-medium">
+                              <span className="text-[#172033] dark:text-[#F8FAFC] text-xs font-medium">
                                 {p.stock_minimo} {p.unidad || "uds"} · mínimo global
                               </span>
                             );
                           } else {
                             return (
-                              <span className="text-[#64748B] text-xs">
+                              <span className="text-[#64748B] dark:text-[#94A3B8] text-xs">
                                 Sin alertas activas
                               </span>
                             );
@@ -805,14 +805,14 @@ export default function GestionProductos({
                         <div className="flex items-center justify-end space-x-1">
                           <button
                             onClick={() => openFormModal(p)}
-                            className="p-1.5 text-[#64748B] hover:text-[#059669] hover:bg-[#F1F5F9] rounded-md transition-colors"
+                            className="p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#059669] dark:hover:text-emerald-400 hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-md transition-colors"
                             title="Editar producto"
                           >
                             <Edit2 className="h-3.5 w-3.5" />
                           </button>
                           <button
                             onClick={() => openDeleteModal(p)}
-                            className="p-1.5 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                            className="p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
                             title="Eliminar producto"
                           >
                             <Trash2 className="h-3.5 w-3.5" />
@@ -837,28 +837,28 @@ export default function GestionProductos({
               }).join(" • ");
 
               return (
-                <div key={p.sku} className="bg-white border border-[#E2E8F0] rounded-xl p-3.5 space-y-2.5 shadow-xs">
+                <div key={p.sku} className="bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 space-y-2.5 shadow-xs">
                   <div className="flex items-start justify-between">
                     <div className="flex items-center space-x-2.5">
-                      <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+                      <div className="bg-[#ECFDF5] dark:bg-emerald-950/50 p-2 rounded-lg text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                         <Package className="h-4 w-4" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-[#172033] text-sm">{p.nombre}</h4>
-                        <span className="font-mono text-[10px] text-[#64748B] uppercase">{p.sku}</span>
+                        <h4 className="font-semibold text-[#172033] dark:text-[#F8FAFC] text-sm">{p.nombre}</h4>
+                        <span className="font-mono text-[10px] text-[#64748B] dark:text-[#94A3B8] uppercase">{p.sku}</span>
                       </div>
                     </div>
                     <div className="flex space-x-1">
                       <button
                         onClick={() => openFormModal(p)}
-                        className="p-1.5 text-[#64748B] hover:text-[#059669] hover:bg-[#F1F5F9] rounded-md transition-colors"
+                        className="p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#059669] dark:hover:text-emerald-400 hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-md transition-colors"
                         title="Editar producto"
                       >
                         <Edit2 className="h-3.5 w-3.5" />
                       </button>
                       <button
                         onClick={() => openDeleteModal(p)}
-                        className="p-1.5 text-[#64748B] hover:text-rose-600 hover:bg-rose-50 rounded-md transition-colors"
+                        className="p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-rose-600 dark:hover:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-md transition-colors"
                         title="Eliminar producto"
                       >
                         <Trash2 className="h-3.5 w-3.5" />
@@ -868,33 +868,33 @@ export default function GestionProductos({
 
                   <div className="grid grid-cols-2 gap-y-2 gap-x-2 pt-1 text-xs">
                     <div>
-                      <span className="text-[#64748B] block text-[11px] mb-0.5">Categoría:</span>
-                      <span className="bg-[#F8FAFC] px-2 py-0.5 border border-[#E2E8F0] rounded text-[#172033] text-xs">
+                      <span className="text-[#64748B] dark:text-[#94A3B8] block text-[11px] mb-0.5">Categoría:</span>
+                      <span className="bg-[#F8FAFC] dark:bg-[#182235] px-2 py-0.5 border border-[#E2E8F0] dark:border-[#263449] rounded text-[#172033] dark:text-[#F8FAFC] text-xs">
                         {p.categoria}
                       </span>
                     </div>
                     <div>
-                      <span className="text-[#64748B] block text-[11px] mb-0.5">U. de Medida:</span>
-                      <span className="text-[#172033] font-semibold capitalize text-xs">{p.unidad}</span>
+                      <span className="text-[#64748B] dark:text-[#94A3B8] block text-[11px] mb-0.5">U. de Medida:</span>
+                      <span className="text-[#172033] dark:text-[#F8FAFC] font-semibold capitalize text-xs">{p.unidad}</span>
                     </div>
                   </div>
 
                   {/* Warehouse minimums on mobile */}
-                  <div className="pt-2 border-t border-[#E2E8F0] flex items-center justify-between">
-                    <span className="text-[11px] text-[#64748B]">Mínimos por almacén:</span>
+                  <div className="pt-2 border-t border-[#E2E8F0] dark:border-[#263449] flex items-center justify-between">
+                    <span className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">Mínimos por almacén:</span>
                     <span 
-                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#F8FAFC] border border-[#E2E8F0] text-[#172033]"
+                      className="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC]"
                       title={tooltipLines}
                     >
                       {totalConfigured > 0 ? (
                         <>
-                          <span className="font-semibold text-[#059669] mr-1">{totalConfigured}</span>
+                          <span className="font-semibold text-[#059669] dark:text-emerald-400 mr-1">{totalConfigured}</span>
                           <span>{totalConfigured === 1 ? "almacén" : "almacenes"}</span>
                         </>
                       ) : p.stock_minimo && p.stock_minimo > 0 ? (
                         <span>{p.stock_minimo} {p.unidad || "uds"} · global</span>
                       ) : (
-                        <span className="text-[#64748B]">Sin alertas</span>
+                        <span className="text-[#64748B] dark:text-[#94A3B8]">Sin alertas</span>
                       )}
                     </span>
                   </div>
@@ -916,35 +916,35 @@ export default function GestionProductos({
               onClick={() => {
                 if (!submitLoading) setIsFormOpen(false);
               }}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-xl bg-white border border-[#E2E8F0] rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
+              className="relative w-full max-w-xl bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
             >
               <button
                 onClick={() => {
                   if (!submitLoading) setIsFormOpen(false);
                 }}
                 disabled={submitLoading}
-                className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all disabled:opacity-40 z-10"
+                className="absolute top-3 right-3 p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-all disabled:opacity-40 z-10"
               >
                 <X className="h-4 w-4" />
               </button>
 
               {/* Modal Header (Fixed at top) */}
-              <div className="p-4 flex items-center space-x-2.5 shrink-0 border-b border-[#E2E8F0]">
-                <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+              <div className="p-4 flex items-center space-x-2.5 shrink-0 border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#182235]">
+                <div className="bg-[#ECFDF5] dark:bg-emerald-950/50 p-2 rounded-lg text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                   <Package className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#172033] leading-tight">
+                  <h3 className="text-base font-bold text-[#172033] dark:text-[#F8FAFC] leading-tight">
                     {selectedProduct ? "Editar Producto" : "Crear Nuevo Producto"}
                   </h3>
-                  <p className="text-[11px] text-[#64748B]">
+                  <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                     Define la ficha técnica del producto y sus límites de stock mínimo por almacén.
                   </p>
                 </div>
@@ -956,7 +956,7 @@ export default function GestionProductos({
                 <div className="p-4 space-y-3.5 overflow-y-auto flex-1 min-h-0">
                   {/* General Form Error Banner */}
                   {fieldErrors.general && (
-                    <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
+                    <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
                       <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
                       <span>{fieldErrors.general}</span>
                     </div>
@@ -966,18 +966,18 @@ export default function GestionProductos({
                     
                     {/* SKU FIELD */}
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider flex items-center justify-between">
-                        <span>SKU del Producto {!selectedProduct && <span className="text-[#059669]">*</span>}</span>
+                      <label className="text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center justify-between">
+                        <span>SKU del Producto {!selectedProduct && <span className="text-[#059669] dark:text-emerald-400">*</span>}</span>
                         {selectedProduct && (
-                          <span className="text-[9px] text-[#64748B] font-normal lowercase bg-[#F8FAFC] px-1.5 py-0.5 rounded border border-[#E2E8F0]">
+                          <span className="text-[9px] text-[#64748B] dark:text-[#94A3B8] font-normal lowercase bg-[#F8FAFC] dark:bg-[#182235] px-1.5 py-0.5 rounded border border-[#E2E8F0] dark:border-[#263449]">
                             solo lectura
                           </span>
                         )}
                       </label>
                       {selectedProduct ? (
-                        <div className="w-full px-3 py-1.5 bg-[#F8FAFC] border border-[#E2E8F0] text-[#172033] text-xs rounded-lg font-mono select-all flex items-center justify-between">
+                        <div className="w-full px-3 py-1.5 bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg font-mono select-all flex items-center justify-between">
                           <span>{selectedProduct.sku}</span>
-                          <span className="text-[10px] text-[#64748B] font-sans">Identificador maestro</span>
+                          <span className="text-[10px] text-[#64748B] dark:text-[#94A3B8] font-sans">Identificador maestro</span>
                         </div>
                       ) : (
                         <input
@@ -987,18 +987,18 @@ export default function GestionProductos({
                           placeholder="Ej. PLAS-POLO-01"
                           value={sku}
                           onChange={(e) => handleSkuInputChange(e.target.value)}
-                          className={`w-full px-3 py-1.5 bg-white border ${
-                            fieldErrors.sku ? "border-rose-500" : "border-[#E2E8F0]"
-                          } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400 font-mono uppercase`}
+                          className={`w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border ${
+                            fieldErrors.sku ? "border-rose-500 dark:border-rose-500" : "border-[#E2E8F0] dark:border-[#263449]"
+                          } text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono uppercase`}
                         />
                       )}
                       {fieldErrors.sku && !selectedProduct ? (
-                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                        <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-0.5">
                           <AlertCircle className="h-3 w-3 shrink-0" />
                           <span>{fieldErrors.sku}</span>
                         </p>
                       ) : (
-                        <p className="text-[10px] text-[#64748B] leading-tight">
+                        <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] leading-tight">
                           {selectedProduct 
                             ? "El SKU es permanente para proteger los registros históricos." 
                             : "Solo letras mayúsculas, números y guiones (-)."}
@@ -1008,8 +1008,8 @@ export default function GestionProductos({
 
                     {/* NOMBRE DEL PRODUCTO */}
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
-                        Nombre del Producto <span className="text-[#059669]">*</span>
+                      <label className="text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider">
+                        Nombre del Producto <span className="text-[#059669] dark:text-emerald-400">*</span>
                       </label>
                       <input
                         type="text"
@@ -1023,12 +1023,12 @@ export default function GestionProductos({
                             setFieldErrors(prev => ({ ...prev, nombre: undefined }));
                           }
                         }}
-                        className={`w-full px-3 py-1.5 bg-white border ${
-                          fieldErrors.nombre ? "border-rose-500" : "border-[#E2E8F0]"
-                        } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all placeholder:text-slate-400`}
+                        className={`w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border ${
+                          fieldErrors.nombre ? "border-rose-500 dark:border-rose-500" : "border-[#E2E8F0] dark:border-[#263449]"
+                        } text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500`}
                       />
                       {fieldErrors.nombre && (
-                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                        <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-0.5">
                           <AlertCircle className="h-3 w-3 shrink-0" />
                           <span>{fieldErrors.nombre}</span>
                         </p>
@@ -1037,8 +1037,8 @@ export default function GestionProductos({
 
                     {/* CATEGORÍA SELECTOR & CREAR NUEVA */}
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
-                        Categoría del Producto <span className="text-[#059669]">*</span>
+                      <label className="text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider">
+                        Categoría del Producto <span className="text-[#059669] dark:text-emerald-400">*</span>
                       </label>
                       <select
                         value={categoriaSelect}
@@ -1049,9 +1049,9 @@ export default function GestionProductos({
                             setFieldErrors(prev => ({ ...prev, categoria: undefined }));
                           }
                         }}
-                        className={`w-full px-3 py-1.5 bg-white border ${
-                          fieldErrors.categoria ? "border-rose-500" : "border-[#E2E8F0]"
-                        } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all`}
+                        className={`w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border ${
+                          fieldErrors.categoria ? "border-rose-500 dark:border-rose-500" : "border-[#E2E8F0] dark:border-[#263449]"
+                        } text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 transition-all`}
                       >
                         <option value="" disabled>-- Seleccionar categoría --</option>
                         {categoriasOpciones.map((cat) => (
@@ -1059,7 +1059,7 @@ export default function GestionProductos({
                             {cat.nombre} {!cat.activa ? "(Desactivada)" : ""}
                           </option>
                         ))}
-                        <option value="__NEW__" className="text-[#059669] font-semibold">
+                        <option value="__NEW__" className="text-[#059669] dark:text-emerald-400 font-semibold">
                           ➕ Crear nueva categoría...
                         </option>
                       </select>
@@ -1083,13 +1083,13 @@ export default function GestionProductos({
                                 setFieldErrors(prev => ({ ...prev, categoria: undefined }));
                               }
                             }}
-                            className="w-full px-3 py-1.5 bg-white border border-[#059669] text-[#172033] text-xs rounded-lg focus:outline-none transition-all placeholder:text-slate-400"
+                            className="w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border border-[#059669] dark:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           />
                         </motion.div>
                       )}
 
                       {fieldErrors.categoria && (
-                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                        <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-0.5">
                           <AlertCircle className="h-3 w-3 shrink-0" />
                           <span>{fieldErrors.categoria}</span>
                         </p>
@@ -1098,8 +1098,8 @@ export default function GestionProductos({
 
                     {/* UNIDAD DE MEDIDA ESTANDARIZADA */}
                     <div className="space-y-1">
-                      <label className="text-[11px] font-semibold text-[#172033] uppercase tracking-wider">
-                        Unidad de Medida <span className="text-[#059669]">*</span>
+                      <label className="text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider">
+                        Unidad de Medida <span className="text-[#059669] dark:text-emerald-400">*</span>
                       </label>
                       <select
                         value={unidadSelect}
@@ -1110,16 +1110,16 @@ export default function GestionProductos({
                             setFieldErrors(prev => ({ ...prev, unidad: undefined }));
                           }
                         }}
-                        className={`w-full px-3 py-1.5 bg-white border ${
-                          fieldErrors.unidad ? "border-rose-500" : "border-[#E2E8F0]"
-                        } text-[#172033] text-xs rounded-lg focus:outline-none focus:border-[#059669] transition-all`}
+                        className={`w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border ${
+                          fieldErrors.unidad ? "border-rose-500 dark:border-rose-500" : "border-[#E2E8F0] dark:border-[#263449]"
+                        } text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 transition-all`}
                       >
                         {unidadesOpciones.map((u) => (
                           <option key={u.id || u.abreviatura} value={u.abreviatura}>
                             {u.nombre} ({u.abreviatura}) {!u.activa ? "(Desactivada)" : ""}
                           </option>
                         ))}
-                        <option value="otra" className="text-[#059669] font-semibold">
+                        <option value="otra" className="text-[#059669] dark:text-emerald-400 font-semibold">
                           ➕ Otra unidad (especificar)...
                         </option>
                       </select>
@@ -1143,13 +1143,13 @@ export default function GestionProductos({
                                 setFieldErrors(prev => ({ ...prev, unidad: undefined }));
                               }
                             }}
-                            className="w-full px-3 py-1.5 bg-white border border-[#059669] text-[#172033] text-xs rounded-lg focus:outline-none transition-all placeholder:text-slate-400"
+                            className="w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border border-[#059669] dark:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
                           />
                         </motion.div>
                       )}
 
                       {fieldErrors.unidad && (
-                        <p className="text-[11px] text-rose-600 flex items-center gap-1 mt-0.5">
+                        <p className="text-[11px] text-rose-600 dark:text-rose-400 flex items-center gap-1 mt-0.5">
                           <AlertCircle className="h-3 w-3 shrink-0" />
                           <span>{fieldErrors.unidad}</span>
                         </p>
@@ -1158,21 +1158,21 @@ export default function GestionProductos({
                   </div>
 
                   {/* STOCK MÍNIMO POR ALMACÉN ACTIVO */}
-                  <div className="pt-2.5 border-t border-[#E2E8F0] space-y-2">
+                  <div className="pt-2.5 border-t border-[#E2E8F0] dark:border-[#263449] space-y-2">
                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                       <div>
-                        <h4 className="text-[11px] font-bold text-[#172033] uppercase tracking-wider flex items-center gap-1.5">
-                          <Warehouse className="h-3 w-3 text-[#059669]" />
+                        <h4 className="text-[11px] font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider flex items-center gap-1.5">
+                          <Warehouse className="h-3 w-3 text-[#059669] dark:text-emerald-400" />
                           <span>Stock Mínimo por Almacén</span>
                         </h4>
-                        <p className="text-[10px] text-[#64748B] mt-0.5">
-                          Límite de alerta de resurtido para cada almacén. El valor <span className="font-semibold text-[#172033]">0</span> desactiva la alerta.
+                        <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8] mt-0.5">
+                          Límite de alerta de resurtido para cada almacén. El valor <span className="font-semibold text-[#172033] dark:text-[#F8FAFC]">0</span> desactiva la alerta.
                         </p>
                       </div>
                     </div>
 
                     {almacenes.length === 0 ? (
-                      <div className="bg-[#F8FAFC] p-3 rounded-lg border border-[#E2E8F0] text-[11px] text-[#64748B] text-center">
+                      <div className="bg-[#F8FAFC] dark:bg-[#182235] p-3 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-[11px] text-[#64748B] dark:text-[#94A3B8] text-center">
                         No hay almacenes activos registrados. Se guardará sin alertas específicas de almacén.
                       </div>
                     ) : (
@@ -1186,24 +1186,24 @@ export default function GestionProductos({
                           return (
                             <div 
                               key={alm.id}
-                              className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-2.5 space-y-1.5 hover:border-slate-300 transition-colors"
+                              className="bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-2.5 space-y-1.5 hover:border-slate-300 dark:hover:border-slate-600 transition-colors"
                             >
                               <div className="flex items-start justify-between">
                                 <div>
-                                  <span className="font-semibold text-[#172033] text-[11px] block">{alm.nombre}</span>
-                                  <span className="text-[10px] text-[#64748B] block">{alm.ubicacion}</span>
+                                  <span className="font-semibold text-[#172033] dark:text-[#F8FAFC] text-[11px] block">{alm.nombre}</span>
+                                  <span className="text-[10px] text-[#64748B] dark:text-[#94A3B8] block">{alm.ubicacion}</span>
                                 </div>
                                 <span className={`text-[9px] font-medium px-1.5 py-0.5 rounded-full border ${
                                   isAlertOff 
-                                    ? "bg-white border-[#E2E8F0] text-[#64748B]" 
-                                    : "bg-emerald-50 border-emerald-200 text-emerald-700 font-semibold"
+                                    ? "bg-white dark:bg-[#0F172A] border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8]" 
+                                    : "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300 font-semibold"
                                 }`}>
                                   {isAlertOff ? "Alerta off (0)" : `≤ ${numVal} ${currentUnitText}`}
                                 </span>
                               </div>
 
                               <div className="flex items-center space-x-2">
-                                <label className="text-[10px] text-[#64748B] shrink-0">Mínimo:</label>
+                                <label className="text-[10px] text-[#64748B] dark:text-[#94A3B8] shrink-0">Mínimo:</label>
                                 <input
                                   type="number"
                                   min={0}
@@ -1217,7 +1217,7 @@ export default function GestionProductos({
                                       [alm.id]: v === "" ? "" : Math.max(0, Number(v))
                                     }));
                                   }}
-                                  className="w-full px-2.5 py-1 bg-white border border-[#E2E8F0] focus:border-[#059669] text-[#172033] text-xs rounded-md focus:outline-none transition-all font-mono"
+                                  className="w-full px-2.5 py-1 bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-md focus:outline-none transition-all font-mono"
                                 />
                               </div>
                             </div>
@@ -1229,12 +1229,12 @@ export default function GestionProductos({
                 </div>
 
                 {/* Modal Footer Controls (Fixed at bottom) */}
-                <div className="p-3.5 border-t border-[#E2E8F0] bg-white flex items-center justify-end space-x-2 shrink-0">
+                <div className="p-3.5 border-t border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111827] flex items-center justify-end space-x-2 shrink-0">
                   <button
                     type="button"
                     disabled={submitLoading}
                     onClick={() => setIsFormOpen(false)}
-                    className="px-3 py-1.5 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors disabled:opacity-40"
+                    className="px-3 py-1.5 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] font-semibold rounded-lg text-xs transition-colors disabled:opacity-40"
                   >
                     Cancelar
                   </button>
@@ -1268,52 +1268,52 @@ export default function GestionProductos({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setCreatedProductPrompt(null)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-5 shadow-2xl overflow-hidden"
             >
               <button
                 onClick={() => setCreatedProductPrompt(null)}
-                className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all"
+                className="absolute top-3 right-3 p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-all"
               >
                 <X className="h-4 w-4" />
               </button>
 
               <div className="flex flex-col items-center text-center p-1">
-                <div className="bg-[#ECFDF5] border border-emerald-200 p-2.5 rounded-full mb-3 text-[#059669]">
+                <div className="bg-[#ECFDF5] dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 p-2.5 rounded-full mb-3 text-[#059669] dark:text-emerald-400">
                   <Sparkles className="h-6 w-6" />
                 </div>
 
-                <h3 className="text-base font-bold text-[#172033]">
+                <h3 className="text-base font-bold text-[#172033] dark:text-[#F8FAFC]">
                   ¡Producto creado correctamente!
                 </h3>
 
-                <p className="text-[#64748B] text-xs mt-1 font-medium">
+                <p className="text-[#64748B] dark:text-[#94A3B8] text-xs mt-1 font-medium">
                   ¿Deseas registrar su entrada inicial?
                 </p>
 
                 {/* Product Summary Badge */}
-                <div className="w-full my-3 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3 text-left font-mono text-xs text-[#172033] space-y-1">
+                <div className="w-full my-3 bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3 text-left font-mono text-xs text-[#172033] dark:text-[#F8FAFC] space-y-1">
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">SKU:</span>
-                    <span className="text-[#059669] font-bold">{createdProductPrompt.sku}</span>
+                    <span className="text-[#64748B] dark:text-[#94A3B8]">SKU:</span>
+                    <span className="text-[#059669] dark:text-emerald-400 font-bold">{createdProductPrompt.sku}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">Nombre:</span>
-                    <span className="text-[#172033] truncate max-w-[200px]">{createdProductPrompt.nombre}</span>
+                    <span className="text-[#64748B] dark:text-[#94A3B8]">Nombre:</span>
+                    <span className="text-[#172033] dark:text-[#F8FAFC] truncate max-w-[200px]">{createdProductPrompt.nombre}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">Categoría:</span>
-                    <span className="text-[#64748B]">{createdProductPrompt.categoria}</span>
+                    <span className="text-[#64748B] dark:text-[#94A3B8]">Categoría:</span>
+                    <span className="text-[#64748B] dark:text-[#94A3B8]">{createdProductPrompt.categoria}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-[#64748B]">Unidad:</span>
-                    <span className="text-[#64748B] capitalize">{createdProductPrompt.unidad}</span>
+                    <span className="text-[#64748B] dark:text-[#94A3B8]">Unidad:</span>
+                    <span className="text-[#64748B] dark:text-[#94A3B8] capitalize">{createdProductPrompt.unidad}</span>
                   </div>
                 </div>
 
@@ -1321,7 +1321,7 @@ export default function GestionProductos({
                   <button
                     type="button"
                     onClick={() => setCreatedProductPrompt(null)}
-                    className="w-full sm:w-1/2 px-3 py-2 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
+                    className="w-full sm:w-1/2 px-3 py-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] font-semibold rounded-lg text-xs transition-colors"
                   >
                     No, permanecer aquí
                   </button>
@@ -1357,32 +1357,32 @@ export default function GestionProductos({
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setIsDeleteOpen(false)}
-                className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
+                className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
               />
 
               <motion.div
                 initial={{ scale: 0.95, opacity: 0, y: 10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                className="relative w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-2xl overflow-hidden"
+                className="relative w-full max-w-md bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-5 shadow-2xl overflow-hidden"
               >
                 <button
                   onClick={() => setIsDeleteOpen(false)}
-                  className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all"
+                  className="absolute top-3 right-3 p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-all"
                 >
                   <X className="h-4 w-4" />
                 </button>
 
                 <div className="flex flex-col items-center text-center p-1">
-                  <div className={`p-2.5 rounded-full mb-3 border ${hasStock ? "bg-amber-50 border-amber-200 text-amber-600" : "bg-rose-50 border-rose-200 text-rose-600"}`}>
+                  <div className={`p-2.5 rounded-full mb-3 border ${hasStock ? "bg-amber-50 dark:bg-amber-950/40 border-amber-200 dark:border-amber-800 text-amber-600 dark:text-amber-400" : "bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400"}`}>
                     <AlertTriangle className="h-6 w-6" />
                   </div>
 
-                  <h3 className="text-base font-bold text-[#172033]">
+                  <h3 className="text-base font-bold text-[#172033] dark:text-[#F8FAFC]">
                     {hasStock ? "Bloqueado: Producto con inventario activo" : "¿Eliminar producto del catálogo?"}
                   </h3>
 
-                  <p className="text-[#64748B] text-xs mt-1.5 leading-relaxed font-sans">
+                  <p className="text-[#64748B] dark:text-[#94A3B8] text-xs mt-1.5 leading-relaxed font-sans">
                     {hasStock 
                       ? `Este producto tiene actualmente stock disponible (${totalQty} ${selectedProduct.unidad}) registrado en tus almacenes. Para proteger la integridad histórica de tu inventario, primero debes liquidar, transferir o dar salida a la mercadería existente de este SKU.`
                       : `¿Estás completamente seguro de eliminar el producto "${selectedProduct.nombre}" (SKU: ${selectedProduct.sku}) del catálogo maestro? Esta acción es definitiva.`}
@@ -1392,7 +1392,7 @@ export default function GestionProductos({
                     <button
                       type="button"
                       onClick={() => setIsDeleteOpen(false)}
-                      className="w-full sm:w-auto px-3.5 py-2 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
+                      className="w-full sm:w-auto px-3.5 py-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] font-semibold rounded-lg text-xs transition-colors"
                     >
                       {hasStock ? "Cerrar" : "Cancelar"}
                     </button>
@@ -1426,48 +1426,48 @@ export default function GestionProductos({
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsImportOpen(false)}
-              className="absolute inset-0 bg-slate-900/40 backdrop-blur-xs"
+              className="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
             />
 
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 10 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              className="relative w-full max-w-lg bg-white border border-[#E2E8F0] rounded-2xl p-5 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
+              className="relative w-full max-w-lg bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-5 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
             >
               <button
                 onClick={() => setIsImportOpen(false)}
-                className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all"
+                className="absolute top-3 right-3 p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-all"
               >
                 <X className="h-4 w-4" />
               </button>
 
               <div className="mb-3 flex items-center space-x-2.5 shrink-0">
-                <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+                <div className="bg-[#ECFDF5] dark:bg-emerald-950/50 p-2 rounded-lg text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                   <Upload className="h-5 w-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#172033]">Importación Masiva de Productos (CSV)</h3>
-                  <p className="text-xs text-[#64748B]">
+                  <h3 className="text-base font-bold text-[#172033] dark:text-[#F8FAFC]">Importación Masiva de Productos (CSV)</h3>
+                  <p className="text-xs text-[#64748B] dark:text-[#94A3B8]">
                     Carga el catálogo de productos de la empresa mediante un archivo plano CSV.
                   </p>
                 </div>
               </div>
 
               {/* CSV Spec Guidelines */}
-              <div className="bg-[#F8FAFC] p-2.5 rounded-lg border border-[#E2E8F0] text-[10px] text-[#64748B] space-y-1.5 shrink-0 mb-3">
-                <div className="flex items-center space-x-1.5 font-semibold text-[#059669]">
+              <div className="bg-[#F8FAFC] dark:bg-[#182235] p-2.5 rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-[10px] text-[#64748B] dark:text-[#94A3B8] space-y-1.5 shrink-0 mb-3">
+                <div className="flex items-center space-x-1.5 font-semibold text-[#059669] dark:text-emerald-400">
                   <FileText className="h-3 w-3" />
                   <span>Especificación requerida del archivo:</span>
                 </div>
                 <p>
                   Sube un archivo delimitado por comas (`.csv`) con las siguientes columnas exactas en la primera fila:
                 </p>
-                <div className="bg-white p-2 rounded font-mono text-[11px] text-[#172033] border border-[#E2E8F0] overflow-x-auto select-all">
+                <div className="bg-white dark:bg-[#0F172A] p-2 rounded font-mono text-[11px] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] overflow-x-auto select-all">
                   sku,nombre,categoria,stock_minimo,unidad
                 </div>
                 <p>
-                  Ejemplo: <span className="font-mono text-[#64748B] text-[10px]">POLO-MET-01,"Tornillo Hexagonal 3/8",Cerrajería Metálica,100,pieza</span>
+                  Ejemplo: <span className="font-mono text-[#64748B] dark:text-[#94A3B8] text-[10px]">POLO-MET-01,"Tornillo Hexagonal 3/8",Cerrajería Metálica,100,pieza</span>
                 </p>
               </div>
 
@@ -1481,10 +1481,10 @@ export default function GestionProductos({
                     onClick={() => fileInputRef.current?.click()}
                     className={`border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-2 ${
                       isDragging 
-                        ? "border-[#059669] bg-emerald-50 text-[#059669]" 
+                        ? "border-[#059669] bg-emerald-50 dark:bg-emerald-950/40 text-[#059669] dark:text-emerald-400" 
                         : csvFile 
-                          ? "border-emerald-300 bg-emerald-50/40" 
-                          : "border-[#E2E8F0] hover:border-slate-300 bg-[#F8FAFC]"
+                          ? "border-emerald-300 dark:border-emerald-700 bg-emerald-50/40 dark:bg-emerald-950/20" 
+                          : "border-[#E2E8F0] dark:border-[#263449] hover:border-slate-300 dark:hover:border-slate-600 bg-[#F8FAFC] dark:bg-[#182235]"
                     }`}
                   >
                     <input
@@ -1495,42 +1495,42 @@ export default function GestionProductos({
                       className="hidden"
                     />
 
-                    <div className="bg-white p-3 rounded-full border border-[#E2E8F0] text-[#64748B]">
-                      <FileText className="h-6 w-6 text-[#64748B]" />
+                    <div className="bg-white dark:bg-[#0F172A] p-3 rounded-full border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8]">
+                      <FileText className="h-6 w-6 text-[#64748B] dark:text-[#94A3B8]" />
                     </div>
 
                     {csvFile ? (
                       <div className="space-y-0.5">
-                        <p className="text-xs font-semibold text-[#059669]">{csvFile.name}</p>
-                        <p className="text-[10px] text-[#64748B]">{(csvFile.size / 1024).toFixed(2)} KB • Archivo listo</p>
+                        <p className="text-xs font-semibold text-[#059669] dark:text-emerald-400">{csvFile.name}</p>
+                        <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8]">{(csvFile.size / 1024).toFixed(2)} KB • Archivo listo</p>
                       </div>
                     ) : (
                       <div className="space-y-0.5">
-                        <p className="text-xs font-semibold text-[#172033]">Arrastra tu archivo CSV aquí</p>
-                        <p className="text-[10px] text-[#64748B]">o haz clic para explorar en el equipo</p>
+                        <p className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC]">Arrastra tu archivo CSV aquí</p>
+                        <p className="text-[10px] text-[#64748B] dark:text-[#94A3B8]">o haz clic para explorar en el equipo</p>
                       </div>
                     )}
                   </div>
                 ) : (
                   /* Import Complete Summary Box */
                   <div className="space-y-3">
-                    <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3.5 space-y-2">
-                      <h4 className="font-bold text-[#172033] flex items-center space-x-1.5 text-xs">
-                        <Check className="h-3.5 w-3.5 text-[#059669]" />
+                    <div className="bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3.5 space-y-2">
+                      <h4 className="font-bold text-[#172033] dark:text-[#F8FAFC] flex items-center space-x-1.5 text-xs">
+                        <Check className="h-3.5 w-3.5 text-[#059669] dark:text-emerald-400" />
                         <span>¡Procesamiento de productos completo!</span>
                       </h4>
                       <div className="grid grid-cols-3 gap-2 text-center">
-                        <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
-                          <span className="text-xl font-bold text-[#059669]">{importResults.successCount}</span>
-                          <span className="block text-[9px] text-[#64748B] uppercase mt-0.5 font-semibold">Cargados</span>
+                        <div className="bg-white dark:bg-[#0F172A] p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449]">
+                          <span className="text-xl font-bold text-[#059669] dark:text-emerald-400">{importResults.successCount}</span>
+                          <span className="block text-[9px] text-[#64748B] dark:text-[#94A3B8] uppercase mt-0.5 font-semibold">Cargados</span>
                         </div>
-                        <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
-                          <span className="text-xl font-bold text-amber-600">{importResults.skippedCount}</span>
-                          <span className="block text-[9px] text-[#64748B] uppercase mt-0.5 font-semibold">Omitidos</span>
+                        <div className="bg-white dark:bg-[#0F172A] p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449]">
+                          <span className="text-xl font-bold text-amber-600 dark:text-amber-400">{importResults.skippedCount}</span>
+                          <span className="block text-[9px] text-[#64748B] dark:text-[#94A3B8] uppercase mt-0.5 font-semibold">Omitidos</span>
                         </div>
-                        <div className="bg-white p-2 rounded-lg border border-[#E2E8F0]">
-                          <span className="text-xl font-bold text-rose-600">{importResults.errors.length}</span>
-                          <span className="block text-[9px] text-[#64748B] uppercase mt-0.5 font-semibold">Alertas</span>
+                        <div className="bg-white dark:bg-[#0F172A] p-2 rounded-lg border border-[#E2E8F0] dark:border-[#263449]">
+                          <span className="text-xl font-bold text-rose-600 dark:text-rose-400">{importResults.errors.length}</span>
+                          <span className="block text-[9px] text-[#64748B] dark:text-[#94A3B8] uppercase mt-0.5 font-semibold">Alertas</span>
                         </div>
                       </div>
                     </div>
@@ -1538,11 +1538,11 @@ export default function GestionProductos({
                     {/* Detailed errors list */}
                     {importResults.errors.length > 0 && (
                       <div className="space-y-1.5">
-                        <h5 className="text-[10px] font-semibold text-[#64748B] uppercase tracking-wider">Bitácora de Advertencias/Errores:</h5>
-                        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-lg p-2.5 max-h-32 overflow-y-auto font-mono text-[9px] text-[#64748B] divide-y divide-[#E2E8F0]">
+                        <h5 className="text-[10px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider">Bitácora de Advertencias/Errores:</h5>
+                        <div className="bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-lg p-2.5 max-h-32 overflow-y-auto font-mono text-[9px] text-[#64748B] dark:text-[#94A3B8] divide-y divide-[#E2E8F0] dark:divide-[#263449]">
                           {importResults.errors.map((err, i) => (
-                            <p key={i} className="py-1 text-rose-700 flex items-start space-x-1.5">
-                              <span className="text-slate-400 shrink-0 select-none">•</span>
+                            <p key={i} className="py-1 text-rose-700 dark:text-rose-400 flex items-start space-x-1.5">
+                              <span className="text-slate-400 dark:text-slate-500 shrink-0 select-none">•</span>
                               <span>{err}</span>
                             </p>
                           ))}
@@ -1554,11 +1554,11 @@ export default function GestionProductos({
               </div>
 
               {/* Footer */}
-              <div className="pt-3 mt-3 border-t border-[#E2E8F0] flex items-center justify-end space-x-2 shrink-0">
+              <div className="pt-3 mt-3 border-t border-[#E2E8F0] dark:border-[#263449] flex items-center justify-end space-x-2 shrink-0">
                 <button
                   type="button"
                   onClick={() => setIsImportOpen(false)}
-                  className="px-3.5 py-1.5 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] font-semibold rounded-lg text-xs transition-colors"
+                  className="px-3.5 py-1.5 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] font-semibold rounded-lg text-xs transition-colors"
                 >
                   Cerrar ventana
                 </button>

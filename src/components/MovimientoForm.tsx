@@ -232,15 +232,15 @@ export default function MovimientoForm({
   return (
     <div className="max-w-3xl mx-auto px-3.5 sm:px-5 py-5" id="movimiento-form-container">
       {/* Main card */}
-      <div className="bg-white border border-[#E2E8F0] rounded-xl shadow-xs overflow-hidden">
-        <div className="border-b border-[#E2E8F0] bg-[#F8FAFC] px-4 sm:px-5 py-3.5 flex items-center justify-between">
+      <div className="bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-xl shadow-xs overflow-hidden">
+        <div className="border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#182235] px-4 sm:px-5 py-3.5 flex items-center justify-between">
           <div className="flex items-center space-x-2.5">
-            <div className="bg-[#ECFDF5] border border-emerald-200 p-1.5 rounded-lg text-[#059669]">
+            <div className="bg-[#ECFDF5] dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 p-1.5 rounded-lg text-[#059669] dark:text-emerald-400">
               <ArrowRightLeft className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-[#172033]">Registrar Movimiento de Mercancía</h2>
-              <p className="text-[11px] text-[#64748B]">
+              <h2 className="text-base font-bold text-[#172033] dark:text-[#F8FAFC]">Registrar Movimiento de Mercancía</h2>
+              <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
                 Registro seguro en la base de datos con actualización atómica de inventario.
               </p>
             </div>
@@ -250,22 +250,22 @@ export default function MovimientoForm({
         <form onSubmit={handleSubmit} className="p-4 sm:p-5 space-y-4">
           {/* Status alerts */}
           {formError && (
-            <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
+            <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/80 text-rose-700 dark:text-rose-400 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
               <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
               <span>{formError}</span>
             </div>
           )}
 
           {formSuccess && (
-            <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
-              <CheckCircle className="h-4 w-4 text-[#059669] shrink-0 mt-0.5" />
+            <div className="bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800/80 text-emerald-800 dark:text-emerald-400 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
+              <CheckCircle className="h-4 w-4 text-[#059669] dark:text-emerald-400 shrink-0 mt-0.5" />
               <span>{formSuccess}</span>
             </div>
           )}
 
           {/* SECTION 1: SKU IDENTIFICATION & SCANNING */}
           <div className="space-y-3">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] border-b border-[#E2E8F0] pb-1.5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] border-b border-[#E2E8F0] dark:border-[#263449] pb-1.5">
               1. Identificación del Producto
             </h3>
 
@@ -274,7 +274,7 @@ export default function MovimientoForm({
               <div className="md:col-span-8">
                 {useCustomSku ? (
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#172033] mb-1">
+                    <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
                       Escribe el nuevo SKU (Código único)
                     </label>
                     <input
@@ -282,18 +282,18 @@ export default function MovimientoForm({
                       placeholder="Ej: SKU-90045"
                       value={sku}
                       onChange={(e) => setSku(e.target.value)}
-                      className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] font-mono placeholder:text-slate-400"
+                      className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500"
                     />
                   </div>
                 ) : (
                   <div>
-                    <label className="block text-[11px] font-semibold text-[#172033] mb-1">
+                    <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
                       Selecciona un producto existente
                     </label>
                     <select
                       value={sku}
                       onChange={handleSkuChange}
-                      className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669] transition-colors"
+                      className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 transition-colors"
                     >
                       <option value="">-- Seleccionar SKU --</option>
                       {productos.map(p => (
@@ -311,7 +311,7 @@ export default function MovimientoForm({
                 <button
                   type="button"
                   onClick={startScanner}
-                  className="flex-1 inline-flex items-center justify-center space-x-1.5 bg-[#ECFDF5] hover:bg-emerald-100 text-[#059669] border border-emerald-200 font-medium py-1.5 px-2.5 rounded-lg text-xs transition-colors"
+                  className="flex-1 inline-flex items-center justify-center space-x-1.5 bg-[#ECFDF5] dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-medium py-1.5 px-2.5 rounded-lg text-xs transition-colors"
                 >
                   <QrCode className="h-3.5 w-3.5" />
                   <span>Escanear Cámara</span>
@@ -324,7 +324,7 @@ export default function MovimientoForm({
                     setSku("");
                     setFormError(null);
                   }}
-                  className="inline-flex items-center justify-center p-2 bg-white hover:bg-[#F1F5F9] text-[#64748B] hover:text-[#172033] rounded-lg border border-[#E2E8F0] text-xs transition-colors"
+                  className="inline-flex items-center justify-center p-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-xs transition-colors"
                   title={useCustomSku ? "Elegir de lista" : "Registrar SKU nuevo"}
                 >
                   <Settings className="h-3.5 w-3.5" />
@@ -339,16 +339,16 @@ export default function MovimientoForm({
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: "auto" }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="bg-[#F8FAFC] p-3 rounded-lg border border-[#E2E8F0] space-y-3 overflow-hidden"
+                  className="bg-[#F8FAFC] dark:bg-[#182235] p-3 rounded-lg border border-[#E2E8F0] dark:border-[#263449] space-y-3 overflow-hidden"
                 >
-                  <div className="flex items-center space-x-1.5 text-amber-700 text-xs font-semibold">
+                  <div className="flex items-center space-x-1.5 text-amber-700 dark:text-amber-400 text-xs font-semibold">
                     <Info className="h-3.5 w-3.5" />
                     <span>¡Estás registrando un nuevo SKU en la base de datos!</span>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#172033] mb-1">
+                      <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
                         Nombre del Producto
                       </label>
                       <input
@@ -356,17 +356,17 @@ export default function MovimientoForm({
                         placeholder="Ej: Cargador USB-C GaN"
                         value={newProductName}
                         onChange={(e) => setNewProductName(e.target.value)}
-                        className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-2.5 text-xs focus:outline-none focus:border-[#059669] placeholder:text-slate-400"
+                        className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
                       />
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#172033] mb-1">
+                      <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
                         Categoría
                       </label>
                       <select
                         value={newProductCategory}
                         onChange={(e) => setNewProductCategory(e.target.value)}
-                        className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-2 text-xs focus:outline-none focus:border-[#059669]"
+                        className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2 text-xs focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500"
                       >
                         <option value="Tecnología">Tecnología</option>
                         <option value="Oficina">Oficina</option>
@@ -375,7 +375,7 @@ export default function MovimientoForm({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-[#172033] mb-1">
+                      <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
                         Mínimo de Alerta
                       </label>
                       <input
@@ -386,7 +386,7 @@ export default function MovimientoForm({
                           const v = e.target.value;
                           setNewProductMinStock(v === "" ? "" : Number(v));
                         }}
-                        className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-2.5 text-xs focus:outline-none focus:border-[#059669]"
+                        className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500"
                       />
                     </div>
                   </div>
@@ -397,14 +397,14 @@ export default function MovimientoForm({
 
           {/* SECTION 2: MOVEMENT TRANSACTION DETAILS */}
           <div className="space-y-3">
-            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] border-b border-[#E2E8F0] pb-1.5">
+            <h3 className="text-[11px] font-semibold uppercase tracking-wider text-[#64748B] dark:text-[#94A3B8] border-b border-[#E2E8F0] dark:border-[#263449] pb-1.5">
               2. Detalles del Movimiento
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Type selector */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#172033] mb-1.5">
+                <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
                   Tipo de Transacción
                 </label>
                 <div className="grid grid-cols-3 gap-1.5">
@@ -416,7 +416,7 @@ export default function MovimientoForm({
                       className={`py-1.5 px-2 text-xs font-semibold capitalize rounded-lg border transition-all ${
                         tipo === t
                           ? "bg-[#059669] text-white border-[#059669] shadow-xs"
-                          : "bg-white text-[#64748B] border-[#E2E8F0] hover:bg-[#F1F5F9] hover:text-[#172033]"
+                          : "bg-white dark:bg-[#0F172A] text-[#64748B] dark:text-[#94A3B8] border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                       }`}
                     >
                       {t === "entrada" && "Entrada"}
@@ -429,7 +429,7 @@ export default function MovimientoForm({
 
               {/* Quantity */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#172033] mb-1.5">
+                <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
                   Cantidad (Unidades)
                 </label>
                 <input
@@ -448,7 +448,7 @@ export default function MovimientoForm({
                       setCantidad(isNaN(parsed) ? "" : parsed);
                     }
                   }}
-                  className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] font-mono placeholder:text-slate-400"
+                  className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500"
                 />
               </div>
             </div>
@@ -456,13 +456,13 @@ export default function MovimientoForm({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {/* Origin Warehouse */}
               <div>
-                <label className="block text-[11px] font-semibold text-[#172033] mb-1.5">
+                <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
                   {tipo === "transferencia" ? "Almacén de Origen" : "Almacén afectado"}
                 </label>
                 <select
                   value={almacenId}
                   onChange={(e) => setAlmacenId(e.target.value)}
-                  className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669]"
+                  className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500"
                 >
                   {almacenes.map(a => (
                     <option key={a.id} value={a.id}>
@@ -475,13 +475,13 @@ export default function MovimientoForm({
               {/* Destination Warehouse (Transfers only) */}
               {tipo === "transferencia" && (
                 <div>
-                  <label className="block text-[11px] font-semibold text-[#172033] mb-1.5">
+                  <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
                     Almacén de Destino
                   </label>
                   <select
                     value={almacenDestinoId}
                     onChange={(e) => setAlmacenDestinoId(e.target.value)}
-                    className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669]"
+                    className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500"
                   >
                     {almacenes.map(a => (
                       <option key={a.id} value={a.id}>
@@ -495,7 +495,7 @@ export default function MovimientoForm({
 
             {/* Reference */}
             <div>
-              <label className="block text-[11px] font-semibold text-[#172033] mb-1.5">
+              <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
                 Referencia / Justificación del movimiento
               </label>
               <input
@@ -504,17 +504,17 @@ export default function MovimientoForm({
                 placeholder="Ej: Factura Compra F-3200, Nota de Entrega N-105, Conteo físico anual..."
                 value={referencia}
                 onChange={(e) => setReferencia(e.target.value)}
-                className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] placeholder:text-slate-400"
+                className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
           </div>
 
           {/* Form Actions */}
-          <div className="pt-3 border-t border-[#E2E8F0] flex items-center justify-end space-x-2.5">
+          <div className="pt-3 border-t border-[#E2E8F0] dark:border-[#263449] flex items-center justify-end space-x-2.5">
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 bg-white hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] rounded-lg text-xs font-medium transition-colors"
+              className="px-4 py-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] rounded-lg text-xs font-medium transition-colors"
             >
               Cancelar
             </button>
@@ -536,21 +536,21 @@ export default function MovimientoForm({
       {/* HTML5 QRCODE CAMERA DIALOG */}
       <AnimatePresence>
         {showScanner && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
             <motion.div 
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-white border border-[#E2E8F0] rounded-2xl w-full max-w-lg overflow-hidden shadow-xl"
+              className="bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl w-full max-w-lg overflow-hidden shadow-xl"
             >
-              <div className="px-5 py-3.5 border-b border-[#E2E8F0] bg-[#F8FAFC] flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-[#059669]">
+              <div className="px-5 py-3.5 border-b border-[#E2E8F0] dark:border-[#263449] bg-[#F8FAFC] dark:bg-[#182235] flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-[#059669] dark:text-emerald-400">
                   <QrCode className="h-4 w-4" />
-                  <span className="font-bold text-sm text-[#172033]">Escanear Código de Barra / QR</span>
+                  <span className="font-bold text-sm text-[#172033] dark:text-[#F8FAFC]">Escanear Código de Barra / QR</span>
                 </div>
                 <button 
                   onClick={stopScanner}
-                  className="p-1 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-colors"
+                  className="p-1 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-colors"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -558,7 +558,7 @@ export default function MovimientoForm({
 
               <div className="p-5 flex flex-col items-center">
                 {scannerError ? (
-                  <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl text-xs flex items-start space-x-2.5 w-full">
+                  <div className="bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800/80 text-rose-700 dark:text-rose-400 p-4 rounded-xl text-xs flex items-start space-x-2.5 w-full">
                     <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
                     <span>{scannerError}</span>
                   </div>
@@ -567,17 +567,17 @@ export default function MovimientoForm({
                     {/* Scanner camera element */}
                     <div 
                       id="qr-scanner-view" 
-                      className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-[#E2E8F0]"
+                      className="w-full aspect-video bg-black rounded-xl overflow-hidden border border-[#E2E8F0] dark:border-[#263449]"
                     />
-                    <p className="text-xs text-[#64748B] mt-3 text-center leading-relaxed">
+                    <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-3 text-center leading-relaxed">
                       Enfoca el código de barras o código QR de tu producto usando la cámara. El sistema lo leerá automáticamente.
                     </p>
                   </div>
                 )}
 
                 {/* Demonstration placeholder values */}
-                <div className="mt-5 pt-4 border-t border-[#E2E8F0] w-full">
-                  <h4 className="text-[11px] font-semibold text-[#64748B] uppercase tracking-wider mb-2">
+                <div className="mt-5 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] w-full">
+                  <h4 className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider mb-2">
                     Códigos de prueba (Demos)
                   </h4>
                   <div className="flex flex-wrap gap-2">
@@ -586,7 +586,7 @@ export default function MovimientoForm({
                         key={demoCode}
                         type="button"
                         onClick={() => handleScanSuccess(demoCode)}
-                        className="bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] px-2.5 py-1 rounded-lg text-xs font-mono transition-colors"
+                        className="bg-[#F8FAFC] dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] px-2.5 py-1 rounded-lg text-xs font-mono transition-colors"
                       >
                         {demoCode}
                       </button>

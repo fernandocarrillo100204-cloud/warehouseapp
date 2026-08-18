@@ -58,36 +58,36 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#FFFFFF] flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-[#FFFFFF] dark:bg-[#0B1220] flex flex-col items-center justify-center p-4 transition-colors">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
-        className="w-full max-w-md bg-white border border-[#E2E8F0] rounded-2xl shadow-sm p-8"
+        className="w-full max-w-md bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-sm p-8"
       >
         {/* Brand Header */}
         <div className="flex flex-col items-center mb-7">
-          <div className="bg-[#ECFDF5] border border-emerald-200 p-3 rounded-2xl text-[#059669] mb-3">
+          <div className="bg-[#ECFDF5] dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 p-3 rounded-2xl text-[#059669] dark:text-emerald-400 mb-3">
             <Warehouse className="h-8 w-8" id="login-brand-icon" />
           </div>
-          <h1 className="text-2xl font-bold text-[#172033] tracking-tight">StockMaster</h1>
-          <p className="text-xs font-semibold text-[#059669] mt-0.5 tracking-wide">
+          <h1 className="text-2xl font-bold text-[#172033] dark:text-[#F8FAFC] tracking-tight">StockMaster</h1>
+          <p className="text-xs font-semibold text-[#059669] dark:text-emerald-400 mt-0.5 tracking-wide">
             Metálicos y Plásticos Polo
           </p>
-          <p className="text-xs text-[#64748B] mt-1 text-center">
+          <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-1 text-center">
             Control de Inventario Multialmacén en Tiempo Real
           </p>
         </div>
 
         {/* Demo Warning / Guide */}
-        <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-4 mb-6">
+        <div className="bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-4 mb-6">
           <div className="flex items-start space-x-3">
             <Database className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
             <div>
-              <h3 className="text-xs font-semibold text-[#172033]">
+              <h3 className="text-xs font-semibold text-[#172033] dark:text-[#F8FAFC]">
                 {isRealFirebase ? "Conexión Firebase Nube Activa" : "Modo Demostración / Emulador"}
               </h3>
-              <p className="text-xs text-[#64748B] mt-1 leading-relaxed">
+              <p className="text-xs text-[#64748B] dark:text-[#94A3B8] mt-1 leading-relaxed">
                 {isRealFirebase 
                   ? "Puedes ingresar con cualquier cuenta Firebase registrada de tu proyecto." 
                   : "Usa las siguientes credenciales preestablecidas para acceder al sistema:"}
@@ -96,7 +96,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 <button
                   type="button"
                   onClick={loadDemoCredentials}
-                  className="mt-2.5 inline-flex items-center text-xs text-[#059669] hover:text-emerald-700 font-medium underline transition-all"
+                  className="mt-2.5 inline-flex items-center text-xs text-[#059669] dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium underline transition-all"
                 >
                   <Key className="h-3 w-3 mr-1" />
                   Autocompletar credenciales de Demo
@@ -110,20 +110,20 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         {error && (
           <div className="space-y-4 mb-6">
             {error.toLowerCase().includes("unauthorized-domain") || error.toLowerCase().includes("unauthorized domain") ? (
-              <div className="bg-amber-50 border border-amber-200 text-amber-900 p-4 rounded-xl text-xs space-y-2.5">
+              <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 p-4 rounded-xl text-xs space-y-2.5">
                 <div className="flex items-start space-x-2">
-                  <AlertCircle className="h-4 w-4 text-amber-600 shrink-0 mt-0.5" />
-                  <div className="font-semibold text-amber-900">Dominio no autorizado en Firebase Auth</div>
+                  <AlertCircle className="h-4 w-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                  <div className="font-semibold text-amber-900 dark:text-amber-200">Dominio no autorizado en Firebase Auth</div>
                 </div>
-                <p className="text-xs text-amber-800 leading-relaxed">
+                <p className="text-xs text-amber-800 dark:text-amber-300 leading-relaxed">
                   Firebase Authentication requiere que autorices el dominio de esta aplicación para habilitar el inicio de sesión con Google.
                 </p>
-                <div className="bg-white p-2.5 rounded-lg border border-amber-200 font-mono text-xs text-emerald-700 break-all select-all">
+                <div className="bg-white dark:bg-[#0F172A] p-2.5 rounded-lg border border-amber-200 dark:border-amber-800 font-mono text-xs text-emerald-700 dark:text-emerald-400 break-all select-all">
                   {window.location.hostname}
                 </div>
               </div>
             ) : (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 px-4 py-3 rounded-xl flex items-start space-x-2.5 text-xs">
+              <div className="bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 px-4 py-3 rounded-xl flex items-start space-x-2.5 text-xs">
                 <AlertCircle className="h-4 w-4 text-rose-500 shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -134,12 +134,12 @@ export default function Login({ onLoginSuccess }: LoginProps) {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold text-[#172033] mb-1.5">
+            <label className="block text-xs font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
               Correo Electrónico
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                <Mail className="h-4 w-4 text-[#64748B]" />
+                <Mail className="h-4 w-4 text-[#64748B] dark:text-[#94A3B8]" />
               </span>
               <input
                 type="email"
@@ -147,18 +147,18 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 placeholder="usuario@empresa.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-[#059669] text-xs sm:text-sm transition-all placeholder:text-slate-400"
+                className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-[#059669] dark:focus:border-emerald-500 text-xs sm:text-sm transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold text-[#172033] mb-1.5">
+            <label className="block text-xs font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
               Contraseña
             </label>
             <div className="relative">
               <span className="absolute inset-y-0 left-0 flex items-center pl-3.5 pointer-events-none">
-                <Lock className="h-4 w-4 text-[#64748B]" />
+                <Lock className="h-4 w-4 text-[#64748B] dark:text-[#94A3B8]" />
               </span>
               <input
                 type="password"
@@ -166,7 +166,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-white border border-[#E2E8F0] text-[#172033] rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-[#059669] text-xs sm:text-sm transition-all placeholder:text-slate-400"
+                className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-xl py-2.5 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-[#059669] dark:focus:border-emerald-500 text-xs sm:text-sm transition-all placeholder:text-slate-400 dark:placeholder:text-slate-500"
               />
             </div>
           </div>
@@ -174,7 +174,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <button
             type="submit"
             disabled={loading}
-            className="w-full flex items-center justify-center space-x-2 bg-[#059669] hover:bg-[#047857] text-white font-semibold rounded-xl py-3 px-4 transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+            className="w-full flex items-center justify-center space-x-2 bg-[#059669] hover:bg-[#047857] dark:bg-[#059669] dark:hover:bg-[#047857] text-white font-semibold rounded-xl py-3 px-4 transition-all shadow-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
           >
             {loading ? (
               <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
@@ -189,10 +189,10 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
         <div className="relative my-5">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-[#E2E8F0]"></div>
+            <div className="w-full border-t border-[#E2E8F0] dark:border-[#263449]"></div>
           </div>
           <div className="relative flex justify-center text-xs">
-            <span className="bg-white px-3 text-[#64748B]">O también</span>
+            <span className="bg-white dark:bg-[#111827] px-3 text-[#64748B] dark:text-[#94A3B8]">O también</span>
           </div>
         </div>
 
@@ -200,7 +200,7 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           type="button"
           onClick={handleGoogleLogin}
           disabled={loading}
-          className="w-full flex items-center justify-center space-x-2.5 bg-white hover:bg-[#F1F5F9] text-[#172033] border border-[#E2E8F0] font-medium rounded-xl py-2.5 px-4 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm shadow-xs"
+          className="w-full flex items-center justify-center space-x-2.5 bg-white dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1e2c44] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] font-medium rounded-xl py-2.5 px-4 transition-all focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm shadow-xs"
         >
           <svg className="h-4 w-4 mr-1" viewBox="0 0 24 24">
             <path
@@ -223,8 +223,8 @@ export default function Login({ onLoginSuccess }: LoginProps) {
           <span>Iniciar sesión con Google</span>
         </button>
 
-        <div className="mt-6 pt-4 border-t border-[#E2E8F0] text-center">
-          <p className="text-[11px] text-[#64748B]">
+        <div className="mt-6 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] text-center">
+          <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8]">
             © {new Date().getFullYear()} StockMaster Corp. Todos los derechos reservados.
           </p>
         </div>

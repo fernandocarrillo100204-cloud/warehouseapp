@@ -383,55 +383,55 @@ export default function ModalCatalogos({
   return (
     <AnimatePresence>
       <div 
-        className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3"
+        className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3"
         id="modal-administrar-catalogos-overlay"
       >
         <motion.div
           initial={{ scale: 0.96, opacity: 0, y: 8 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}
           exit={{ scale: 0.96, opacity: 0, y: 8 }}
-          className="relative w-full max-w-2xl bg-white border border-[#E2E8F0] rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
+          className="relative w-full max-w-2xl bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl shadow-2xl overflow-hidden max-h-[88vh] flex flex-col"
           id="modal-administrar-catalogos-container"
         >
           {/* Close button */}
           <button
             onClick={onClose}
             disabled={actionLoading}
-            className="absolute top-3 right-3 p-1.5 text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9] rounded-lg transition-all disabled:opacity-40 z-20"
+            className="absolute top-3 right-3 p-1.5 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-all disabled:opacity-40 z-20"
             title="Cerrar ventana"
           >
             <X className="h-4 w-4" />
           </button>
 
           {/* Modal Header */}
-          <div className="p-4 pb-3 border-b border-[#E2E8F0] shrink-0">
+          <div className="p-4 pb-3 border-b border-[#E2E8F0] dark:border-[#263449] shrink-0">
             <div className="flex items-center space-x-2.5">
-              <div className="bg-[#ECFDF5] p-2 rounded-lg text-[#059669] border border-emerald-200">
+              <div className="bg-[#ECFDF5] dark:bg-emerald-950/40 p-2 rounded-lg text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800">
                 <FolderTree className="h-5 w-5" />
               </div>
               <div>
-                <h2 className="text-base font-bold text-[#172033] tracking-tight">Administrar Catálogos</h2>
-                <p className="text-[11px] text-[#64748B] mt-0.5">
+                <h2 className="text-base font-bold text-[#172033] dark:text-[#F8FAFC] tracking-tight">Administrar Catálogos</h2>
+                <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] mt-0.5">
                   Gestiona las categorías y unidades de medida maestras del catálogo de productos.
                 </p>
               </div>
             </div>
 
             {/* Navigation Tabs */}
-            <div className="flex items-center space-x-2 mt-3 border-b border-[#E2E8F0] pb-1">
+            <div className="flex items-center space-x-2 mt-3 border-b border-[#E2E8F0] dark:border-[#263449] pb-1">
               <button
                 type="button"
                 onClick={() => handleTabChange("categorias")}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === "categorias"
-                    ? "bg-[#ECFDF5] text-[#059669] border border-emerald-200"
-                    : "text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9]"
+                    ? "bg-[#ECFDF5] dark:bg-emerald-950/50 text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                    : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235]"
                 }`}
               >
                 <Tag className="h-3.5 w-3.5" />
                 <span>Categorías</span>
                 <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
-                  activeTab === "categorias" ? "bg-emerald-100 text-emerald-800" : "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]"
+                  activeTab === "categorias" ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300" : "bg-[#F8FAFC] dark:bg-[#182235] text-[#64748B] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]"
                 }`}>
                   {categorias.length}
                 </span>
@@ -442,14 +442,14 @@ export default function ModalCatalogos({
                 onClick={() => handleTabChange("unidades")}
                 className={`flex items-center space-x-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
                   activeTab === "unidades"
-                    ? "bg-[#ECFDF5] text-[#059669] border border-emerald-200"
-                    : "text-[#64748B] hover:text-[#172033] hover:bg-[#F1F5F9]"
+                    ? "bg-[#ECFDF5] dark:bg-emerald-950/50 text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800"
+                    : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235]"
                 }`}
               >
                 <Scale className="h-3.5 w-3.5" />
                 <span>Unidades de Medida</span>
                 <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono ${
-                  activeTab === "unidades" ? "bg-emerald-100 text-emerald-800" : "bg-[#F8FAFC] text-[#64748B] border border-[#E2E8F0]"
+                  activeTab === "unidades" ? "bg-emerald-100 dark:bg-emerald-900/60 text-emerald-800 dark:text-emerald-300" : "bg-[#F8FAFC] dark:bg-[#182235] text-[#64748B] dark:text-[#94A3B8] border border-[#E2E8F0] dark:border-[#263449]"
                 }`}>
                   {unidades.length}
                 </span>
@@ -460,7 +460,7 @@ export default function ModalCatalogos({
           {/* Feedback alerts */}
           <div className="px-4 pt-2 space-y-1.5 shrink-0">
             {errorMsg && (
-              <div className="bg-rose-50 border border-rose-200 text-rose-700 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
+              <div className="bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-400 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
                 <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
                 <span className="flex-1">{errorMsg}</span>
                 <button onClick={() => setErrorMsg(null)} className="text-rose-500 hover:text-rose-700">
@@ -469,8 +469,8 @@ export default function ModalCatalogos({
               </div>
             )}
             {successMsg && (
-              <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
-                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669] shrink-0 mt-0.5" />
+              <div className="bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 px-3 py-2 rounded-lg flex items-start space-x-2 text-xs">
+                <CheckCircle2 className="h-3.5 w-3.5 text-[#059669] dark:text-emerald-400 shrink-0 mt-0.5" />
                 <span className="flex-1">{successMsg}</span>
                 <button onClick={() => setSuccessMsg(null)} className="text-[#059669] hover:text-emerald-900">
                   <X className="h-3 w-3" />
@@ -483,9 +483,9 @@ export default function ModalCatalogos({
           {activeTab === "categorias" && (
             <div className="p-4 space-y-3.5 overflow-y-auto flex-1 min-h-0">
               {/* Add category form */}
-              <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3">
-                <h3 className="text-[11px] font-bold text-[#172033] uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
-                  <Plus className="h-3 w-3 text-[#059669]" />
+              <div className="bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3">
+                <h3 className="text-[11px] font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
+                  <Plus className="h-3 w-3 text-[#059669] dark:text-emerald-400" />
                   <span>Crear nueva categoría</span>
                 </h3>
                 <form onSubmit={handleAddCategoria} className="flex flex-col sm:flex-row gap-2">
@@ -496,7 +496,7 @@ export default function ModalCatalogos({
                     placeholder="Ej. Inyección de Plástico, Herrajes, Químicos..."
                     value={newCatNombre}
                     onChange={(e) => setNewCatNombre(e.target.value)}
-                    className="flex-1 px-3 py-1.5 bg-white border border-[#E2E8F0] focus:border-[#059669] text-[#172033] text-xs rounded-lg focus:outline-none placeholder:text-slate-400 transition-all"
+                    className="flex-1 px-3 py-1.5 bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
                   />
                   <button
                     type="submit"
@@ -512,30 +512,30 @@ export default function ModalCatalogos({
               {/* Filters & Search */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-0.5">
                 <div className="relative flex-1 max-w-xs">
-                  <Search className="h-3 w-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+                  <Search className="h-3 w-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#64748B] dark:text-[#94A3B8]" />
                   <input
                     type="text"
                     placeholder="Filtrar categorías..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1 bg-white border border-[#E2E8F0] focus:border-[#059669] text-[#172033] text-xs rounded-md focus:outline-none"
+                    className="w-full pl-8 pr-3 py-1 bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-md focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#172033]"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   )}
                 </div>
 
-                <div className="flex items-center space-x-1 bg-[#F8FAFC] p-0.5 rounded-md border border-[#E2E8F0] shrink-0">
+                <div className="flex items-center space-x-1 bg-[#F8FAFC] dark:bg-[#182235] p-0.5 rounded-md border border-[#E2E8F0] dark:border-[#263449] shrink-0">
                   <button
                     type="button"
                     onClick={() => setFilterStatus("todos")}
                     className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${
-                      filterStatus === "todos" ? "bg-white text-[#172033] shadow-2xs border border-[#E2E8F0]" : "text-[#64748B] hover:text-[#172033]"
+                      filterStatus === "todos" ? "bg-white dark:bg-[#0F172A] text-[#172033] dark:text-[#F8FAFC] shadow-2xs border border-[#E2E8F0] dark:border-[#263449]" : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     }`}
                   >
                     Todas ({categorias.length})
@@ -544,7 +544,7 @@ export default function ModalCatalogos({
                     type="button"
                     onClick={() => setFilterStatus("activas")}
                     className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${
-                      filterStatus === "activas" ? "bg-[#ECFDF5] text-[#059669] border border-emerald-200" : "text-[#64748B] hover:text-[#172033]"
+                      filterStatus === "activas" ? "bg-[#ECFDF5] dark:bg-emerald-950/50 text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     }`}
                   >
                     Activas ({categorias.filter(c => c.activa).length})
@@ -553,7 +553,7 @@ export default function ModalCatalogos({
                     type="button"
                     onClick={() => setFilterStatus("desactivadas")}
                     className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${
-                      filterStatus === "desactivadas" ? "bg-white text-[#172033] shadow-2xs border border-[#E2E8F0]" : "text-[#64748B] hover:text-[#172033]"
+                      filterStatus === "desactivadas" ? "bg-white dark:bg-[#0F172A] text-[#172033] dark:text-[#F8FAFC] shadow-2xs border border-[#E2E8F0] dark:border-[#263449]" : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     }`}
                   >
                     Desactivadas ({categorias.filter(c => !c.activa).length})
@@ -564,7 +564,7 @@ export default function ModalCatalogos({
               {/* Categories list */}
               <div className="space-y-1.5">
                 {filteredCategorias.length === 0 ? (
-                  <div className="p-6 text-center bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs text-[#64748B]">
+                  <div className="p-6 text-center bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-xs text-[#64748B] dark:text-[#94A3B8]">
                     {searchQuery ? "No se encontraron categorías con ese término." : "No hay categorías en este estado."}
                   </div>
                 ) : (
@@ -577,8 +577,8 @@ export default function ModalCatalogos({
                         key={cat.id}
                         className={`p-2.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
                           cat.activa 
-                            ? "bg-white border-[#E2E8F0] hover:border-slate-300" 
-                            : "bg-[#F8FAFC] border-[#E2E8F0] opacity-70"
+                            ? "bg-white dark:bg-[#111827] border-[#E2E8F0] dark:border-[#263449] hover:border-slate-300 dark:hover:border-slate-600" 
+                            : "bg-[#F8FAFC] dark:bg-[#182235] border-[#E2E8F0] dark:border-[#263449] opacity-70"
                         }`}
                       >
                         {/* Left Info / Edit mode */}
@@ -590,7 +590,7 @@ export default function ModalCatalogos({
                                 value={editingCatNombre}
                                 onChange={(e) => setEditingCatNombre(e.target.value)}
                                 autoFocus
-                                className="px-2.5 py-1 bg-white border border-[#059669] text-[#172033] text-xs rounded-md focus:outline-none w-full max-w-sm"
+                                className="px-2.5 py-1 bg-white dark:bg-[#0F172A] border border-[#059669] dark:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-md focus:outline-none w-full max-w-sm"
                                 placeholder="Nuevo nombre de la categoría"
                               />
                               <button
@@ -605,7 +605,7 @@ export default function ModalCatalogos({
                               <button
                                 type="button"
                                 onClick={() => setEditingCatId(null)}
-                                className="p-1 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] rounded-md"
+                                className="p-1 bg-white dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1f2d42] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8] rounded-md"
                                 title="Cancelar"
                               >
                                 <X className="h-3.5 w-3.5" />
@@ -613,20 +613,20 @@ export default function ModalCatalogos({
                             </div>
                           ) : (
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="font-semibold text-[#172033] text-xs">{cat.nombre}</span>
+                              <span className="font-semibold text-[#172033] dark:text-[#F8FAFC] text-xs">{cat.nombre}</span>
                               
                               {/* Status badge */}
                               <span className={`text-[9px] font-medium px-1.5 py-0.2 rounded-full border ${
                                 cat.activa 
-                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700" 
-                                  : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]"
+                                  ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300" 
+                                  : "bg-[#F8FAFC] dark:bg-[#182235] border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8]"
                               }`}>
                                 {cat.activa ? "Activa" : "Desactivada"}
                               </span>
 
                               {/* Usage count badge */}
-                              <span className="text-[9px] text-[#64748B] bg-[#F8FAFC] border border-[#E2E8F0] px-1.5 py-0.2 rounded-full flex items-center gap-1">
-                                <Package className="h-2.5 w-2.5 text-slate-400" />
+                              <span className="text-[9px] text-[#64748B] dark:text-[#94A3B8] bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] px-1.5 py-0.2 rounded-full flex items-center gap-1">
+                                <Package className="h-2.5 w-2.5 text-slate-400 dark:text-slate-500" />
                                 <span>{usageCount} {usageCount === 1 ? "producto" : "productos"}</span>
                               </span>
                             </div>
@@ -640,10 +640,10 @@ export default function ModalCatalogos({
                               type="button"
                               onClick={() => handleStartEditCat(cat)}
                               disabled={actionLoading}
-                              className="px-2 py-1 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#172033] rounded-md text-xs flex items-center space-x-1 transition-all shadow-2xs"
+                              className="px-2 py-1 bg-white dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1f2d42] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-md text-xs flex items-center space-x-1 transition-all shadow-2xs"
                               title="Renombrar categoría"
                             >
-                              <Edit3 className="h-3 w-3 text-[#64748B]" />
+                              <Edit3 className="h-3 w-3 text-[#64748B] dark:text-[#94A3B8]" />
                               <span>Renombrar</span>
                             </button>
 
@@ -653,8 +653,8 @@ export default function ModalCatalogos({
                               disabled={actionLoading}
                               className={`px-2 py-1 border rounded-md text-xs font-medium flex items-center space-x-1 transition-all ${
                                 cat.activa
-                                  ? "bg-white hover:bg-amber-50 border-[#E2E8F0] hover:border-amber-200 text-[#64748B] hover:text-amber-700"
-                                  : "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-800"
+                                  ? "bg-white dark:bg-[#182235] hover:bg-amber-50 dark:hover:bg-amber-950/40 border-[#E2E8F0] dark:border-[#263449] hover:border-amber-200 dark:hover:border-amber-800 text-[#64748B] dark:text-[#94A3B8] hover:text-amber-700 dark:hover:text-amber-400"
+                                  : "bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
                               }`}
                               title={cat.activa ? "Desactivar de nuevos productos" : "Activar categoría"}
                             >
@@ -668,7 +668,7 @@ export default function ModalCatalogos({
                                 type="button"
                                 onClick={() => setItemToDelete({ type: "categoria", id: cat.id, nombre: cat.nombre })}
                                 disabled={actionLoading}
-                                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-md text-xs font-medium flex items-center space-x-1 transition-all disabled:opacity-50"
+                                className="px-2 py-1 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-md text-xs font-medium flex items-center space-x-1 transition-all disabled:opacity-50"
                                 title="Eliminar permanentemente del catálogo"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -679,13 +679,13 @@ export default function ModalCatalogos({
                                 <button
                                   type="button"
                                   disabled={true}
-                                  className="px-2 py-1 bg-slate-50 border border-[#E2E8F0] text-slate-400 rounded-md text-xs font-medium flex items-center space-x-1 cursor-not-allowed opacity-60"
+                                  className="px-2 py-1 bg-slate-50 dark:bg-slate-800/40 border border-[#E2E8F0] dark:border-[#263449] text-slate-400 dark:text-slate-500 rounded-md text-xs font-medium flex items-center space-x-1 cursor-not-allowed opacity-60"
                                   title="No se puede eliminar porque está asignado a productos"
                                 >
-                                  <Trash2 className="h-3 w-3 text-slate-400" />
+                                  <Trash2 className="h-3 w-3 text-slate-400 dark:text-slate-500" />
                                   <span>Eliminar</span>
                                 </button>
-                                <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover:block z-30 pointer-events-none w-48 p-1.5 bg-[#172033] text-white text-[10px] leading-tight rounded-md border border-slate-700 shadow-xl text-center">
+                                <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover:block z-30 pointer-events-none w-48 p-1.5 bg-[#172033] dark:bg-[#0B1220] text-white text-[10px] leading-tight rounded-md border border-slate-700 dark:border-slate-600 shadow-xl text-center">
                                   No se puede eliminar porque está asignado a productos
                                 </div>
                               </div>
@@ -704,9 +704,9 @@ export default function ModalCatalogos({
           {activeTab === "unidades" && (
             <div className="p-4 space-y-3.5 overflow-y-auto flex-1 min-h-0">
               {/* Add unit form */}
-              <div className="bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl p-3">
-                <h3 className="text-[11px] font-bold text-[#172033] uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
-                  <Plus className="h-3 w-3 text-[#059669]" />
+              <div className="bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl p-3">
+                <h3 className="text-[11px] font-bold text-[#172033] dark:text-[#F8FAFC] uppercase tracking-wider mb-1.5 flex items-center space-x-1.5">
+                  <Plus className="h-3 w-3 text-[#059669] dark:text-emerald-400" />
                   <span>Registrar nueva unidad de medida</span>
                 </h3>
                 <form onSubmit={handleAddUnidad} className="grid grid-cols-1 sm:grid-cols-12 gap-2">
@@ -718,7 +718,7 @@ export default function ModalCatalogos({
                       placeholder="Nombre (ej. Gramo, Par, Millares)"
                       value={newUnitNombre}
                       onChange={(e) => setNewUnitNombre(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-[#E2E8F0] focus:border-[#059669] text-[#172033] text-xs rounded-lg focus:outline-none placeholder:text-slate-400 transition-all"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 transition-all"
                     />
                   </div>
                   <div className="sm:col-span-3">
@@ -729,7 +729,7 @@ export default function ModalCatalogos({
                       placeholder="Abrev. (ej. g, par, mil)"
                       value={newUnitAbrev}
                       onChange={(e) => setNewUnitAbrev(e.target.value)}
-                      className="w-full px-3 py-1.5 bg-white border border-[#E2E8F0] focus:border-[#059669] text-[#172033] text-xs rounded-lg focus:outline-none placeholder:text-slate-400 font-mono transition-all lowercase"
+                      className="w-full px-3 py-1.5 bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-lg focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500 font-mono transition-all lowercase"
                     />
                   </div>
                   <div className="sm:col-span-3">
@@ -748,30 +748,30 @@ export default function ModalCatalogos({
               {/* Filters & Search */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-0.5">
                 <div className="relative flex-1 max-w-xs">
-                  <Search className="h-3 w-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#64748B]" />
+                  <Search className="h-3 w-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-[#64748B] dark:text-[#94A3B8]" />
                   <input
                     type="text"
                     placeholder="Filtrar por nombre o abreviatura..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    className="w-full pl-8 pr-3 py-1 bg-white border border-[#E2E8F0] focus:border-[#059669] text-[#172033] text-xs rounded-md focus:outline-none"
+                    className="w-full pl-8 pr-3 py-1 bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-md focus:outline-none placeholder:text-slate-400 dark:placeholder:text-slate-500"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery("")}
-                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748B] hover:text-[#172033]"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     >
                       <X className="h-3 w-3" />
                     </button>
                   )}
                 </div>
 
-                <div className="flex items-center space-x-1 bg-[#F8FAFC] p-0.5 rounded-md border border-[#E2E8F0] shrink-0">
+                <div className="flex items-center space-x-1 bg-[#F8FAFC] dark:bg-[#182235] p-0.5 rounded-md border border-[#E2E8F0] dark:border-[#263449] shrink-0">
                   <button
                     type="button"
                     onClick={() => setFilterStatus("todos")}
                     className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${
-                      filterStatus === "todos" ? "bg-white text-[#172033] shadow-2xs border border-[#E2E8F0]" : "text-[#64748B] hover:text-[#172033]"
+                      filterStatus === "todos" ? "bg-white dark:bg-[#0F172A] text-[#172033] dark:text-[#F8FAFC] shadow-2xs border border-[#E2E8F0] dark:border-[#263449]" : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     }`}
                   >
                     Todas ({unidades.length})
@@ -780,7 +780,7 @@ export default function ModalCatalogos({
                     type="button"
                     onClick={() => setFilterStatus("activas")}
                     className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${
-                      filterStatus === "activas" ? "bg-[#ECFDF5] text-[#059669] border border-emerald-200" : "text-[#64748B] hover:text-[#172033]"
+                      filterStatus === "activas" ? "bg-[#ECFDF5] dark:bg-emerald-950/50 text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800" : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     }`}
                   >
                     Activas ({unidades.filter(u => u.activa).length})
@@ -789,7 +789,7 @@ export default function ModalCatalogos({
                     type="button"
                     onClick={() => setFilterStatus("desactivadas")}
                     className={`px-2 py-0.5 text-[10px] font-medium rounded transition-all ${
-                      filterStatus === "desactivadas" ? "bg-white text-[#172033] shadow-2xs border border-[#E2E8F0]" : "text-[#64748B] hover:text-[#172033]"
+                      filterStatus === "desactivadas" ? "bg-white dark:bg-[#0F172A] text-[#172033] dark:text-[#F8FAFC] shadow-2xs border border-[#E2E8F0] dark:border-[#263449]" : "text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
                     }`}
                   >
                     Desactivadas ({unidades.filter(u => !u.activa).length})
@@ -800,7 +800,7 @@ export default function ModalCatalogos({
               {/* Units list */}
               <div className="space-y-1.5">
                 {filteredUnidades.length === 0 ? (
-                  <div className="p-6 text-center bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-xs text-[#64748B]">
+                  <div className="p-6 text-center bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-xs text-[#64748B] dark:text-[#94A3B8]">
                     {searchQuery ? "No se encontraron unidades con ese término." : "No hay unidades en este estado."}
                   </div>
                 ) : (
@@ -813,8 +813,8 @@ export default function ModalCatalogos({
                         key={unit.id}
                         className={`p-2.5 rounded-xl border transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-2 ${
                           unit.activa 
-                            ? "bg-white border-[#E2E8F0] hover:border-slate-300" 
-                            : "bg-[#F8FAFC] border-[#E2E8F0] opacity-70"
+                            ? "bg-white dark:bg-[#111827] border-[#E2E8F0] dark:border-[#263449] hover:border-slate-300 dark:hover:border-slate-600" 
+                            : "bg-[#F8FAFC] dark:bg-[#182235] border-[#E2E8F0] dark:border-[#263449] opacity-70"
                         }`}
                       >
                         {/* Left Info / Edit mode */}
@@ -827,7 +827,7 @@ export default function ModalCatalogos({
                                   value={editingUnitNombre}
                                   onChange={(e) => setEditingUnitNombre(e.target.value)}
                                   autoFocus
-                                  className="w-full px-2.5 py-1 bg-white border border-[#059669] text-[#172033] text-xs rounded-md focus:outline-none"
+                                  className="w-full px-2.5 py-1 bg-white dark:bg-[#0F172A] border border-[#059669] dark:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-md focus:outline-none"
                                   placeholder="Nombre de la unidad"
                                 />
                               </div>
@@ -836,7 +836,7 @@ export default function ModalCatalogos({
                                   type="text"
                                   value={editingUnitAbrev}
                                   onChange={(e) => setEditingUnitAbrev(e.target.value)}
-                                  className="w-full px-2.5 py-1 bg-white border border-[#059669] text-[#172033] text-xs rounded-md focus:outline-none font-mono lowercase"
+                                  className="w-full px-2.5 py-1 bg-white dark:bg-[#0F172A] border border-[#059669] dark:border-emerald-500 text-[#172033] dark:text-[#F8FAFC] text-xs rounded-md focus:outline-none font-mono lowercase"
                                   placeholder="Abrev."
                                 />
                               </div>
@@ -853,7 +853,7 @@ export default function ModalCatalogos({
                                 <button
                                   type="button"
                                   onClick={() => setEditingUnitId(null)}
-                                  className="p-1 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] rounded-md"
+                                  className="p-1 bg-white dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1f2d42] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8] rounded-md"
                                   title="Cancelar"
                                 >
                                   <X className="h-3.5 w-3.5" />
@@ -862,25 +862,25 @@ export default function ModalCatalogos({
                             </div>
                           ) : (
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="font-semibold text-[#172033] text-xs">{unit.nombre}</span>
+                              <span className="font-semibold text-[#172033] dark:text-[#F8FAFC] text-xs">{unit.nombre}</span>
                               
                               {/* Abbreviation badge */}
-                              <span className="font-mono font-bold text-[11px] text-[#059669] bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md">
+                              <span className="font-mono font-bold text-[11px] text-[#059669] dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 px-1.5 py-0.2 rounded-md">
                                 {unit.abreviatura}
                               </span>
 
                               {/* Status badge */}
                               <span className={`text-[9px] font-medium px-1.5 py-0.2 rounded-full border ${
                                 unit.activa 
-                                  ? "bg-emerald-50 border-emerald-200 text-emerald-700" 
-                                  : "bg-[#F8FAFC] border-[#E2E8F0] text-[#64748B]"
+                                  ? "bg-emerald-50 dark:bg-emerald-950/50 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300" 
+                                  : "bg-[#F8FAFC] dark:bg-[#182235] border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8]"
                               }`}>
                                 {unit.activa ? "Activa" : "Desactivada"}
                               </span>
 
                               {/* Usage count badge */}
-                              <span className="text-[9px] text-[#64748B] bg-[#F8FAFC] border border-[#E2E8F0] px-1.5 py-0.2 rounded-full flex items-center gap-1">
-                                <Package className="h-2.5 w-2.5 text-slate-400" />
+                              <span className="text-[9px] text-[#64748B] dark:text-[#94A3B8] bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] px-1.5 py-0.2 rounded-full flex items-center gap-1">
+                                <Package className="h-2.5 w-2.5 text-slate-400 dark:text-slate-500" />
                                 <span>{usageCount} {usageCount === 1 ? "producto" : "productos"}</span>
                               </span>
                             </div>
@@ -894,10 +894,10 @@ export default function ModalCatalogos({
                               type="button"
                               onClick={() => handleStartEditUnit(unit)}
                               disabled={actionLoading}
-                              className="px-2 py-1 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#172033] rounded-md text-xs flex items-center space-x-1 transition-all shadow-2xs"
+                              className="px-2 py-1 bg-white dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1f2d42] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-md text-xs flex items-center space-x-1 transition-all shadow-2xs"
                               title="Editar nombre y abreviatura"
                             >
-                              <Edit3 className="h-3 w-3 text-[#64748B]" />
+                              <Edit3 className="h-3 w-3 text-[#64748B] dark:text-[#94A3B8]" />
                               <span>Editar</span>
                             </button>
 
@@ -907,8 +907,8 @@ export default function ModalCatalogos({
                               disabled={actionLoading}
                               className={`px-2 py-1 border rounded-md text-xs font-medium flex items-center space-x-1 transition-all ${
                                 unit.activa
-                                  ? "bg-white hover:bg-amber-50 border-[#E2E8F0] hover:border-amber-200 text-[#64748B] hover:text-amber-700"
-                                  : "bg-emerald-50 hover:bg-emerald-100 border-emerald-200 text-emerald-800"
+                                  ? "bg-white dark:bg-[#182235] hover:bg-amber-50 dark:hover:bg-amber-950/40 border-[#E2E8F0] dark:border-[#263449] hover:border-amber-200 dark:hover:border-amber-800 text-[#64748B] dark:text-[#94A3B8] hover:text-amber-700 dark:hover:text-amber-400"
+                                  : "bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300"
                               }`}
                               title={unit.activa ? "Desactivar de nuevos productos" : "Activar unidad"}
                             >
@@ -922,7 +922,7 @@ export default function ModalCatalogos({
                                 type="button"
                                 onClick={() => setItemToDelete({ type: "unidad", id: unit.id, nombre: `${unit.nombre} (${unit.abreviatura})` })}
                                 disabled={actionLoading}
-                                className="px-2 py-1 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 rounded-md text-xs font-medium flex items-center space-x-1 transition-all disabled:opacity-50"
+                                className="px-2 py-1 bg-rose-50 dark:bg-rose-950/50 hover:bg-rose-100 dark:hover:bg-rose-900/60 border border-rose-200 dark:border-rose-800 text-rose-700 dark:text-rose-300 rounded-md text-xs font-medium flex items-center space-x-1 transition-all disabled:opacity-50"
                                 title="Eliminar permanentemente del catálogo"
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -933,13 +933,13 @@ export default function ModalCatalogos({
                                 <button
                                   type="button"
                                   disabled={true}
-                                  className="px-2 py-1 bg-slate-50 border border-[#E2E8F0] text-slate-400 rounded-md text-xs font-medium flex items-center space-x-1 cursor-not-allowed opacity-60"
+                                  className="px-2 py-1 bg-slate-50 dark:bg-slate-800/40 border border-[#E2E8F0] dark:border-[#263449] text-slate-400 dark:text-slate-500 rounded-md text-xs font-medium flex items-center space-x-1 cursor-not-allowed opacity-60"
                                   title="No se puede eliminar porque está asignado a productos"
                                 >
-                                  <Trash2 className="h-3 w-3 text-slate-400" />
+                                  <Trash2 className="h-3 w-3 text-slate-400 dark:text-slate-500" />
                                   <span>Eliminar</span>
                                 </button>
-                                <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover:block z-30 pointer-events-none w-48 p-1.5 bg-[#172033] text-white text-[10px] leading-tight rounded-md border border-slate-700 shadow-xl text-center">
+                                <div className="absolute bottom-full right-0 mb-1.5 hidden group-hover:block z-30 pointer-events-none w-48 p-1.5 bg-[#172033] dark:bg-[#0B1220] text-white text-[10px] leading-tight rounded-md border border-slate-700 dark:border-slate-600 shadow-xl text-center">
                                   No se puede eliminar porque está asignado a productos
                                 </div>
                               </div>
@@ -955,15 +955,15 @@ export default function ModalCatalogos({
           )}
 
           {/* Modal Footer (Fixed at bottom) */}
-          <div className="p-3 px-4 border-t border-[#E2E8F0] bg-white flex items-center justify-between shrink-0">
-            <div className="flex items-center space-x-1.5 text-[10px] text-[#64748B]">
-              <Info className="h-3 w-3 text-[#64748B]" />
+          <div className="p-3 px-4 border-t border-[#E2E8F0] dark:border-[#263449] bg-white dark:bg-[#111827] flex items-center justify-between shrink-0">
+            <div className="flex items-center space-x-1.5 text-[10px] text-[#64748B] dark:text-[#94A3B8]">
+              <Info className="h-3 w-3 text-[#64748B] dark:text-[#94A3B8]" />
               <span>Opciones en uso solo pueden desactivarse para preservar la integridad del historial.</span>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="px-3.5 py-1.5 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#172033] text-xs font-semibold rounded-lg transition-all"
+              className="px-3.5 py-1.5 bg-white dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1f2d42] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] text-xs font-semibold rounded-lg transition-all"
             >
               Cerrar
             </button>
@@ -974,37 +974,37 @@ export default function ModalCatalogos({
         <AnimatePresence>
           {itemToDelete && (
             <div 
-              className="fixed inset-0 z-[60] bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-3"
+              className="fixed inset-0 z-[60] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3"
               id="confirm-delete-catalog-overlay"
             >
               <motion.div
                 initial={{ scale: 0.95, opacity: 0, y: 10 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                className="relative w-full max-w-sm bg-white border border-[#E2E8F0] rounded-2xl p-4 shadow-2xl overflow-hidden"
+                className="relative w-full max-w-sm bg-white dark:bg-[#111827] border border-[#E2E8F0] dark:border-[#263449] rounded-2xl p-4 shadow-2xl overflow-hidden"
                 id="confirm-delete-catalog-container"
               >
                 <div className="flex items-start space-x-2.5">
-                  <div className="p-2 bg-rose-50 border border-rose-200 rounded-xl text-rose-600 shrink-0">
+                  <div className="p-2 bg-rose-50 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-800 rounded-xl text-rose-600 dark:text-rose-400 shrink-0">
                     <AlertTriangle className="h-5 w-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-bold text-[#172033]">
+                    <h3 className="text-sm font-bold text-[#172033] dark:text-[#F8FAFC]">
                       ¿Eliminar {itemToDelete.type === "categoria" ? "categoría" : "unidad de medida"}?
                     </h3>
-                    <p className="text-[11px] text-[#64748B] mt-0.5 leading-relaxed">
-                      Estás por eliminar <span className="font-semibold text-[#172033]">"{itemToDelete.nombre}"</span> de forma definitiva.
+                    <p className="text-[11px] text-[#64748B] dark:text-[#94A3B8] mt-0.5 leading-relaxed">
+                      Estás por eliminar <span className="font-semibold text-[#172033] dark:text-[#F8FAFC]">"{itemToDelete.nombre}"</span> de forma definitiva.
                     </p>
                   </div>
                 </div>
 
-                <div className="my-3 p-2.5 bg-[#F8FAFC] border border-[#E2E8F0] rounded-xl text-[11px] space-y-1.5 text-[#172033]">
-                  <div className="flex items-center space-x-1.5 text-[#059669] font-medium">
+                <div className="my-3 p-2.5 bg-[#F8FAFC] dark:bg-[#182235] border border-[#E2E8F0] dark:border-[#263449] rounded-xl text-[11px] space-y-1.5 text-[#172033] dark:text-[#F8FAFC]">
+                  <div className="flex items-center space-x-1.5 text-[#059669] dark:text-emerald-400 font-medium">
                     <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
                     <span>0 productos asignados actualmente</span>
                   </div>
-                  <div className="flex items-start space-x-1.5 text-rose-600 text-[10px] leading-tight">
-                    <AlertCircle className="h-3.5 w-3.5 text-rose-500 shrink-0 mt-0.5" />
+                  <div className="flex items-start space-x-1.5 text-rose-600 dark:text-rose-400 text-[10px] leading-tight">
+                    <AlertCircle className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400 shrink-0 mt-0.5" />
                     <span>
                       Esta acción es <strong>irreversible</strong> y se eliminará permanentemente de la base de datos.
                     </span>
@@ -1016,7 +1016,7 @@ export default function ModalCatalogos({
                     type="button"
                     onClick={() => setItemToDelete(null)}
                     disabled={actionLoading}
-                    className="px-3 py-1.5 bg-white hover:bg-[#F1F5F9] border border-[#E2E8F0] text-[#64748B] hover:text-[#172033] text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
+                    className="px-3 py-1.5 bg-white dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1f2d42] border border-[#E2E8F0] dark:border-[#263449] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] text-xs font-semibold rounded-lg transition-all disabled:opacity-50"
                   >
                     Cancelar
                   </button>

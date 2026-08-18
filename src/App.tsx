@@ -89,9 +89,9 @@ export default function App() {
   // Render Loading spinner during initial firebase state check
   if (authChecking) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center text-[#64748B]">
+      <div className="min-h-screen bg-white dark:bg-[#0B1220] flex flex-col items-center justify-center text-[#64748B] dark:text-[#94A3B8] transition-colors">
         <span className="h-9 w-9 border-3 border-[#059669] border-t-transparent rounded-full animate-spin mb-4" />
-        <p className="text-xs font-medium text-[#172033]">Iniciando entorno de inventario...</p>
+        <p className="text-xs font-medium text-[#172033] dark:text-[#F8FAFC]">Iniciando entorno de inventario...</p>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-white text-[#172033] flex flex-col md:flex-row font-sans selection:bg-[#ECFDF5] selection:text-[#059669]">
+    <div className="min-h-screen bg-white dark:bg-[#0B1220] text-[#172033] dark:text-[#F8FAFC] flex flex-col md:flex-row font-sans selection:bg-[#ECFDF5] dark:selection:bg-emerald-950/60 selection:text-[#059669] dark:selection:text-emerald-400 transition-colors duration-200">
       {/* Left Minimalist Sidebar (Desktop permanent + Mobile slide-over) */}
       <Sidebar 
         user={user} 
