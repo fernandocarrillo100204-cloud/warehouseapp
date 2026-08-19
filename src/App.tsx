@@ -22,6 +22,7 @@ export default function App() {
   
   const [activeTab, setActiveTab] = useState<NavigationTab>("movimientos");
   const [preselectedSku, setPreselectedSku] = useState("");
+  const [preselectedAlmacenId, setPreselectedAlmacenId] = useState("");
 
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
@@ -63,17 +64,15 @@ export default function App() {
       // Reset active views
       setActiveTab("movimientos");
       setPreselectedSku("");
+      setPreselectedAlmacenId("");
     } catch (err) {
       console.error("Error signing out:", err);
     }
   };
 
-  const handleNavigateToMovements = (sku?: string) => {
-    if (sku) {
-      setPreselectedSku(sku);
-    } else {
-      setPreselectedSku("");
-    }
+  const handleNavigateToMovements = (sku?: string, almacenId?: string) => {
+    setPreselectedSku(sku || "");
+    setPreselectedAlmacenId(almacenId || "");
     setActiveTab("movimientos");
   };
 
@@ -206,13 +205,16 @@ export default function App() {
                     almacenes={almacenes} 
                     productos={productos} 
                     preselectedSku={preselectedSku}
+                    preselectedAlmacenId={preselectedAlmacenId}
                     onSuccess={() => {
-                      // Navigate to historial or keep on form with cleared SKU
+                      // Navigate to historial or keep on form with cleared SKU and warehouse
                       setActiveTab("historial");
                       setPreselectedSku("");
+                      setPreselectedAlmacenId("");
                     }}
                     onCancel={() => {
                       setPreselectedSku("");
+                      setPreselectedAlmacenId("");
                     }}
                   />
                 </motion.div>

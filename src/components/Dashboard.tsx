@@ -23,7 +23,7 @@ import {
 interface DashboardProps {
   almacenes: Almacen[];
   productos: Producto[];
-  onNavigateToMovements: (sku?: string) => void;
+  onNavigateToMovements: (sku?: string, almacenId?: string) => void;
   onNavigateToHistory: (sku?: string) => void;
 }
 
@@ -606,8 +606,8 @@ export default function Dashboard({
                       <td className="py-2.5 px-3.5 text-right">
                         <div className="flex items-center justify-end space-x-1.5">
                           <button
-                            onClick={() => onNavigateToMovements(prod.sku)}
-                            className="p-1 hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#64748B] dark:text-[#94A3B8] hover:text-[#059669] dark:hover:text-emerald-400 rounded-md transition-colors"
+                            onClick={() => onNavigateToMovements(prod.sku, selectedAlmacen !== "all" ? selectedAlmacen : undefined)}
+                            className="p-1 hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#64748B] dark:text-[#94A3B8] hover:text-[#059669] dark:hover:text-emerald-400 rounded-md transition-colors cursor-pointer"
                             title="Registrar movimiento"
                           >
                             <ArrowRightLeft className="h-3.5 w-3.5" />

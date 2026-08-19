@@ -43,6 +43,13 @@ export interface Movimiento {
     nanoseconds: number;
   } | Date;
   almacen_destino_id?: string; // Para transferencias
+  estado?: "activo" | "anulado"; // Estado del movimiento (por defecto activo)
+  anulado_at?: {
+    seconds: number;
+    nanoseconds: number;
+  } | Date;
+  anulado_por?: string; // Usuario / Email que realizó la anulación
+  motivo_anulacion?: string; // Motivo opcional de la anulación
 }
 
 export interface Usuario {

@@ -9,15 +9,11 @@ import { Almacen, Producto } from "../types";
 import { 
   ArrowRightLeft, 
   QrCode, 
-  PlusCircle, 
-  MinusCircle, 
   Settings, 
   CheckCircle, 
   X, 
   AlertCircle, 
-  Info,
-  Layers,
-  HelpCircle
+  Info
 } from "lucide-react";
 import { Html5Qrcode } from "html5-qrcode";
 import { motion, AnimatePresence } from "motion/react";
@@ -26,6 +22,7 @@ interface MovimientoFormProps {
   almacenes: Almacen[];
   productos: Producto[];
   preselectedSku?: string;
+  preselectedAlmacenId?: string;
   onSuccess: () => void;
   onCancel: () => void;
 }
@@ -34,6 +31,7 @@ export default function MovimientoForm({
   almacenes, 
   productos, 
   preselectedSku = "", 
+  preselectedAlmacenId = "",
   onSuccess, 
   onCancel 
 }: MovimientoFormProps) {
@@ -43,8 +41,14 @@ export default function MovimientoForm({
   const [newProductCategory, setNewProductCategory] = useState("Tecnología");
   const [newProductMinStock, setNewProductMinStock] = useState<number | string>(5);
   
-  const [almacenId, setAlmacenId] = useState("");
-  const [almacenDestinoId, setAlmacenDestinoId] = useState("");
+  // Warehouses MUST start empty unless explicitly provided via contextual action with BOTH sku and almacen
+  const [almacenId, setAlmacenId] = useState<string>(() => {
+    if (preselectedSku && preselectedAlmacenId) {
+      return preselectedAlmacenId;
+    }
+    return "";
+  });
+  const [almacenDestinoId, setAlmacenDestinoId] = useState<string>("");
   const [tipo, setTipo] = useState<"entrada" | "salida" | "transferencia">("entrada");
   const [cantidad, setCantidad] = useState<number | string>(1);
   const [referencia, setReferencia] = useState("");
@@ -53,32 +57,43 @@ export default function MovimientoForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
 
+  // Field-specific validation errors
+  const [almacenError, setAlmacenError] = useState<string | null>(null);
+  const [almacenDestinoError, setAlmacenDestinoError] = useState<string | null>(null);
+  const [skuError, setSkuError] = useState<string | null>(null);
+
   // QR/Barcode Scanner state
   const [showScanner, setShowScanner] = useState(false);
   const [scannerError, setScannerError] = useState<string | null>(null);
   const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
 
+  // Synchronize contextual preselection ONLY when both product and warehouse are explicitly sent
   useEffect(() => {
-    if (preselectedSku) {
+    if (preselectedSku && preselectedAlmacenId) {
+      setSku(preselectedSku);
+      setAlmacenId(preselectedAlmacenId);
+      setUseCustomSku(false);
+    } else if (preselectedSku) {
       setSku(preselectedSku);
       setUseCustomSku(false);
     }
-  }, [preselectedSku]);
+  }, [preselectedSku, preselectedAlmacenId]);
 
-  // Set default warehouse if available
-  useEffect(() => {
-    if (almacenes.length > 0) {
-      setAlmacenId((prev) => (prev ? prev : almacenes[0].id));
-    }
-    if (almacenes.length > 1) {
-      setAlmacenDestinoId((prev) => (prev ? prev : almacenes[1].id));
-    }
-  }, [almacenes]);
+  // Handler for changing transaction type: MUST clear any selected warehouse
+  const handleTipoChange = (newTipo: "entrada" | "salida" | "transferencia") => {
+    setTipo(newTipo);
+    setAlmacenId("");
+    setAlmacenDestinoId("");
+    setAlmacenError(null);
+    setAlmacenDestinoError(null);
+    setFormError(null);
+  };
 
   // Handle SKU changes to toggle "New product" creation state
   const handleSkuChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const val = e.target.value;
     setSku(val);
+    setSkuError(null);
     setFormError(null);
   };
 
@@ -91,7 +106,6 @@ export default function MovimientoForm({
     setTimeout(async () => {
       try {
         const qrInstance = new Html5Qrcode("qr-scanner-view");
-        html5QrcodeRef.ref = qrInstance; // Keep ref manually
         html5QrcodeRef.current = qrInstance;
 
         await qrInstance.start(
@@ -138,6 +152,7 @@ export default function MovimientoForm({
     // Check if the scanned SKU matches an existing product
     const exists = productos.some(p => p.sku.toLowerCase() === decodedSku.toLowerCase());
     setSku(decodedSku);
+    setSkuError(null);
     
     if (exists) {
       setUseCustomSku(false);
@@ -165,26 +180,53 @@ export default function MovimientoForm({
     e.preventDefault();
     setFormError(null);
     setFormSuccess(null);
+    setAlmacenError(null);
+    setAlmacenDestinoError(null);
+    setSkuError(null);
 
-    // Form validations
-    if (!sku) {
-      setFormError("Por favor ingresa o selecciona un SKU.");
-      return;
+    let hasError = false;
+
+    // 1. Validate SKU
+    if (!sku.trim()) {
+      setSkuError("Por favor ingresa o selecciona un SKU.");
+      hasError = true;
     }
 
+    // 2. Validate Origin Warehouse (MUST NOT be empty)
     if (!almacenId) {
-      setFormError("Por favor selecciona el almacén de origen.");
-      return;
+      setAlmacenError(
+        tipo === "transferencia" 
+          ? "Por favor selecciona el almacén de origen." 
+          : "Por favor selecciona el almacén para el movimiento."
+      );
+      hasError = true;
     }
 
-    if (tipo === "transferencia" && almacenId === almacenDestinoId) {
-      setFormError("El almacén de destino debe ser diferente al de origen.");
-      return;
+    // 3. Validate Destination Warehouse in transfers
+    if (tipo === "transferencia") {
+      if (!almacenDestinoId) {
+        setAlmacenDestinoError("Por favor selecciona el almacén de destino.");
+        hasError = true;
+      } else if (almacenId && almacenId === almacenDestinoId) {
+        setAlmacenDestinoError("El almacén de destino no puede ser igual al de origen.");
+        hasError = true;
+      }
     }
 
+    // 4. Validate Quantity
     const numCantidad = Number(cantidad);
     if (!cantidad || isNaN(numCantidad) || numCantidad <= 0) {
       setFormError("La cantidad debe ser mayor a 0.");
+      hasError = true;
+    }
+
+    // 5. Validate Reference
+    if (!referencia.trim()) {
+      setFormError("Por favor ingresa una referencia o justificación para el movimiento.");
+      hasError = true;
+    }
+
+    if (hasError) {
       return;
     }
 
@@ -217,7 +259,19 @@ export default function MovimientoForm({
 
       setFormSuccess(`¡Movimiento registrado con éxito! Folio asignado: ${result.folio}`);
       
-      // Notify parent & reset
+      // Reset warehouse states back to empty after successful save
+      setAlmacenId("");
+      setAlmacenDestinoId("");
+      setSku("");
+      setCantidad(1);
+      setReferencia("");
+      setUseCustomSku(false);
+      setNewProductName("");
+      setAlmacenError(null);
+      setAlmacenDestinoError(null);
+      setSkuError(null);
+      
+      // Notify parent
       setTimeout(() => {
         onSuccess();
       }, 1000);
@@ -275,25 +329,36 @@ export default function MovimientoForm({
                 {useCustomSku ? (
                   <div>
                     <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
-                      Escribe el nuevo SKU (Código único)
+                      Escribe el nuevo SKU (Código único) *
                     </label>
                     <input
                       type="text"
                       placeholder="Ej: SKU-90045"
                       value={sku}
-                      onChange={(e) => setSku(e.target.value)}
-                      className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500"
+                      onChange={(e) => {
+                        setSku(e.target.value);
+                        setSkuError(null);
+                      }}
+                      className={`w-full bg-white dark:bg-[#0F172A] border ${
+                        skuError 
+                          ? "border-rose-500 dark:border-rose-500" 
+                          : "border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500"
+                      } text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-3 text-xs sm:text-sm focus:outline-none font-mono placeholder:text-slate-400 dark:placeholder:text-slate-500`}
                     />
                   </div>
                 ) : (
                   <div>
                     <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
-                      Selecciona un producto existente
+                      Selecciona un producto existente *
                     </label>
                     <select
                       value={sku}
                       onChange={handleSkuChange}
-                      className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500 transition-colors"
+                      className={`w-full bg-white dark:bg-[#0F172A] border ${
+                        skuError 
+                          ? "border-rose-500 dark:border-rose-500" 
+                          : "border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500"
+                      } text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none transition-colors`}
                     >
                       <option value="">-- Seleccionar SKU --</option>
                       {productos.map(p => (
@@ -304,6 +369,12 @@ export default function MovimientoForm({
                     </select>
                   </div>
                 )}
+                {skuError && (
+                  <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 flex items-center space-x-1">
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    <span>{skuError}</span>
+                  </p>
+                )}
               </div>
 
               {/* Scan Barcode Button */}
@@ -311,7 +382,7 @@ export default function MovimientoForm({
                 <button
                   type="button"
                   onClick={startScanner}
-                  className="flex-1 inline-flex items-center justify-center space-x-1.5 bg-[#ECFDF5] dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-medium py-1.5 px-2.5 rounded-lg text-xs transition-colors"
+                  className="flex-1 inline-flex items-center justify-center space-x-1.5 bg-[#ECFDF5] dark:bg-emerald-950/50 hover:bg-emerald-100 dark:hover:bg-emerald-900/60 text-[#059669] dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-medium py-1.5 px-2.5 rounded-lg text-xs transition-colors cursor-pointer"
                 >
                   <QrCode className="h-3.5 w-3.5" />
                   <span>Escanear Cámara</span>
@@ -322,9 +393,10 @@ export default function MovimientoForm({
                   onClick={() => {
                     setUseCustomSku(!useCustomSku);
                     setSku("");
+                    setSkuError(null);
                     setFormError(null);
                   }}
-                  className="inline-flex items-center justify-center p-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-xs transition-colors"
+                  className="inline-flex items-center justify-center p-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] rounded-lg border border-[#E2E8F0] dark:border-[#263449] text-xs transition-colors cursor-pointer"
                   title={useCustomSku ? "Elegir de lista" : "Registrar SKU nuevo"}
                 >
                   <Settings className="h-3.5 w-3.5" />
@@ -349,7 +421,7 @@ export default function MovimientoForm({
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     <div>
                       <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1">
-                        Nombre del Producto
+                        Nombre del Producto *
                       </label>
                       <input
                         type="text"
@@ -412,8 +484,8 @@ export default function MovimientoForm({
                     <button
                       key={t}
                       type="button"
-                      onClick={() => setTipo(t)}
-                      className={`py-1.5 px-2 text-xs font-semibold capitalize rounded-lg border transition-all ${
+                      onClick={() => handleTipoChange(t)}
+                      className={`py-1.5 px-2 text-xs font-semibold capitalize rounded-lg border transition-all cursor-pointer ${
                         tipo === t
                           ? "bg-[#059669] text-white border-[#059669] shadow-xs"
                           : "bg-white dark:bg-[#0F172A] text-[#64748B] dark:text-[#94A3B8] border-[#E2E8F0] dark:border-[#263449] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] hover:text-[#172033] dark:hover:text-[#F8FAFC]"
@@ -430,7 +502,7 @@ export default function MovimientoForm({
               {/* Quantity */}
               <div>
                 <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
-                  Cantidad (Unidades)
+                  Cantidad (Unidades) *
                 </label>
                 <input
                   type="number"
@@ -454,41 +526,81 @@ export default function MovimientoForm({
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {/* Origin Warehouse */}
+              {/* Origin Warehouse Selector - Starts empty, shows disabled placeholder */}
               <div>
                 <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
-                  {tipo === "transferencia" ? "Almacén de Origen" : "Almacén afectado"}
+                  {tipo === "transferencia" ? "Almacén de Origen *" : "Almacén afectado *"}
                 </label>
                 <select
+                  id="select-almacen-origen"
                   value={almacenId}
-                  onChange={(e) => setAlmacenId(e.target.value)}
-                  className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500"
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setAlmacenId(val);
+                    setAlmacenError(null);
+                    if (tipo === "transferencia" && val && val === almacenDestinoId) {
+                      setAlmacenDestinoError("El almacén de destino no puede ser igual al de origen.");
+                    } else if (almacenDestinoError && val !== almacenDestinoId) {
+                      setAlmacenDestinoError(null);
+                    }
+                  }}
+                  className={`w-full bg-white dark:bg-[#0F172A] border ${
+                    almacenError 
+                      ? "border-rose-500 dark:border-rose-500 focus:border-rose-500" 
+                      : "border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500"
+                  } text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none transition-colors`}
                 >
+                  <option value="" disabled>-- Seleccionar almacén --</option>
                   {almacenes.map(a => (
                     <option key={a.id} value={a.id}>
                       {a.nombre} ({a.ubicacion})
                     </option>
                   ))}
                 </select>
+                {almacenError && (
+                  <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 flex items-center space-x-1">
+                    <AlertCircle className="h-3 w-3 shrink-0" />
+                    <span>{almacenError}</span>
+                  </p>
+                )}
               </div>
 
-              {/* Destination Warehouse (Transfers only) */}
+              {/* Destination Warehouse Selector (Transfers only) - Starts empty */}
               {tipo === "transferencia" && (
                 <div>
                   <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
-                    Almacén de Destino
+                    Almacén de Destino *
                   </label>
                   <select
+                    id="select-almacen-destino"
                     value={almacenDestinoId}
-                    onChange={(e) => setAlmacenDestinoId(e.target.value)}
-                    className="w-full bg-white dark:bg-[#0F172A] border border-[#E2E8F0] dark:border-[#263449] text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none focus:border-[#059669] dark:focus:border-emerald-500"
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setAlmacenDestinoId(val);
+                      setAlmacenDestinoError(null);
+                      if (val && val === almacenId) {
+                        setAlmacenDestinoError("El almacén de destino debe ser diferente al de origen.");
+                      }
+                    }}
+                    className={`w-full bg-white dark:bg-[#0F172A] border ${
+                      almacenDestinoError 
+                        ? "border-rose-500 dark:border-rose-500 focus:border-rose-500" 
+                        : "border-[#E2E8F0] dark:border-[#263449] focus:border-[#059669] dark:focus:border-emerald-500"
+                    } text-[#172033] dark:text-[#F8FAFC] rounded-lg py-1.5 px-2.5 text-xs sm:text-sm focus:outline-none transition-colors`}
                   >
+                    <option value="" disabled>-- Seleccionar almacén --</option>
                     {almacenes.map(a => (
-                      <option key={a.id} value={a.id}>
-                        {a.nombre} ({a.ubicacion})
+                      <option key={a.id} value={a.id} disabled={a.id === almacenId}>
+                        {a.nombre} ({a.ubicacion}) {a.id === almacenId ? "— (Mismo que origen)" : ""}
                       </option>
                     ))}
                   </select>
+                  {almacenDestinoError && (
+                    <p className="text-[11px] text-rose-600 dark:text-rose-400 mt-1 flex items-center space-x-1">
+                      <AlertCircle className="h-3 w-3 shrink-0" />
+                      <span>{almacenDestinoError}</span>
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -496,7 +608,7 @@ export default function MovimientoForm({
             {/* Reference */}
             <div>
               <label className="block text-[11px] font-semibold text-[#172033] dark:text-[#F8FAFC] mb-1.5">
-                Referencia / Justificación del movimiento
+                Referencia / Justificación del movimiento *
               </label>
               <input
                 type="text"
@@ -514,14 +626,14 @@ export default function MovimientoForm({
             <button
               type="button"
               onClick={onCancel}
-              className="px-4 py-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] rounded-lg text-xs font-medium transition-colors"
+              className="px-4 py-2 bg-white dark:bg-[#0F172A] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white rounded-lg text-xs font-semibold transition-all shadow-xs focus:outline-none"
+              className="px-4 py-2 bg-[#059669] hover:bg-[#047857] text-white rounded-lg text-xs font-semibold transition-all shadow-xs focus:outline-none cursor-pointer"
             >
               {loading ? (
                 <span className="h-3.5 w-3.5 border-2 border-white border-t-transparent rounded-full animate-spin inline-block" />
@@ -550,7 +662,7 @@ export default function MovimientoForm({
                 </div>
                 <button 
                   onClick={stopScanner}
-                  className="p-1 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-colors"
+                  className="p-1 text-[#64748B] dark:text-[#94A3B8] hover:text-[#172033] dark:hover:text-[#F8FAFC] hover:bg-[#F1F5F9] dark:hover:bg-[#182235] rounded-lg transition-colors cursor-pointer"
                 >
                   <X className="h-4 w-4" />
                 </button>
@@ -586,7 +698,7 @@ export default function MovimientoForm({
                         key={demoCode}
                         type="button"
                         onClick={() => handleScanSuccess(demoCode)}
-                        className="bg-[#F8FAFC] dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] px-2.5 py-1 rounded-lg text-xs font-mono transition-colors"
+                        className="bg-[#F8FAFC] dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] px-2.5 py-1 rounded-lg text-xs font-mono transition-colors cursor-pointer"
                       >
                         {demoCode}
                       </button>
