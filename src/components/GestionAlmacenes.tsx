@@ -21,48 +21,59 @@ import {
 import { motion, AnimatePresence } from "motion/react";
 
 interface GestionAlmacenesProps {
-  productos: Producto[];
+  almacenes?: Almacen[];
+  productos?: Producto[];
+  stockList?: StockItem[];
 }
 
-export default function GestionAlmacenes({ productos }: GestionAlmacenesProps) {
-  const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
-  const [stockList, setStockList] = useState<StockItem[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function GestionAlmacenes({ 
+  almacenes: propAlmacenes, 
+  productos = [], 
+  stockList: propStockList 
+}: GestionAlmacenesProps) {
+  const [internalAlmacenes, setInternalAlmacenes] = useState<Almacen[]>(propAlmacenes || []);
+  const [internalStockList, setInternalStockList] = useState<StockItem[]>(propStockList || []);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Modals state
+  // Modal and Form States
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
-
-  // Selected or active items
   const [selectedAlmacen, setSelectedAlmacen] = useState<Almacen | null>(null);
-  
-  // Form fields
   const [nombre, setNombre] = useState("");
   const [ubicacion, setUbicacion] = useState("");
-  const [formError, setFormError] = useState<string | null>(null);
   const [submitLoading, setSubmitLoading] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
-  // Real-time subscriptions
+  const almacenes = propAlmacenes ?? internalAlmacenes;
+  const stockList = propStockList ?? internalStockList;
+
+  // Fallback subscriptions only if props are not provided
   useEffect(() => {
-    setLoading(true);
-    
-    // Subscribe to warehouses
-    const unsubscribeAlmacenes = firestoreService.getAlmacenesRealtime((data) => {
-      setAlmacenes(data);
-      setLoading(false);
-    });
+    if (propAlmacenes && propStockList) return;
 
-    // Subscribe to stock for validation
-    const unsubscribeStock = firestoreService.getStockRealtime((data) => {
-      setStockList(data);
-    });
+    setLoading(true);
+    let unsubAlm = () => {};
+    let unsubStock = () => {};
+
+    if (!propAlmacenes) {
+      unsubAlm = firestoreService.getAlmacenesRealtime((data) => {
+        setInternalAlmacenes(data);
+        setLoading(false);
+      });
+    }
+
+    if (!propStockList) {
+      unsubStock = firestoreService.getStockRealtime((data) => {
+        setInternalStockList(data);
+      });
+    }
 
     return () => {
-      unsubscribeAlmacenes();
-      unsubscribeStock();
+      unsubAlm();
+      unsubStock();
     };
-  }, []);
+  }, [propAlmacenes, propStockList]);
 
   // Filtered warehouses
   const filteredAlmacenes = almacenes.filter(alm => {

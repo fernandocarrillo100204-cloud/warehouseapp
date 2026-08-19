@@ -29,6 +29,8 @@ import { motion, AnimatePresence } from "motion/react";
 
 interface GestionProductosProps {
   almacenes?: Almacen[];
+  productos?: Producto[];
+  stockList?: StockItem[];
   onNavigateToMovimiento?: (sku: string) => void;
 }
 
@@ -58,15 +60,21 @@ const CATEGORIAS_POR_DEFECTO = [
 
 export default function GestionProductos({ 
   almacenes: propAlmacenes, 
+  productos: propProductos,
+  stockList: propStockList,
   onNavigateToMovimiento 
 }: GestionProductosProps) {
-  const [productos, setProductos] = useState<Producto[]>([]);
-  const [stockList, setStockList] = useState<StockItem[]>([]);
-  const [almacenes, setAlmacenes] = useState<Almacen[]>(propAlmacenes || []);
+  const [internalProductos, setInternalProductos] = useState<Producto[]>(propProductos || []);
+  const [internalStockList, setInternalStockList] = useState<StockItem[]>(propStockList || []);
+  const [internalAlmacenes, setInternalAlmacenes] = useState<Almacen[]>(propAlmacenes || []);
   const [catalogCategorias, setCatalogCategorias] = useState<CategoriaCatalogo[]>([]);
   const [catalogUnidades, setCatalogUnidades] = useState<UnidadMedidaCatalogo[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const productos = propProductos ?? internalProductos;
+  const stockList = propStockList ?? internalStockList;
+  const almacenes = propAlmacenes ?? internalAlmacenes;
 
   // Modals state
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -111,32 +119,29 @@ export default function GestionProductos({
   } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Synchronize warehouses from prop or realtime listener
+  // Real-time subscriptions for categories/units and fallback for missing props
   useEffect(() => {
-    if (propAlmacenes && propAlmacenes.length > 0) {
-      setAlmacenes(propAlmacenes);
-    } else {
-      const unsubscribe = firestoreService.getAlmacenesRealtime((data) => {
-        setAlmacenes(data);
+    let unsubProds = () => {};
+    let unsubStock = () => {};
+    let unsubAlm = () => {};
+
+    if (!propProductos) {
+      unsubProds = firestoreService.getProductosRealtime((data) => {
+        setInternalProductos(data);
       });
-      return () => unsubscribe();
     }
-  }, [propAlmacenes]);
 
-  // Real-time subscriptions for products, stock, categories and units
-  useEffect(() => {
-    setLoading(true);
+    if (!propStockList) {
+      unsubStock = firestoreService.getStockRealtime((data) => {
+        setInternalStockList(data);
+      });
+    }
 
-    firestoreService.seedAndImportCatalogos();
-
-    const unsubscribeProductos = firestoreService.getProductosRealtime((data) => {
-      setProductos(data);
-      setLoading(false);
-    });
-
-    const unsubscribeStock = firestoreService.getStockRealtime((data) => {
-      setStockList(data);
-    });
+    if (!propAlmacenes) {
+      unsubAlm = firestoreService.getAlmacenesRealtime((data) => {
+        setInternalAlmacenes(data);
+      });
+    }
 
     const unsubscribeCats = firestoreService.getCategoriasRealtime((data) => {
       setCatalogCategorias(data);
@@ -147,12 +152,13 @@ export default function GestionProductos({
     });
 
     return () => {
-      unsubscribeProductos();
-      unsubscribeStock();
+      unsubProds();
+      unsubStock();
+      unsubAlm();
       unsubscribeCats();
       unsubscribeUnits();
     };
-  }, []);
+  }, [propProductos, propStockList, propAlmacenes]);
 
   // Compute all available categories dynamically
   const categoriasDisponibles = React.useMemo(() => {

@@ -83,3 +83,21 @@ export interface UnidadMedidaCatalogo {
   } | Date;
 }
 
+export interface ResumenVentaDiaria {
+  id: string; // Formato: YYYY-MM-DD_SKU_almacenId
+  fecha_str: string; // YYYY-MM-DD
+  fecha: {
+    seconds: number;
+    nanoseconds: number;
+  } | Date;
+  sku: string;
+  almacen_id: string;
+  cantidad: number; // Unidades totales vendidas para este SKU, almacén y fecha
+  total_transacciones: number; // Número de movimientos de salida
+  actualizado?: {
+    seconds: number;
+    nanoseconds: number;
+  } | Date;
+}
+
+

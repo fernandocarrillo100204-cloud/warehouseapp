@@ -22,9 +22,7 @@ import {
   orderBy,
   limit,
   startAfter,
-  Timestamp,
-  QueryDocumentSnapshot,
-  DocumentData
+  Timestamp
 } from "firebase/firestore";
 import { 
   getAuth, 
@@ -35,7 +33,16 @@ import {
   GoogleAuthProvider,
   User as FirebaseUser
 } from "firebase/auth";
-import { Almacen, Producto, StockItem, Movimiento, Usuario, CategoriaCatalogo, UnidadMedidaCatalogo } from "../types";
+import { 
+  Almacen, 
+  Producto, 
+  StockItem, 
+  Movimiento, 
+  Usuario, 
+  CategoriaCatalogo, 
+  UnidadMedidaCatalogo,
+  ResumenVentaDiaria
+} from "../types";
 
 // Silence non-critical network retry noise from Firestore client
 try {
@@ -82,15 +89,40 @@ if (isConfigured) {
       realDb = getFirestore(realApp);
     }
     realAuth = getAuth(realApp);
-    console.log("Firebase initialized successfully with auto-detect long polling and resilient offline fallback.");
+    console.log("Firebase inicializado exitosamente.");
   } catch (error) {
-    console.error("Failed to initialize Firebase with real config, falling back to local emulator:", error);
+    console.error("Error al inicializar Firebase:", error);
+    realDb = null;
+    realAuth = null;
   }
 } else {
-  console.log("Firebase configuration is missing or default. Operating in high-fidelity Local Emulator mode.");
+  console.log("Firebase no configurado. Operando en modo Emulador Local (localStorage).");
 }
 
-// --- LOCAL STORAGE HIGH-FIDELITY EMULATOR ---
+// --- HELPER PARA FECHAS LOCALES Y-M-D ---
+export function getLocalDateString(date: Date | { seconds: number; nanoseconds: number } | any): string {
+  if (!date) {
+    date = new Date();
+  }
+  const d = date instanceof Date 
+    ? date 
+    : (typeof date?.toDate === "function" ? date.toDate() : (date?.seconds ? new Date(date.seconds * 1000) : new Date(date)));
+  
+  if (isNaN(d.getTime())) {
+    const fallback = new Date();
+    const y = fallback.getFullYear();
+    const m = String(fallback.getMonth() + 1).padStart(2, "0");
+    const day = String(fallback.getDate()).padStart(2, "0");
+    return `${y}-${m}-${day}`;
+  }
+
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+// --- LOCAL STORAGE HIGH-FIDELITY EMULATOR (SOLO CUANDO FIREBASE NO ESTÁ CONFIGURADO) ---
 const STORAGE_PREFIX = "inventario_mvp_";
 
 const getLocalStorageItem = <T>(key: string, defaultValue: T): T => {
@@ -98,403 +130,134 @@ const getLocalStorageItem = <T>(key: string, defaultValue: T): T => {
   if (!value) return defaultValue;
   try {
     return JSON.parse(value) as T;
-  } catch {
+  } catch (e) {
+    console.error(`Error parsing localStorage key ${key}:`, e);
     return defaultValue;
   }
 };
 
 const setLocalStorageItem = <T>(key: string, value: T): void => {
-  localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+  try {
+    localStorage.setItem(STORAGE_PREFIX + key, JSON.stringify(value));
+  } catch (e) {
+    console.error(`Error writing to localStorage key ${key}:`, e);
+  }
 };
 
-// Seed initial data if first time running
-const seedData = () => {
-  const seededVersion = localStorage.getItem(STORAGE_PREFIX + "seeded_version");
-  if (seededVersion !== "v4_atomic_inventory_engine") {
-    // 1. Almacenes
-    const almacenes: Almacen[] = [
-      { id: "alm_1", nombre: "Almacén Central", ubicacion: "Madrid, España" },
-      { id: "alm_2", nombre: "Almacén Norte", ubicacion: "Bilbao, España" },
-      { id: "alm_3", nombre: "Almacén Sur", ubicacion: "Sevilla, España" }
+// Listeners for local emulator reactivity
+const listeners = {
+  almacenes: [] as ((data: Almacen[]) => void)[],
+  productos: [] as ((data: Producto[]) => void)[],
+  stock: [] as ((data: StockItem[]) => void)[],
+  movimientos: [] as ((data: Movimiento[]) => void)[],
+  categorias: [] as ((data: CategoriaCatalogo[]) => void)[],
+  unidades: [] as ((data: UnidadMedidaCatalogo[]) => void)[],
+  auth: [] as ((user: Usuario | null) => void)[]
+};
+
+const notifyListeners = (key: keyof typeof listeners, data: any) => {
+  listeners[key].forEach(cb => {
+    try {
+      cb(data);
+    } catch (err) {
+      console.error(`Error notifying listener for ${key}:`, err);
+    }
+  });
+};
+
+// Seed initial demo data for local emulator only
+const initializeLocalEmulator = () => {
+  if (isConfigured) return; // Never seed localStorage if Firebase is configured
+
+  const almacenes = getLocalStorageItem<Almacen[]>("almacenes", []);
+  if (almacenes.length === 0) {
+    const initialAlmacenes: Almacen[] = [
+      { id: "alm_principal", nombre: "Almacén Central (CDMX)", ubicacion: "Parque Industrial Norte, Bodega 4" },
+      { id: "alm_secundario", nombre: "Sucursal Guadalajara", ubicacion: "Av. Vallarta Poniente #4520" },
+      { id: "alm_norte", nombre: "Cedis Monterrey", ubicacion: "Carretera a Laredo Km 14" }
     ];
-    setLocalStorageItem("almacenes", almacenes);
+    setLocalStorageItem("almacenes", initialAlmacenes);
+  }
 
-    // 2. Productos
-    const productos: Producto[] = [
-      { sku: "SKU-1001", nombre: "Laptop Pro 15 pulgadas", categoria: "Tecnología", stock_minimo: 5, unidad: "uds" },
-      { sku: "SKU-1002", nombre: "Monitor UltraWide 34\"", categoria: "Tecnología", stock_minimo: 3, unidad: "uds" },
-      { sku: "SKU-1003", nombre: "Silla Ergonómica Premium", categoria: "Oficina", stock_minimo: 10, unidad: "uds" },
-      { sku: "SKU-1004", nombre: "Teclado Mecánico Inalámbrico", categoria: "Tecnología", stock_minimo: 8, unidad: "uds" },
-      { sku: "SKU-1005", nombre: "Escritorio Elevable Eléctrico", categoria: "Oficina", stock_minimo: 2, unidad: "uds" }
+  const productos = getLocalStorageItem<Producto[]>("productos", []);
+  if (productos.length === 0) {
+    const initialProductos: Producto[] = [
+      { sku: "PLAST-001", nombre: "Envase PET 500ml Cristal", categoria: "Inyección de Plástico", stock_minimo: 100, unidad: "pieza" },
+      { sku: "PLAST-002", nombre: "Tapa Rosca 28mm Azul", categoria: "Inyección de Plástico", stock_minimo: 200, unidad: "pieza" },
+      { sku: "TORN-101", nombre: "Tornillo Hexagonal 1/4 x 2 pulg", categoria: "Tornillería y Herrajes", stock_minimo: 50, unidad: "caja" },
+      { sku: "CERR-201", nombre: "Cerradura de Sobreponer Derecha", categoria: "Cerrajería Metálica", stock_minimo: 15, unidad: "pieza" },
+      { sku: "EMPQ-301", nombre: "Caja Cartón Corrugado 40x30x30", categoria: "Empaque y Embalaje", stock_minimo: 80, unidad: "paquete" },
+      { sku: "TECH-001", nombre: "Lector Código de Barras 2D USB", categoria: "Tecnología", stock_minimo: 5, unidad: "pieza" }
     ];
-    setLocalStorageItem("productos", productos);
+    setLocalStorageItem("productos", initialProductos);
+  }
 
-    // 3. Movimientos de Auditoría con Folios Únicos Consecutivos y estado "activo"
-    const now = Date.now();
-    const day = 24 * 60 * 60 * 1000;
-
-    const movimientos: Movimiento[] = [
-      {
-        id: "mov_501",
-        folio: "Entrada-1",
-        sku: "SKU-1005",
-        almacen_id: "alm_1",
-        tipo: "entrada",
-        cantidad: 6,
-        referencia: "Inventario Inicial Fábrica Mobel",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 8 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_301",
-        folio: "Entrada-2",
-        sku: "SKU-1003",
-        almacen_id: "alm_1",
-        tipo: "entrada",
-        cantidad: 25,
-        referencia: "Contenedor Mobiliario Ergo #88",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 7 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_201",
-        folio: "Entrada-3",
-        sku: "SKU-1002",
-        almacen_id: "alm_1",
-        tipo: "entrada",
-        cantidad: 10,
-        referencia: "Importación Lote Displays M-201",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 6 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_401",
-        folio: "Entrada-4",
-        sku: "SKU-1004",
-        almacen_id: "alm_1",
-        tipo: "entrada",
-        cantidad: 35,
-        referencia: "Factura Importación Keyboards #991",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 6 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_101",
-        folio: "Entrada-5",
-        sku: "SKU-1001",
-        almacen_id: "alm_1",
-        tipo: "entrada",
-        cantidad: 15,
-        referencia: "Recepción de Compra Lote Tech #101",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 5 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_302",
-        folio: "Transferencia-1",
-        sku: "SKU-1003",
-        almacen_id: "alm_1",
-        tipo: "transferencia",
-        cantidad: 15,
-        referencia: "Carga de reabastecimiento Norte",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 5 * day),
-        almacen_destino_id: "alm_2",
-        estado: "activo"
-      },
-      {
-        id: "mov_102",
-        folio: "Transferencia-2",
-        sku: "SKU-1001",
-        almacen_id: "alm_1",
-        tipo: "transferencia",
-        cantidad: 4,
-        referencia: "Abastecimiento Sucursal Norte",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 4 * day),
-        almacen_destino_id: "alm_2",
-        estado: "activo"
-      },
-      {
-        id: "mov_202",
-        folio: "Transferencia-3",
-        sku: "SKU-1002",
-        almacen_id: "alm_1",
-        tipo: "transferencia",
-        cantidad: 5,
-        referencia: "Transferencia de stock a Almacén Sur",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 4 * day),
-        almacen_destino_id: "alm_3",
-        estado: "activo"
-      },
-      {
-        id: "mov_402",
-        folio: "Entrada-6",
-        sku: "SKU-1004",
-        almacen_id: "alm_2",
-        tipo: "entrada",
-        cantidad: 22,
-        referencia: "Recepción Sucursal Norte",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 4 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_502",
-        folio: "Entrada-7",
-        sku: "SKU-1005",
-        almacen_id: "alm_3",
-        tipo: "entrada",
-        cantidad: 3,
-        referencia: "Recepción Fábrica Lote Sevilla",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 4 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_103",
-        folio: "Entrada-8",
-        sku: "SKU-1001",
-        almacen_id: "alm_3",
-        tipo: "entrada",
-        cantidad: 8,
-        referencia: "Recepción directa Distribuidor Sur",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 3 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_203",
-        folio: "Entrada-9",
-        sku: "SKU-1002",
-        almacen_id: "alm_2",
-        tipo: "entrada",
-        cantidad: 3,
-        referencia: "Compra local Bilbao",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 3 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_403",
-        folio: "Entrada-10",
-        sku: "SKU-1004",
-        almacen_id: "alm_3",
-        tipo: "entrada",
-        cantidad: 14,
-        referencia: "Recepción Sucursal Sur",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 3 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_303",
-        folio: "Entrada-11",
-        sku: "SKU-1003",
-        almacen_id: "alm_3",
-        tipo: "entrada",
-        cantidad: 6,
-        referencia: "Recepción de Mercancía R-102",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 2 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_204",
-        folio: "Salida-1",
-        sku: "SKU-1002",
-        almacen_id: "alm_1",
-        tipo: "salida",
-        cantidad: 2,
-        referencia: "Despacho Orden Online #4012",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 2 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_503",
-        folio: "Salida-2",
-        sku: "SKU-1005",
-        almacen_id: "alm_1",
-        tipo: "salida",
-        cantidad: 1,
-        referencia: "Venta Showroom Madrid NV-109",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 2 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_104",
-        folio: "Salida-3",
-        sku: "SKU-1001",
-        almacen_id: "alm_1",
-        tipo: "salida",
-        cantidad: 3,
-        referencia: "Factura Venta Cliente Corporativo F-9901",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 1 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_205",
-        folio: "Salida-4",
-        sku: "SKU-1002",
-        almacen_id: "alm_2",
-        tipo: "salida",
-        cantidad: 2,
-        referencia: "Nota de Entrega N-4501",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 1 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_304",
-        folio: "Salida-5",
-        sku: "SKU-1003",
-        almacen_id: "alm_1",
-        tipo: "salida",
-        cantidad: 5,
-        referencia: "Dotación Sede Central Fac-441",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 1 * day),
-        estado: "activo"
-      },
-      {
-        id: "mov_404",
-        folio: "Salida-6",
-        sku: "SKU-1004",
-        almacen_id: "alm_1",
-        tipo: "salida",
-        cantidad: 5,
-        referencia: "Venta Mayorista Tech-Dist #312",
-        usuario: "admin@empresa.com",
-        fecha: new Date(now - 1 * day),
-        estado: "activo"
-      }
-    ];
-    setLocalStorageItem("movimientos", movimientos);
-
-    // Contadores consecutivos iniciales
-    setLocalStorageItem("contadores_movimientos", {
-      entrada: 11,
-      salida: 6,
-      transferencia: 3,
-      ajuste: 0
-    });
-
-    // 4. Initial atomic stock balance
-    const initialStockMap: Record<string, StockItem> = {
-      "SKU-1001_alm_1": { id: "SKU-1001_alm_1", sku: "SKU-1001", almacen_id: "alm_1", cantidad: 8, actualizado: new Date() },
-      "SKU-1001_alm_2": { id: "SKU-1001_alm_2", sku: "SKU-1001", almacen_id: "alm_2", cantidad: 4, actualizado: new Date() },
-      "SKU-1001_alm_3": { id: "SKU-1001_alm_3", sku: "SKU-1001", almacen_id: "alm_3", cantidad: 8, actualizado: new Date() },
-      "SKU-1002_alm_1": { id: "SKU-1002_alm_1", sku: "SKU-1002", almacen_id: "alm_1", cantidad: 3, actualizado: new Date() },
-      "SKU-1002_alm_2": { id: "SKU-1002_alm_2", sku: "SKU-1002", almacen_id: "alm_2", cantidad: 1, actualizado: new Date() },
-      "SKU-1002_alm_3": { id: "SKU-1002_alm_3", sku: "SKU-1002", almacen_id: "alm_3", cantidad: 5, actualizado: new Date() },
-      "SKU-1003_alm_1": { id: "SKU-1003_alm_1", sku: "SKU-1003", almacen_id: "alm_1", cantidad: 5, actualizado: new Date() },
-      "SKU-1003_alm_2": { id: "SKU-1003_alm_2", sku: "SKU-1003", almacen_id: "alm_2", cantidad: 15, actualizado: new Date() },
-      "SKU-1003_alm_3": { id: "SKU-1003_alm_3", sku: "SKU-1003", almacen_id: "alm_3", cantidad: 6, actualizado: new Date() },
-      "SKU-1004_alm_1": { id: "SKU-1004_alm_1", sku: "SKU-1004", almacen_id: "alm_1", cantidad: 30, actualizado: new Date() },
-      "SKU-1004_alm_2": { id: "SKU-1004_alm_2", sku: "SKU-1004", almacen_id: "alm_2", cantidad: 22, actualizado: new Date() },
-      "SKU-1004_alm_3": { id: "SKU-1004_alm_3", sku: "SKU-1004", almacen_id: "alm_3", cantidad: 14, actualizado: new Date() },
-      "SKU-1005_alm_1": { id: "SKU-1005_alm_1", sku: "SKU-1005", almacen_id: "alm_1", cantidad: 5, actualizado: new Date() },
-      "SKU-1005_alm_2": { id: "SKU-1005_alm_2", sku: "SKU-1005", almacen_id: "alm_2", cantidad: 0, actualizado: new Date() },
-      "SKU-1005_alm_3": { id: "SKU-1005_alm_3", sku: "SKU-1005", almacen_id: "alm_3", cantidad: 3, actualizado: new Date() }
+  const stock = getLocalStorageItem<Record<string, StockItem>>("stock", {});
+  if (Object.keys(stock).length === 0) {
+    const initialStock: Record<string, StockItem> = {
+      "PLAST-001_alm_principal": { id: "PLAST-001_alm_principal", sku: "PLAST-001", almacen_id: "alm_principal", cantidad: 450, actualizado: new Date() },
+      "PLAST-001_alm_secundario": { id: "PLAST-001_alm_secundario", sku: "PLAST-001", almacen_id: "alm_secundario", cantidad: 120, actualizado: new Date() },
+      "PLAST-002_alm_principal": { id: "PLAST-002_alm_principal", sku: "PLAST-002", almacen_id: "alm_principal", cantidad: 850, actualizado: new Date() },
+      "TORN-101_alm_principal": { id: "TORN-101_alm_principal", sku: "TORN-101", almacen_id: "alm_principal", cantidad: 35, actualizado: new Date() },
+      "TORN-101_alm_norte": { id: "TORN-101_alm_norte", sku: "TORN-101", almacen_id: "alm_norte", cantidad: 80, actualizado: new Date() },
+      "CERR-201_alm_principal": { id: "CERR-201_alm_principal", sku: "CERR-201", almacen_id: "alm_principal", cantidad: 8, actualizado: new Date() },
+      "EMPQ-301_alm_principal": { id: "EMPQ-301_alm_principal", sku: "EMPQ-301", almacen_id: "alm_principal", cantidad: 210, actualizado: new Date() },
+      "TECH-001_alm_principal": { id: "TECH-001_alm_principal", sku: "TECH-001", almacen_id: "alm_principal", cantidad: 12, actualizado: new Date() }
     };
-    setLocalStorageItem("stock", initialStockMap);
-
-    // 5. Usuario por defecto
-    setLocalStorageItem("currentUser", {
-      uid: "usr_admin",
-      email: "admin@empresa.com",
-      nombre: "Administrador de Inventario"
-    });
-
-    localStorage.setItem(STORAGE_PREFIX + "seeded_version", "v4_atomic_inventory_engine");
+    setLocalStorageItem("stock", initialStock);
   }
 };
 
-// Execute seeding
-seedData();
+initializeLocalEmulator();
 
-// List of listeners for mock real-time updates
-const listeners: Record<string, ((data: any) => void)[]> = {
-  auth: [],
-  stock: [],
-  movimientos: [],
-  almacenes: [],
-  productos: [],
-  categorias: [],
-  unidades: []
-};
-
-const notifyListeners = (channel: "auth" | "stock" | "movimientos" | "almacenes" | "productos" | "categorias" | "unidades", data: any) => {
-  if (listeners[channel]) {
-    listeners[channel].forEach(callback => callback(data));
-  }
-};
-
-// --- CORE EXPORTED SERVICE ---
 export const isRealFirebase = isConfigured;
 
+// --- SERVICIO DE AUTENTICACIÓN ---
 export const authService = {
-  login: async (email: string, password: string): Promise<Usuario> => {
-    if (isConfigured && realAuth) {
-      const userCredential = await signInWithEmailAndPassword(realAuth, email, password);
-      const user = userCredential.user;
-      return {
-        uid: user.uid,
-        email: user.email || ""
-      };
-    } else {
-      if (email === "admin@empresa.com" && password === "admin123") {
-        const adminUser: Usuario = {
-          uid: "usr_admin",
-          email: "admin@empresa.com",
-          nombre: "Administrador"
-        };
-        setLocalStorageItem("currentUser", adminUser);
-        notifyListeners("auth", adminUser);
-        return adminUser;
-      } else if (email && password.length >= 6) {
-        const newUser: Usuario = {
-          uid: "usr_" + Math.random().toString(36).substr(2, 9),
-          email: email,
-          nombre: email.split("@")[0]
-        };
-        setLocalStorageItem("currentUser", newUser);
-        notifyListeners("auth", newUser);
-        return newUser;
-      } else {
-        throw new Error("Credenciales inválidas. Usa admin@empresa.com con admin123 o ingresa una contraseña de al menos 6 caracteres.");
-      }
-    }
+  isConfigured: () => isConfigured,
+
+  login: async (email: string, pass: string): Promise<Usuario> => {
+    return authService.loginWithEmail(email, pass);
   },
 
   loginWithGoogle: async (): Promise<Usuario> => {
     if (isConfigured && realAuth) {
       const provider = new GoogleAuthProvider();
-      const userCredential = await signInWithPopup(realAuth, provider);
-      const user = userCredential.user;
+      const result = await signInWithPopup(realAuth, provider);
       return {
-        uid: user.uid,
-        email: user.email || "",
-        nombre: user.displayName || undefined
+        uid: result.user.uid,
+        email: result.user.email || "",
+        nombre: result.user.displayName || undefined
       };
     } else {
-      const googleUser: Usuario = {
-        uid: "usr_google_demo",
-        email: "google.demo@empresa.com",
-        nombre: "Usuario Demo Google"
+      // Local Emulator Google Login
+      const mockUser: Usuario = {
+        uid: "local_google_user_001",
+        email: "admin.local@stockmaster.io",
+        nombre: "Administrador StockMaster"
       };
-      setLocalStorageItem("currentUser", googleUser);
-      notifyListeners("auth", googleUser);
-      return googleUser;
+      setLocalStorageItem("currentUser", mockUser);
+      notifyListeners("auth", mockUser);
+      return mockUser;
+    }
+  },
+
+  loginWithEmail: async (email: string, pass: string): Promise<Usuario> => {
+    if (isConfigured && realAuth) {
+      const result = await signInWithEmailAndPassword(realAuth, email, pass);
+      return {
+        uid: result.user.uid,
+        email: result.user.email || ""
+      };
+    } else {
+      const mockUser: Usuario = {
+        uid: "local_email_user_002",
+        email: email || "usuario.demo@stockmaster.io",
+        nombre: email.split("@")[0]
+      };
+      setLocalStorageItem("currentUser", mockUser);
+      notifyListeners("auth", mockUser);
+      return mockUser;
     }
   },
 
@@ -549,55 +312,38 @@ export const authService = {
   }
 };
 
+// --- SERVICIO DE FIRESTORE / INVENTARIO ---
 export const firestoreService = {
+  isConfigured: () => isConfigured,
+
   // --- ALMACENES ---
   getAlmacenes: async (): Promise<Almacen[]> => {
     if (isConfigured && realDb) {
-      try {
-        const snap = await getDocs(collection(realDb, "almacenes"));
-        const list: Almacen[] = [];
-        snap.forEach(d => {
-          list.push({ id: d.id, ...d.data() } as Almacen);
-        });
-        if (list.length > 0) {
-          setLocalStorageItem("almacenes", list);
-          return list;
-        }
-      } catch (err) {
-        console.warn("Firestore getAlmacenes unavailable, using local cache:", err);
-      }
+      const snap = await getDocs(collection(realDb, "almacenes"));
+      const list: Almacen[] = [];
+      snap.forEach(d => {
+        list.push({ id: d.id, ...d.data() } as Almacen);
+      });
+      return list;
     }
     return getLocalStorageItem<Almacen[]>("almacenes", []);
   },
 
   getAlmacenesRealtime: (onUpdate: (almacenes: Almacen[]) => void): (() => void) => {
     if (isConfigured && realDb) {
-      try {
-        const unsubscribe = onSnapshot(
-          collection(realDb, "almacenes"),
-          (snap) => {
-            const list: Almacen[] = [];
-            snap.forEach(d => {
-              list.push({ id: d.id, ...d.data() } as Almacen);
-            });
-            if (list.length > 0) {
-              setLocalStorageItem("almacenes", list);
-              onUpdate(list);
-            } else {
-              const localList = getLocalStorageItem<Almacen[]>("almacenes", []);
-              onUpdate(localList);
-            }
-          },
-          (error) => {
-            console.warn("Firestore onSnapshot (almacenes) error, falling back to local state:", error.message);
-            const localList = getLocalStorageItem<Almacen[]>("almacenes", []);
-            onUpdate(localList);
-          }
-        );
-        return unsubscribe;
-      } catch (err) {
-        console.warn("Could not attach onSnapshot to almacenes, falling back to local listener:", err);
-      }
+      return onSnapshot(
+        collection(realDb, "almacenes"),
+        (snap) => {
+          const list: Almacen[] = [];
+          snap.forEach(d => {
+            list.push({ id: d.id, ...d.data() } as Almacen);
+          });
+          onUpdate(list);
+        },
+        (error) => {
+          console.error("Error en listener de almacenes:", error);
+        }
+      );
     }
 
     const update = () => {
@@ -613,12 +359,8 @@ export const firestoreService = {
 
   addAlmacen: async (almacen: Omit<Almacen, "id">): Promise<string> => {
     if (isConfigured && realDb) {
-      try {
-        const docRef = await addDoc(collection(realDb, "almacenes"), almacen);
-        return docRef.id;
-      } catch (err) {
-        console.warn("Firestore addDoc failed, using local storage:", err);
-      }
+      const docRef = await addDoc(collection(realDb, "almacenes"), almacen);
+      return docRef.id;
     }
     const list = getLocalStorageItem<Almacen[]>("almacenes", []);
     const newId = "alm_" + Math.random().toString(36).substr(2, 9);
@@ -631,12 +373,9 @@ export const firestoreService = {
 
   updateAlmacen: async (id: string, data: Partial<Omit<Almacen, "id">>): Promise<void> => {
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "almacenes", id);
-        await setDoc(docRef, data, { merge: true });
-      } catch (err) {
-        console.warn("Firestore updateAlmacen failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "almacenes", id);
+      await setDoc(docRef, data, { merge: true });
+      return;
     }
     const list = getLocalStorageItem<Almacen[]>("almacenes", []);
     const index = list.findIndex(a => a.id === id);
@@ -649,12 +388,9 @@ export const firestoreService = {
 
   deleteAlmacen: async (id: string): Promise<void> => {
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "almacenes", id);
-        await deleteDoc(docRef);
-      } catch (err) {
-        console.warn("Firestore deleteDoc failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "almacenes", id);
+      await deleteDoc(docRef);
+      return;
     }
     const list = getLocalStorageItem<Almacen[]>("almacenes", []);
     const filtered = list.filter(a => a.id !== id);
@@ -675,51 +411,31 @@ export const firestoreService = {
   // --- PRODUCTOS ---
   getProductos: async (): Promise<Producto[]> => {
     if (isConfigured && realDb) {
-      try {
-        const snap = await getDocs(collection(realDb, "productos"));
-        const list: Producto[] = [];
-        snap.forEach(d => {
-          list.push({ sku: d.id, ...d.data() } as Producto);
-        });
-        if (list.length > 0) {
-          setLocalStorageItem("productos", list);
-          return list;
-        }
-      } catch (err) {
-        console.warn("Firestore getProductos failed, using local storage:", err);
-      }
+      const snap = await getDocs(collection(realDb, "productos"));
+      const list: Producto[] = [];
+      snap.forEach(d => {
+        list.push({ sku: d.id, ...d.data() } as Producto);
+      });
+      return list;
     }
     return getLocalStorageItem<Producto[]>("productos", []);
   },
 
   getProductosRealtime: (onUpdate: (productos: Producto[]) => void): (() => void) => {
     if (isConfigured && realDb) {
-      try {
-        const unsubscribe = onSnapshot(
-          collection(realDb, "productos"),
-          (snap) => {
-            const list: Producto[] = [];
-            snap.forEach(d => {
-              list.push({ sku: d.id, ...d.data() } as Producto);
-            });
-            if (list.length > 0) {
-              setLocalStorageItem("productos", list);
-              onUpdate(list);
-            } else {
-              const localList = getLocalStorageItem<Producto[]>("productos", []);
-              onUpdate(localList);
-            }
-          },
-          (error) => {
-            console.warn("Firestore onSnapshot (productos) error, falling back to local state:", error.message);
-            const localList = getLocalStorageItem<Producto[]>("productos", []);
-            onUpdate(localList);
-          }
-        );
-        return unsubscribe;
-      } catch (err) {
-        console.warn("Could not attach onSnapshot to productos, falling back to local listener:", err);
-      }
+      return onSnapshot(
+        collection(realDb, "productos"),
+        (snap) => {
+          const list: Producto[] = [];
+          snap.forEach(d => {
+            list.push({ sku: d.id, ...d.data() } as Producto);
+          });
+          onUpdate(list);
+        },
+        (error) => {
+          console.error("Error en listener de productos:", error);
+        }
+      );
     }
 
     const update = () => {
@@ -737,56 +453,57 @@ export const firestoreService = {
     const cleanSku = sku.trim().toUpperCase();
     if (!cleanSku) return false;
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "productos", cleanSku);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) return true;
-      } catch (err) {
-        console.warn("Firestore checkSkuExists failed, checking local cache:", err);
-      }
+      const docRef = doc(realDb, "productos", cleanSku);
+      const docSnap = await getDoc(docRef);
+      return docSnap.exists();
     }
     const list = getLocalStorageItem<Producto[]>("productos", []);
     return list.some(p => p.sku?.trim().toUpperCase() === cleanSku);
   },
 
   addProduct: async (producto: Producto): Promise<void> => {
+    const cleanSku = producto.sku.trim().toUpperCase();
+    if (!cleanSku) throw new Error("El SKU no puede estar vacío.");
+
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "productos", producto.sku);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists()) {
-          throw new Error("El SKU ya existe en la base de datos.");
-        }
-        const { sku, ...data } = producto;
-        await setDoc(docRef, data);
-      } catch (err: any) {
-        if (err?.message?.includes("ya existe")) {
-          throw err;
-        }
-        console.warn("Firestore addProduct failed, using local storage:", err);
+      const docRef = doc(realDb, "productos", cleanSku);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        throw new Error(`El producto con SKU "${cleanSku}" ya existe en el catálogo.`);
       }
+      await setDoc(docRef, {
+        nombre: producto.nombre.trim(),
+        categoria: producto.categoria.trim() || "General",
+        stock_minimo: Number(producto.stock_minimo) || 5,
+        unidad: (producto.unidad || "uds").trim(),
+        ...(producto.stock_minimo_almacenes ? { stock_minimo_almacenes: producto.stock_minimo_almacenes } : {})
+      });
+      return;
     }
+
     const list = getLocalStorageItem<Producto[]>("productos", []);
-    const existing = list.find(p => p.sku.toLowerCase() === producto.sku.toLowerCase());
-    if (existing) {
-      throw new Error("El SKU ya existe.");
+    if (list.some(p => p.sku === cleanSku)) {
+      throw new Error(`El producto con SKU "${cleanSku}" ya existe.`);
     }
-    list.push(producto);
+    const newItem: Producto = {
+      ...producto,
+      sku: cleanSku,
+      unidad: (producto.unidad || "uds").trim()
+    };
+    list.push(newItem);
     setLocalStorageItem("productos", list);
     notifyListeners("productos", list);
   },
 
   updateProduct: async (sku: string, data: Partial<Omit<Producto, "sku">>): Promise<void> => {
+    const cleanSku = sku.trim().toUpperCase();
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "productos", sku);
-        await setDoc(docRef, data, { merge: true });
-      } catch (err) {
-        console.warn("Firestore updateProduct failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "productos", cleanSku);
+      await setDoc(docRef, data, { merge: true });
+      return;
     }
     const list = getLocalStorageItem<Producto[]>("productos", []);
-    const index = list.findIndex(p => p.sku === sku);
+    const index = list.findIndex(p => p.sku === cleanSku);
     if (index !== -1) {
       list[index] = { ...list[index], ...data };
       setLocalStorageItem("productos", list);
@@ -795,36 +512,31 @@ export const firestoreService = {
   },
 
   deleteProduct: async (sku: string): Promise<void> => {
+    const cleanSku = sku.trim().toUpperCase();
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "productos", sku);
-        await deleteDoc(docRef);
-      } catch (err) {
-        console.warn("Firestore deleteProduct failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "productos", cleanSku);
+      await deleteDoc(docRef);
+      return;
     }
     const list = getLocalStorageItem<Producto[]>("productos", []);
-    const filtered = list.filter(p => p.sku !== sku);
+    const filtered = list.filter(p => p.sku !== cleanSku);
     setLocalStorageItem("productos", filtered);
     notifyListeners("productos", filtered);
   },
 
   ensureProductExists: async (sku: string, nombre: string, categoria = "General", stockMinimo = 5, unidad = "uds"): Promise<Producto> => {
-    const productData: Producto = { sku, nombre, categoria, stock_minimo: stockMinimo, unidad };
+    const cleanSku = sku.trim().toUpperCase();
+    const productData: Producto = { sku: cleanSku, nombre, categoria, stock_minimo: stockMinimo, unidad };
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "productos", sku);
-        const docSnap = await getDoc(docRef);
-        if (!docSnap.exists()) {
-          await setDoc(docRef, { nombre, categoria, stock_minimo: stockMinimo, unidad });
-        }
-        return productData;
-      } catch (err) {
-        console.warn("Firestore ensureProductExists failed, using local fallback:", err);
+      const docRef = doc(realDb, "productos", cleanSku);
+      const docSnap = await getDoc(docRef);
+      if (!docSnap.exists()) {
+        await setDoc(docRef, { nombre, categoria, stock_minimo: stockMinimo, unidad });
       }
+      return productData;
     }
     const prods = getLocalStorageItem<Producto[]>("productos", []);
-    const existing = prods.find(p => p.sku === sku);
+    const existing = prods.find(p => p.sku === cleanSku);
     if (!existing) {
       prods.push(productData);
       setLocalStorageItem("productos", prods);
@@ -832,46 +544,31 @@ export const firestoreService = {
     return existing || productData;
   },
 
-  // --- ATOMIC REAL-TIME STOCK (LISTENS DIRECTLY TO 'stock' COLLECTION) ---
+  // --- ATOMIC REAL-TIME STOCK ---
   getStockRealtime: (onUpdate: (stock: StockItem[]) => void): (() => void) => {
     if (isConfigured && realDb) {
-      try {
-        const unsubscribe = onSnapshot(
-          collection(realDb, "stock"),
-          (snap) => {
-            const list: StockItem[] = [];
-            snap.forEach(d => {
-              const data = d.data();
-              list.push({
-                id: d.id,
-                sku: data.sku,
-                almacen_id: data.almacen_id,
-                cantidad: Number(data.cantidad) || 0,
-                actualizado: data.actualizado ? (data.actualizado as Timestamp).toDate() : new Date()
-              });
+      return onSnapshot(
+        collection(realDb, "stock"),
+        (snap) => {
+          const list: StockItem[] = [];
+          snap.forEach(d => {
+            const data = d.data();
+            list.push({
+              id: d.id,
+              sku: data.sku,
+              almacen_id: data.almacen_id,
+              cantidad: Number(data.cantidad) || 0,
+              actualizado: data.actualizado ? (data.actualizado as Timestamp).toDate() : new Date()
             });
-
-            // Cache locally for instantaneous offline fallback
-            const stockMap: Record<string, StockItem> = {};
-            list.forEach(s => {
-              stockMap[s.id] = s;
-            });
-            setLocalStorageItem("stock", stockMap);
-            onUpdate(list);
-          },
-          (error) => {
-            console.warn("Firestore onSnapshot (stock) error, falling back to local stock table:", error.message);
-            const stockMap = getLocalStorageItem<Record<string, StockItem>>("stock", {});
-            onUpdate(Object.values(stockMap));
-          }
-        );
-        return unsubscribe;
-      } catch (err) {
-        console.warn("Could not attach onSnapshot to stock collection:", err);
-      }
+          });
+          onUpdate(list);
+        },
+        (error) => {
+          console.error("Error en listener de stock:", error);
+        }
+      );
     }
 
-    // Local Emulator Stock Listener (Updates only affected items, no full history scan)
     const update = () => {
       const stockMap = getLocalStorageItem<Record<string, StockItem>>("stock", {});
       onUpdate(Object.values(stockMap));
@@ -916,8 +613,191 @@ export const firestoreService = {
     return `${prefix}${nextNumber}`;
   },
 
-  // --- ATOMIC MOVEMENT REGISTRATION VIA FIRESTORE TRANSACTION ---
-  // Updates ONLY affected stock document(s) and validates stock availability without traversing full history
+  // --- MIGRACIÓN 1: INICIALIZACIÓN IDEMPOTENTE DE CONTADORES DE FOLIOS ---
+  runFolioMigrationIfNeeded: async (): Promise<void> => {
+    if (isConfigured && realDb) {
+      const migRef = doc(realDb, "migraciones", "folios_counter_v1");
+      const migSnap = await getDoc(migRef);
+      if (migSnap.exists() && migSnap.data()?.completada) {
+        return; // Ya fue ejecutada
+      }
+
+      console.log("Iniciando migración única de contadores de folios...");
+      const movsSnap = await getDocs(collection(realDb, "movimientos"));
+      const maxCounters: Record<string, number> = {
+        entrada: 0,
+        salida: 0,
+        transferencia: 0,
+        ajuste: 0
+      };
+
+      movsSnap.forEach(docSnap => {
+        const data = docSnap.data();
+        const folio = String(data.folio || "");
+        const tipo = String(data.tipo || "").toLowerCase();
+        
+        // Reconoce formatos: Entrada-15, Salida-3, Transferencia-8
+        const match = folio.match(/^(?:Entrada|Salida|Transferencia|Ajuste|Movimiento)-(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && tipo && maxCounters[tipo] !== undefined) {
+            if (num > maxCounters[tipo]) {
+              maxCounters[tipo] = num;
+            }
+          }
+        }
+      });
+
+      for (const [tipo, maxConsecutivo] of Object.entries(maxCounters)) {
+        const counterRef = doc(realDb, "contadores", tipo);
+        const counterSnap = await getDoc(counterRef);
+        const currentInDb = counterSnap.exists() ? (Number(counterSnap.data()?.ultimo_consecutivo) || 0) : 0;
+        const finalMax = Math.max(maxConsecutivo, currentInDb);
+        await setDoc(counterRef, {
+          tipo,
+          ultimo_consecutivo: finalMax,
+          actualizado: Timestamp.now()
+        }, { merge: true });
+      }
+
+      await setDoc(migRef, {
+        completada: true,
+        fecha: Timestamp.now(),
+        descripcion: "Migración inicial e idempotente de contadores de folios"
+      });
+      console.log("Migración de contadores completada:", maxCounters);
+    } else {
+      const migKey = "migracion_folios_v1";
+      const migrated = getLocalStorageItem<boolean>(migKey, false);
+      if (migrated) return;
+
+      const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
+      const counters = getLocalStorageItem<Record<string, number>>("contadores_movimientos", {
+        entrada: 0,
+        salida: 0,
+        transferencia: 0,
+        ajuste: 0
+      });
+
+      movimientos.forEach(m => {
+        const folio = String(m.folio || "");
+        const match = folio.match(/^(?:Entrada|Salida|Transferencia|Ajuste|Movimiento)-(\d+)$/i);
+        if (match) {
+          const num = parseInt(match[1], 10);
+          if (!isNaN(num) && m.tipo && counters[m.tipo] !== undefined) {
+            if (num > counters[m.tipo]) {
+              counters[m.tipo] = num;
+            }
+          }
+        }
+      });
+
+      setLocalStorageItem("contadores_movimientos", counters);
+      setLocalStorageItem(migKey, true);
+    }
+  },
+
+  // --- MIGRACIÓN 2: INICIALIZACIÓN CONTROLADA DE RESÚMENES DE VENTAS ---
+  runResumenVentasMigrationIfNeeded: async (): Promise<void> => {
+    if (isConfigured && realDb) {
+      const migRef = doc(realDb, "migraciones", "resumen_ventas_v1");
+      const migSnap = await getDoc(migRef);
+      if (migSnap.exists() && migSnap.data()?.completada) {
+        return; // Ya fue ejecutada
+      }
+
+      console.log("Iniciando migración única de resúmenes de ventas diarias...");
+      const q = query(
+        collection(realDb, "movimientos"),
+        where("tipo", "==", "salida")
+      );
+      const snap = await getDocs(q);
+      const summaryMap: Record<string, {
+        id: string;
+        fecha_str: string;
+        fecha: Timestamp;
+        sku: string;
+        almacen_id: string;
+        cantidad: number;
+        total_transacciones: number;
+      }> = {};
+
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.estado === "anulado") return; // Omitir ventas anuladas
+        
+        const dateStr = getLocalDateString(data.fecha);
+        const sku = (data.sku || "").trim().toUpperCase();
+        const almId = (data.almacen_id || "").trim();
+        const qty = Number(data.cantidad) || 0;
+        const key = `${dateStr}_${sku}_${almId}`;
+
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            id: key,
+            fecha_str: dateStr,
+            fecha: data.fecha instanceof Timestamp ? data.fecha : Timestamp.now(),
+            sku,
+            almacen_id: almId,
+            cantidad: 0,
+            total_transacciones: 0
+          };
+        }
+        summaryMap[key].cantidad += qty;
+        summaryMap[key].total_transacciones += 1;
+      });
+
+      for (const [key, item] of Object.entries(summaryMap)) {
+        await setDoc(doc(realDb, "resumen_ventas", key), {
+          ...item,
+          actualizado: Timestamp.now()
+        }, { merge: true });
+      }
+
+      await setDoc(migRef, {
+        completada: true,
+        fecha: Timestamp.now(),
+        descripcion: "Migración inicial de resumen diario de ventas"
+      });
+      console.log("Migración de resúmenes de ventas completada exitosamente.");
+    } else {
+      const migKey = "migracion_resumen_ventas_v1";
+      const migrated = getLocalStorageItem<boolean>(migKey, false);
+      if (migrated) return;
+
+      const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
+      const summaryMap = getLocalStorageItem<Record<string, ResumenVentaDiaria>>("resumen_ventas", {});
+
+      movimientos.forEach(m => {
+        if (m.tipo !== "salida" || m.estado === "anulado") return;
+        const dateStr = getLocalDateString(m.fecha);
+        const sku = (m.sku || "").trim().toUpperCase();
+        const almId = (m.almacen_id || "").trim();
+        const qty = Number(m.cantidad) || 0;
+        const key = `${dateStr}_${sku}_${almId}`;
+
+        if (!summaryMap[key]) {
+          summaryMap[key] = {
+            id: key,
+            fecha_str: dateStr,
+            fecha: new Date(m.fecha as any),
+            sku,
+            almacen_id: almId,
+            cantidad: 0,
+            total_transacciones: 0,
+            actualizado: new Date()
+          };
+        }
+        summaryMap[key].cantidad += qty;
+        summaryMap[key].total_transacciones += 1;
+      });
+
+      setLocalStorageItem("resumen_ventas", summaryMap);
+      setLocalStorageItem(migKey, true);
+    }
+  },
+
+  // --- REGISTRO ATÓMICO DE MOVIMIENTO VÍA RUNTRANSACTION ---
   registerMovimientoTransaction: async (mov: Omit<Movimiento, "fecha" | "usuario">): Promise<{ id: string; folio: string }> => {
     const user = authService.getCurrentUser();
     const usuarioEmail = user ? user.email : "sistema@empresa.com";
@@ -931,134 +811,163 @@ export const firestoreService = {
       throw new Error("La cantidad debe ser un número positivo mayor a cero.");
     }
 
-    let generatedFolio = "";
-    let docId = "mov_" + Math.random().toString(36).substr(2, 9);
-
-    if (isConfigured && realDb) {
-      try {
-        const counterDocRef = doc(realDb, "contadores", mov.tipo);
-        const movRef = doc(collection(realDb, "movimientos"));
-        docId = movRef.id;
-
-        const originStockKey = `${cleanSku}_${originAlmId}`;
-        const originStockRef = doc(realDb, "stock", originStockKey);
-
-        const destStockKey = destAlmId ? `${cleanSku}_${destAlmId}` : null;
-        const destStockRef = destStockKey ? doc(realDb, "stock", destStockKey) : null;
-
-        await runTransaction(realDb, async (transaction) => {
-          // 1. Read Counter
-          const counterSnap = await transaction.get(counterDocRef);
-          let nextNumber = 1;
-          if (counterSnap.exists()) {
-            const data = counterSnap.data();
-            if (typeof data?.ultimo_consecutivo === "number") {
-              nextNumber = data.ultimo_consecutivo + 1;
-            }
-          }
-          generatedFolio = `${prefix}${nextNumber}`;
-
-          // 2. Read Origin Stock
-          const originStockSnap = await transaction.get(originStockRef);
-          const currentOriginQty = originStockSnap.exists() ? (Number(originStockSnap.data()?.cantidad) || 0) : 0;
-
-          let newOriginQty = currentOriginQty;
-          let newDestQty = 0;
-
-          // 3. Process Transaction Type & Validate Availability
-          if (mov.tipo === "entrada") {
-            newOriginQty = currentOriginQty + moveQty;
-          } else if (mov.tipo === "salida") {
-            if (currentOriginQty < moveQty) {
-              throw new Error(`Stock insuficiente en el almacén seleccionado. Stock actual disponible: ${currentOriginQty} uds, solicitado: ${moveQty} uds.`);
-            }
-            newOriginQty = currentOriginQty - moveQty;
-          } else if (mov.tipo === "transferencia") {
-            if (!destStockRef || !destAlmId) {
-              throw new Error("El almacén de destino es requerido para transferencias.");
-            }
-            if (currentOriginQty < moveQty) {
-              throw new Error(`Stock insuficiente en el almacén de origen. Stock actual disponible: ${currentOriginQty} uds, solicitado: ${moveQty} uds.`);
-            }
-
-            // Read Destination Stock inside transaction
-            const destStockSnap = await transaction.get(destStockRef);
-            const currentDestQty = destStockSnap.exists() ? (Number(destStockSnap.data()?.cantidad) || 0) : 0;
-
-            newOriginQty = currentOriginQty - moveQty;
-            newDestQty = currentDestQty + moveQty;
-
-            // Write Destination Stock
-            transaction.set(destStockRef, {
-              id: destStockKey,
-              sku: cleanSku,
-              almacen_id: destAlmId,
-              cantidad: newDestQty,
-              actualizado: Timestamp.now()
-            }, { merge: true });
-          }
-
-          // 4. Write Origin Stock
-          transaction.set(originStockRef, {
-            id: originStockKey,
-            sku: cleanSku,
-            almacen_id: originAlmId,
-            cantidad: newOriginQty,
-            actualizado: Timestamp.now()
-          }, { merge: true });
-
-          // 5. Update Sequential Counter
-          transaction.set(counterDocRef, {
-            tipo: mov.tipo,
-            ultimo_consecutivo: nextNumber,
-            actualizado: Timestamp.now()
-          }, { merge: true });
-
-          // 6. Write Movement Document (estado: "activo")
-          transaction.set(movRef, {
-            folio: generatedFolio,
-            sku: cleanSku,
-            almacen_id: originAlmId,
-            tipo: mov.tipo,
-            cantidad: moveQty,
-            referencia: mov.referencia,
-            usuario: usuarioEmail,
-            fecha: Timestamp.now(),
-            estado: "activo",
-            ...(destAlmId ? { almacen_destino_id: destAlmId } : {})
-          });
-        });
-
-        return { id: docId, folio: generatedFolio };
-      } catch (err: any) {
-        if (err.message && err.message.includes("Stock insuficiente")) {
-          throw err;
-        }
-        console.warn("Firestore runTransaction falló, aplicando lógica atómica en almacenamiento local:", err);
-      }
+    if (!cleanSku) {
+      throw new Error("El SKU del producto es obligatorio.");
     }
 
-    // --- LOCAL EMULATOR ATOMIC TRANSACTION LOGIC ---
+    if (!originAlmId) {
+      throw new Error("El almacén de origen es obligatorio.");
+    }
+
+    // Fecha local YYYY-MM-DD para resúmenes de ventas
+    const now = new Date();
+    const todayStr = getLocalDateString(now);
+
+    if (isConfigured && realDb) {
+      // EN MODO FIREBASE: Ejecución 100% transaccional en la nube.
+      // Si falla, el error se propaga hacia arriba y NUNCA se escribe en localStorage.
+      const counterDocRef = doc(realDb, "contadores", mov.tipo);
+      const movRef = doc(collection(realDb, "movimientos"));
+      const docId = movRef.id;
+
+      const originStockKey = `${cleanSku}_${originAlmId}`;
+      const originStockRef = doc(realDb, "stock", originStockKey);
+
+      const destStockKey = destAlmId ? `${cleanSku}_${destAlmId}` : null;
+      const destStockRef = destStockKey ? doc(realDb, "stock", destStockKey) : null;
+
+      // Resumen de ventas para salidas
+      const summaryKey = `${todayStr}_${cleanSku}_${originAlmId}`;
+      const resumenDocRef = mov.tipo === "salida" ? doc(realDb, "resumen_ventas", summaryKey) : null;
+
+      let generatedFolio = "";
+
+      await runTransaction(realDb, async (transaction) => {
+        // 1. Lectura del contador de folios
+        const counterSnap = await transaction.get(counterDocRef);
+        let nextNumber = 1;
+        if (counterSnap.exists()) {
+          const data = counterSnap.data();
+          if (typeof data?.ultimo_consecutivo === "number") {
+            nextNumber = data.ultimo_consecutivo + 1;
+          }
+        }
+        generatedFolio = `${prefix}${nextNumber}`;
+
+        // 2. Lectura del stock de origen
+        const originStockSnap = await transaction.get(originStockRef);
+        const currentOriginQty = originStockSnap.exists() ? (Number(originStockSnap.data()?.cantidad) || 0) : 0;
+
+        let newOriginQty = currentOriginQty;
+        let newDestQty = 0;
+
+        // 3. Procesamiento y validación de stock
+        if (mov.tipo === "entrada") {
+          newOriginQty = currentOriginQty + moveQty;
+        } else if (mov.tipo === "salida") {
+          if (currentOriginQty < moveQty) {
+            throw new Error(`Stock insuficiente en el almacén seleccionado. Stock disponible: ${currentOriginQty} uds, solicitado: ${moveQty} uds.`);
+          }
+          newOriginQty = currentOriginQty - moveQty;
+        } else if (mov.tipo === "transferencia") {
+          if (!destStockRef || !destAlmId) {
+            throw new Error("El almacén de destino es obligatorio para realizar una transferencia.");
+          }
+          if (originAlmId === destAlmId) {
+            throw new Error("El almacén de origen y destino no pueden ser iguales.");
+          }
+          if (currentOriginQty < moveQty) {
+            throw new Error(`Stock insuficiente en el almacén de origen. Stock disponible: ${currentOriginQty} uds, solicitado: ${moveQty} uds.`);
+          }
+
+          const destStockSnap = await transaction.get(destStockRef);
+          const currentDestQty = destStockSnap.exists() ? (Number(destStockSnap.data()?.cantidad) || 0) : 0;
+
+          newOriginQty = currentOriginQty - moveQty;
+          newDestQty = currentDestQty + moveQty;
+
+          // Escritura de stock en destino
+          transaction.set(destStockRef, {
+            id: destStockKey,
+            sku: cleanSku,
+            almacen_id: destAlmId,
+            cantidad: newDestQty,
+            actualizado: Timestamp.now()
+          }, { merge: true });
+        }
+
+        // 4. Lectura y actualización de resumen de ventas si es salida
+        if (mov.tipo === "salida" && resumenDocRef) {
+          const resumenSnap = await transaction.get(resumenDocRef);
+          const prevQty = resumenSnap.exists() ? (Number(resumenSnap.data()?.cantidad) || 0) : 0;
+          const prevTotal = resumenSnap.exists() ? (Number(resumenSnap.data()?.total_transacciones) || 0) : 0;
+
+          transaction.set(resumenDocRef, {
+            id: summaryKey,
+            fecha_str: todayStr,
+            fecha: Timestamp.now(),
+            sku: cleanSku,
+            almacen_id: originAlmId,
+            cantidad: prevQty + moveQty,
+            total_transacciones: prevTotal + 1,
+            actualizado: Timestamp.now()
+          }, { merge: true });
+        }
+
+        // 5. Escritura de stock en origen
+        transaction.set(originStockRef, {
+          id: originStockKey,
+          sku: cleanSku,
+          almacen_id: originAlmId,
+          cantidad: newOriginQty,
+          actualizado: Timestamp.now()
+        }, { merge: true });
+
+        // 6. Actualización del contador secuencial
+        transaction.set(counterDocRef, {
+          tipo: mov.tipo,
+          ultimo_consecutivo: nextNumber,
+          actualizado: Timestamp.now()
+        }, { merge: true });
+
+        // 7. Escritura del documento de movimiento
+        transaction.set(movRef, {
+          folio: generatedFolio,
+          sku: cleanSku,
+          almacen_id: originAlmId,
+          tipo: mov.tipo,
+          cantidad: moveQty,
+          referencia: mov.referencia,
+          usuario: usuarioEmail,
+          fecha: Timestamp.now(),
+          estado: "activo",
+          ...(destAlmId ? { almacen_destino_id: destAlmId } : {})
+        });
+      });
+
+      return { id: docId, folio: generatedFolio };
+    }
+
+    // --- MODO EMULADOR LOCAL (SOLO CUANDO FIREBASE NO ESTÁ CONFIGURADO) ---
     const stockMap = getLocalStorageItem<Record<string, StockItem>>("stock", {});
     const originKey = `${cleanSku}_${originAlmId}`;
     const currentOrigin = stockMap[originKey]?.cantidad || 0;
 
     if (mov.tipo === "salida" && currentOrigin < moveQty) {
-      throw new Error(`Stock insuficiente en el almacén seleccionado. Stock actual disponible: ${currentOrigin} uds, solicitado: ${moveQty} uds.`);
+      throw new Error(`Stock insuficiente en el almacén seleccionado. Stock disponible: ${currentOrigin} uds, solicitado: ${moveQty} uds.`);
     }
 
     if (mov.tipo === "transferencia") {
-      if (!destAlmId) throw new Error("El almacén de destino es requerido para transferencias.");
+      if (!destAlmId) throw new Error("El almacén de destino es obligatorio para transferencias.");
+      if (originAlmId === destAlmId) throw new Error("El almacén de origen y destino no pueden ser iguales.");
       if (currentOrigin < moveQty) {
-        throw new Error(`Stock insuficiente en el almacén de origen. Stock actual disponible: ${currentOrigin} uds, solicitado: ${moveQty} uds.`);
+        throw new Error(`Stock insuficiente en el almacén de origen. Stock disponible: ${currentOrigin} uds, solicitado: ${moveQty} uds.`);
       }
     }
 
-    if (!generatedFolio) {
-      generatedFolio = firestoreService.getNextLocalFolio(mov.tipo);
-    }
+    const generatedFolio = firestoreService.getNextLocalFolio(mov.tipo);
+    const docId = "mov_" + Math.random().toString(36).substr(2, 9);
 
-    // Update ONLY affected stock item(s)
     if (mov.tipo === "entrada") {
       stockMap[originKey] = {
         id: originKey,
@@ -1075,6 +984,22 @@ export const firestoreService = {
         cantidad: currentOrigin - moveQty,
         actualizado: new Date()
       };
+
+      // Actualizar resumen incremental local
+      const summaryMap = getLocalStorageItem<Record<string, ResumenVentaDiaria>>("resumen_ventas", {});
+      const summaryKey = `${todayStr}_${cleanSku}_${originAlmId}`;
+      const prev = summaryMap[summaryKey];
+      summaryMap[summaryKey] = {
+        id: summaryKey,
+        fecha_str: todayStr,
+        fecha: new Date(),
+        sku: cleanSku,
+        almacen_id: originAlmId,
+        cantidad: (prev?.cantidad || 0) + moveQty,
+        total_transacciones: (prev?.total_transacciones || 0) + 1,
+        actualizado: new Date()
+      };
+      setLocalStorageItem("resumen_ventas", summaryMap);
     } else if (mov.tipo === "transferencia" && destAlmId) {
       const destKey = `${cleanSku}_${destAlmId}`;
       const currentDest = stockMap[destKey]?.cantidad || 0;
@@ -1096,11 +1021,9 @@ export const firestoreService = {
       };
     }
 
-    // Save stock directly
     setLocalStorageItem("stock", stockMap);
     notifyListeners("stock", stockMap);
 
-    // Save movement with estado "activo"
     const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
     const nuevoMovimiento: Movimiento = {
       id: docId,
@@ -1123,123 +1046,129 @@ export const firestoreService = {
     return { id: docId, folio: generatedFolio };
   },
 
-  // --- ATOMIC ANULACIÓN (VOIDING) OF MOVEMENT ---
-  // Reverts the exact stock effect once, preserves audit doc with status "anulado", and blocks double-voiding
+  // --- ANULACIÓN ATÓMICA DE MOVIMIENTO VÍA RUNTRANSACTION ---
   anularMovimiento: async (id: string, motivo = "Anulado por el usuario"): Promise<void> => {
     const user = authService.getCurrentUser();
     const usuarioEmail = user ? user.email : "sistema@empresa.com";
 
     if (isConfigured && realDb) {
-      try {
-        const movRef = doc(realDb, "movimientos", id);
+      // EN MODO FIREBASE: Si falla o no hay stock para revertir, lanza el error y no toca localStorage
+      const movRef = doc(realDb, "movimientos", id);
 
-        await runTransaction(realDb, async (transaction) => {
-          // 1. Read Movement Document
-          const movSnap = await transaction.get(movRef);
-          if (!movSnap.exists()) {
-            throw new Error("El movimiento que intentas anular no existe en el sistema.");
-          }
-
-          const movData = movSnap.data();
-
-          // 2. Strict Check: Double voiding prevention
-          if (movData.estado === "anulado") {
-            throw new Error("Este movimiento ya ha sido anulado previamente. No se puede anular dos veces.");
-          }
-
-          const sku = (movData.sku || "").trim().toUpperCase();
-          const originAlmId = movData.almacen_id;
-          const destAlmId = movData.almacen_destino_id;
-          const qty = Number(movData.cantidad) || 0;
-          const tipo = movData.tipo;
-
-          const originStockKey = `${sku}_${originAlmId}`;
-          const originStockRef = doc(realDb, "stock", originStockKey);
-
-          // 3. Revert Atomic Stock Effects
-          if (tipo === "entrada") {
-            // Reversing an entrada means subtracting stock from origin warehouse
-            const originSnap = await transaction.get(originStockRef);
-            const currentOrigin = originSnap.exists() ? (Number(originSnap.data()?.cantidad) || 0) : 0;
-
-            if (currentOrigin < qty) {
-              throw new Error(`No se puede anular la entrada: el stock actual (${currentOrigin} uds) en el almacén es inferior a la cantidad a revertir (${qty} uds).`);
-            }
-
-            transaction.set(originStockRef, {
-              id: originStockKey,
-              sku,
-              almacen_id: originAlmId,
-              cantidad: currentOrigin - qty,
-              actualizado: Timestamp.now()
-            }, { merge: true });
-          } else if (tipo === "salida") {
-            // Reversing a salida means adding stock back to origin warehouse
-            const originSnap = await transaction.get(originStockRef);
-            const currentOrigin = originSnap.exists() ? (Number(originSnap.data()?.cantidad) || 0) : 0;
-
-            transaction.set(originStockRef, {
-              id: originStockKey,
-              sku,
-              almacen_id: originAlmId,
-              cantidad: currentOrigin + qty,
-              actualizado: Timestamp.now()
-            }, { merge: true });
-          } else if (tipo === "transferencia") {
-            // Reversing a transfer means adding stock back to origin and subtracting from destination
-            if (!destAlmId) {
-              throw new Error("Error en datos de transferencia: falta almacén de destino.");
-            }
-
-            const destStockKey = `${sku}_${destAlmId}`;
-            const destStockRef = doc(realDb, "stock", destStockKey);
-
-            const destSnap = await transaction.get(destStockRef);
-            const currentDest = destSnap.exists() ? (Number(destSnap.data()?.cantidad) || 0) : 0;
-
-            if (currentDest < qty) {
-              throw new Error(`No se puede anular la transferencia: el almacén de destino no tiene suficiente stock (${currentDest} uds) para devolver las ${qty} uds.`);
-            }
-
-            const originSnap = await transaction.get(originStockRef);
-            const currentOrigin = originSnap.exists() ? (Number(originSnap.data()?.cantidad) || 0) : 0;
-
-            transaction.set(originStockRef, {
-              id: originStockKey,
-              sku,
-              almacen_id: originAlmId,
-              cantidad: currentOrigin + qty,
-              actualizado: Timestamp.now()
-            }, { merge: true });
-
-            transaction.set(destStockRef, {
-              id: destStockKey,
-              sku,
-              almacen_id: destAlmId,
-              cantidad: currentDest - qty,
-              actualizado: Timestamp.now()
-            }, { merge: true });
-          }
-
-          // 4. Mark movement document as Anulado (preserving audit history)
-          transaction.update(movRef, {
-            estado: "anulado",
-            anulado_at: Timestamp.now(),
-            anulado_por: usuarioEmail,
-            motivo_anulacion: motivo
-          });
-        });
-
-        return;
-      } catch (err: any) {
-        if (err.message && (err.message.includes("anulado") || err.message.includes("stock"))) {
-          throw err;
+      await runTransaction(realDb, async (transaction) => {
+        // 1. Lectura del movimiento
+        const movSnap = await transaction.get(movRef);
+        if (!movSnap.exists()) {
+          throw new Error("El movimiento que intentas anular no existe en el sistema.");
         }
-        console.warn("Firestore runTransaction anulación falló, ejecutando en local:", err);
-      }
+
+        const movData = movSnap.data();
+
+        // 2. Validación estricta anti-doble anulación
+        if (movData.estado === "anulado") {
+          throw new Error("Este movimiento ya ha sido anulado previamente. No se puede anular dos veces.");
+        }
+
+        const sku = (movData.sku || "").trim().toUpperCase();
+        const originAlmId = movData.almacen_id;
+        const destAlmId = movData.almacen_destino_id;
+        const qty = Number(movData.cantidad) || 0;
+        const tipo = movData.tipo;
+
+        const originStockKey = `${sku}_${originAlmId}`;
+        const originStockRef = doc(realDb, "stock", originStockKey);
+
+        // 3. Reversión de stock
+        if (tipo === "entrada") {
+          const originSnap = await transaction.get(originStockRef);
+          const currentOrigin = originSnap.exists() ? (Number(originSnap.data()?.cantidad) || 0) : 0;
+
+          if (currentOrigin < qty) {
+            throw new Error(`No se puede anular la entrada: el stock actual (${currentOrigin} uds) en el almacén es menor a la cantidad a revertir (${qty} uds).`);
+          }
+
+          transaction.set(originStockRef, {
+            id: originStockKey,
+            sku,
+            almacen_id: originAlmId,
+            cantidad: currentOrigin - qty,
+            actualizado: Timestamp.now()
+          }, { merge: true });
+        } else if (tipo === "salida") {
+          const originSnap = await transaction.get(originStockRef);
+          const currentOrigin = originSnap.exists() ? (Number(originSnap.data()?.cantidad) || 0) : 0;
+
+          transaction.set(originStockRef, {
+            id: originStockKey,
+            sku,
+            almacen_id: originAlmId,
+            cantidad: currentOrigin + qty,
+            actualizado: Timestamp.now()
+          }, { merge: true });
+
+          // Descontar del resumen incremental de ventas
+          const dateStr = getLocalDateString(movData.fecha);
+          const summaryKey = `${dateStr}_${sku}_${originAlmId}`;
+          const resumenDocRef = doc(realDb, "resumen_ventas", summaryKey);
+          const resumenSnap = await transaction.get(resumenDocRef);
+
+          if (resumenSnap.exists()) {
+            const prevQty = Number(resumenSnap.data()?.cantidad) || 0;
+            const prevTotal = Number(resumenSnap.data()?.total_transacciones) || 0;
+            transaction.set(resumenDocRef, {
+              cantidad: Math.max(0, prevQty - qty),
+              total_transacciones: Math.max(0, prevTotal - 1),
+              actualizado: Timestamp.now()
+            }, { merge: true });
+          }
+        } else if (tipo === "transferencia") {
+          if (!destAlmId) {
+            throw new Error("Datos de transferencia incompletos: falta almacén de destino.");
+          }
+
+          const destStockKey = `${sku}_${destAlmId}`;
+          const destStockRef = doc(realDb, "stock", destStockKey);
+
+          const destSnap = await transaction.get(destStockRef);
+          const currentDest = destSnap.exists() ? (Number(destSnap.data()?.cantidad) || 0) : 0;
+
+          if (currentDest < qty) {
+            throw new Error(`No se puede anular la transferencia: el almacén de destino no tiene suficiente stock (${currentDest} uds) para devolver las ${qty} uds.`);
+          }
+
+          const originSnap = await transaction.get(originStockRef);
+          const currentOrigin = originSnap.exists() ? (Number(originSnap.data()?.cantidad) || 0) : 0;
+
+          transaction.set(originStockRef, {
+            id: originStockKey,
+            sku,
+            almacen_id: originAlmId,
+            cantidad: currentOrigin + qty,
+            actualizado: Timestamp.now()
+          }, { merge: true });
+
+          transaction.set(destStockRef, {
+            id: destStockKey,
+            sku,
+            almacen_id: destAlmId,
+            cantidad: currentDest - qty,
+            actualizado: Timestamp.now()
+          }, { merge: true });
+        }
+
+        // 4. Marca el documento como anulado
+        transaction.update(movRef, {
+          estado: "anulado",
+          anulado_at: Timestamp.now(),
+          anulado_por: usuarioEmail,
+          motivo_anulacion: motivo
+        });
+      });
+
+      return;
     }
 
-    // --- LOCAL EMULATOR ANULACIÓN ---
+    // --- MODO EMULADOR LOCAL ---
     const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
     const movIndex = movimientos.findIndex(m => m.id === id);
 
@@ -1248,7 +1177,6 @@ export const firestoreService = {
     }
 
     const mov = movimientos[movIndex];
-
     if (mov.estado === "anulado") {
       throw new Error("Este movimiento ya ha sido anulado previamente. No se puede anular dos veces.");
     }
@@ -1261,7 +1189,7 @@ export const firestoreService = {
 
     if (mov.tipo === "entrada") {
       if (currentOrigin < qty) {
-        throw new Error(`No se puede anular la entrada: el stock actual (${currentOrigin} uds) en el almacén es inferior a la cantidad a revertir (${qty} uds).`);
+        throw new Error(`No se puede anular la entrada: el stock actual (${currentOrigin} uds) en el almacén es menor a la cantidad a revertir (${qty} uds).`);
       }
       stockMap[originKey] = {
         id: originKey,
@@ -1278,6 +1206,21 @@ export const firestoreService = {
         cantidad: currentOrigin + qty,
         actualizado: new Date()
       };
+
+      // Descontar del resumen incremental
+      const summaryMap = getLocalStorageItem<Record<string, ResumenVentaDiaria>>("resumen_ventas", {});
+      const dateStr = getLocalDateString(mov.fecha);
+      const summaryKey = `${dateStr}_${sku}_${mov.almacen_id}`;
+      if (summaryMap[summaryKey]) {
+        const prev = summaryMap[summaryKey];
+        summaryMap[summaryKey] = {
+          ...prev,
+          cantidad: Math.max(0, prev.cantidad - qty),
+          total_transacciones: Math.max(0, prev.total_transacciones - 1),
+          actualizado: new Date()
+        };
+        setLocalStorageItem("resumen_ventas", summaryMap);
+      }
     } else if (mov.tipo === "transferencia" && mov.almacen_destino_id) {
       const destKey = `${sku}_${mov.almacen_destino_id}`;
       const currentDest = stockMap[destKey]?.cantidad || 0;
@@ -1303,11 +1246,9 @@ export const firestoreService = {
       };
     }
 
-    // Save reverted stock
     setLocalStorageItem("stock", stockMap);
     notifyListeners("stock", stockMap);
 
-    // Mark movement as anulado
     movimientos[movIndex] = {
       ...mov,
       estado: "anulado",
@@ -1320,12 +1261,11 @@ export const firestoreService = {
     notifyListeners("movimientos", movimientos);
   },
 
-  // Legacy delete fallback (aliases to anular for safety)
   deleteMovimiento: async (id: string): Promise<void> => {
     await firestoreService.anularMovimiento(id, "Anulación directa de registro");
   },
 
-  // --- PAGINATED AUDIT HISTORY (50 BY 50) ---
+  // --- HISTORIAL PAGINADO DE AUDITORÍA (50 EN 50) ---
   getMovimientosPaginated: async (options: {
     pageSize?: number;
     lastDoc?: any;
@@ -1342,66 +1282,62 @@ export const firestoreService = {
     const pageSize = options.pageSize || 50;
 
     if (isConfigured && realDb) {
-      try {
-        let qConstraints: any[] = [orderBy("fecha", "desc"), limit(pageSize + 1)];
+      let qConstraints: any[] = [orderBy("fecha", "desc"), limit(pageSize + 1)];
 
-        if (options.skuFilter) {
-          qConstraints.unshift(where("sku", "==", options.skuFilter.trim().toUpperCase()));
-        }
-        if (options.warehouseFilter && options.warehouseFilter !== "all") {
-          qConstraints.unshift(where("almacen_id", "==", options.warehouseFilter));
-        }
-        if (options.tipoFilter && options.tipoFilter !== "all") {
-          qConstraints.unshift(where("tipo", "==", options.tipoFilter));
-        }
-        if (options.estadoFilter && options.estadoFilter !== "all") {
-          qConstraints.unshift(where("estado", "==", options.estadoFilter));
-        }
-
-        if (options.lastDoc) {
-          qConstraints.push(startAfter(options.lastDoc));
-        }
-
-        const q = query(collection(realDb, "movimientos"), ...qConstraints);
-        const snap = await getDocs(q);
-
-        const docs = snap.docs;
-        const hasMore = docs.length > pageSize;
-        const itemsToProcess = hasMore ? docs.slice(0, pageSize) : docs;
-        const nextLastDoc = itemsToProcess.length > 0 ? itemsToProcess[itemsToProcess.length - 1] : null;
-
-        const list: Movimiento[] = itemsToProcess.map(d => {
-          const data = d.data();
-          return {
-            id: d.id,
-            folio: data.folio,
-            sku: data.sku,
-            almacen_id: data.almacen_id,
-            tipo: data.tipo,
-            cantidad: data.cantidad,
-            referencia: data.referencia,
-            usuario: data.usuario,
-            fecha: data.fecha ? (data.fecha as Timestamp).toDate() : new Date(),
-            almacen_destino_id: data.almacen_destino_id,
-            estado: data.estado || "activo",
-            anulado_at: data.anulado_at ? (data.anulado_at as Timestamp).toDate() : undefined,
-            anulado_por: data.anulado_por,
-            motivo_anulacion: data.motivo_anulacion
-          };
-        });
-
-        return {
-          items: list,
-          lastDoc: nextLastDoc,
-          hasMore,
-          totalLoaded: list.length
-        };
-      } catch (err) {
-        console.warn("Firestore getMovimientosPaginated failed, using local storage pagination:", err);
+      if (options.skuFilter) {
+        qConstraints.unshift(where("sku", "==", options.skuFilter.trim().toUpperCase()));
       }
+      if (options.warehouseFilter && options.warehouseFilter !== "all") {
+        qConstraints.unshift(where("almacen_id", "==", options.warehouseFilter));
+      }
+      if (options.tipoFilter && options.tipoFilter !== "all") {
+        qConstraints.unshift(where("tipo", "==", options.tipoFilter));
+      }
+      if (options.estadoFilter && options.estadoFilter !== "all") {
+        qConstraints.unshift(where("estado", "==", options.estadoFilter));
+      }
+
+      if (options.lastDoc) {
+        qConstraints.push(startAfter(options.lastDoc));
+      }
+
+      const q = query(collection(realDb, "movimientos"), ...qConstraints);
+      const snap = await getDocs(q);
+
+      const docs = snap.docs;
+      const hasMore = docs.length > pageSize;
+      const itemsToProcess = hasMore ? docs.slice(0, pageSize) : docs;
+      const nextLastDoc = itemsToProcess.length > 0 ? itemsToProcess[itemsToProcess.length - 1] : null;
+
+      const list: Movimiento[] = itemsToProcess.map(d => {
+        const data = d.data();
+        return {
+          id: d.id,
+          folio: data.folio,
+          sku: data.sku,
+          almacen_id: data.almacen_id,
+          tipo: data.tipo,
+          cantidad: data.cantidad,
+          referencia: data.referencia,
+          usuario: data.usuario,
+          fecha: data.fecha ? (data.fecha as Timestamp).toDate() : new Date(),
+          almacen_destino_id: data.almacen_destino_id,
+          estado: data.estado || "activo",
+          anulado_at: data.anulado_at ? (data.anulado_at as Timestamp).toDate() : undefined,
+          anulado_por: data.anulado_por,
+          motivo_anulacion: data.motivo_anulacion
+        };
+      });
+
+      return {
+        items: list,
+        lastDoc: nextLastDoc,
+        hasMore,
+        totalLoaded: list.length
+      };
     }
 
-    // Local Storage Pagination
+    // Modo local
     let movs = getLocalStorageItem<Movimiento[]>("movimientos", []);
     movs = movs.map(m => ({
       ...m,
@@ -1416,7 +1352,6 @@ export const firestoreService = {
       return timeB - timeA;
     });
 
-    // Apply filters
     if (options.skuFilter) {
       const s = options.skuFilter.trim().toLowerCase();
       movs = movs.filter(m => 
@@ -1448,64 +1383,97 @@ export const firestoreService = {
     };
   },
 
-  // Single page fetch for non-paginated small components (returns up to 100 items by default)
   getMovimientos: async (skuFilter?: string): Promise<Movimiento[]> => {
     const res = await firestoreService.getMovimientosPaginated({ pageSize: 100, skuFilter });
     return res.items;
   },
 
-  // --- OPTIMIZED SALES ANALYSIS: QUERY ONLY SALES MOVEMENTS IN DATE RANGE ---
+  // --- CONSULTA OPTIMIZADA DE RESÚMENES INCREMENTALES DE VENTAS ---
+  getResumenVentasByDateRange: async (startDate: Date, endDate: Date): Promise<ResumenVentaDiaria[]> => {
+    const startStr = getLocalDateString(startDate);
+    const endStr = getLocalDateString(endDate);
+
+    if (isConfigured && realDb) {
+      const q = query(
+        collection(realDb, "resumen_ventas"),
+        where("fecha_str", ">=", startStr),
+        where("fecha_str", "<=", endStr)
+      );
+
+      const snap = await getDocs(q);
+      const list: ResumenVentaDiaria[] = [];
+
+      snap.forEach(d => {
+        const data = d.data();
+        if (Number(data.cantidad) > 0) {
+          list.push({
+            id: d.id,
+            fecha_str: data.fecha_str,
+            fecha: data.fecha ? (data.fecha as Timestamp).toDate() : new Date(),
+            sku: data.sku,
+            almacen_id: data.almacen_id,
+            cantidad: Number(data.cantidad) || 0,
+            total_transacciones: Number(data.total_transacciones) || 1,
+            actualizado: data.actualizado ? (data.actualizado as Timestamp).toDate() : undefined
+          });
+        }
+      });
+
+      return list;
+    }
+
+    // Modo emulador local
+    const summaryMap = getLocalStorageItem<Record<string, ResumenVentaDiaria>>("resumen_ventas", {});
+    return Object.values(summaryMap).filter(item => {
+      const f = item.fecha_str;
+      return f >= startStr && f <= endStr && item.cantidad > 0;
+    });
+  },
+
+  // Fallback para consultas directas de movimientos de salida si fuera necesario
   getVentasByDateRange: async (startDate: Date, endDate: Date): Promise<Movimiento[]> => {
     const startMs = startDate.getTime();
     const endMs = endDate.getTime();
 
     if (isConfigured && realDb) {
-      try {
-        const startTimestamp = Timestamp.fromDate(startDate);
-        const endTimestamp = Timestamp.fromDate(endDate);
+      const startTimestamp = Timestamp.fromDate(startDate);
+      const endTimestamp = Timestamp.fromDate(endDate);
 
-        const q = query(
-          collection(realDb, "movimientos"),
-          where("tipo", "==", "salida"),
-          where("fecha", ">=", startTimestamp),
-          where("fecha", "<=", endTimestamp),
-          orderBy("fecha", "desc")
-        );
+      const q = query(
+        collection(realDb, "movimientos"),
+        where("tipo", "==", "salida"),
+        where("fecha", ">=", startTimestamp),
+        where("fecha", "<=", endTimestamp),
+        orderBy("fecha", "desc")
+      );
 
-        const snap = await getDocs(q);
-        const list: Movimiento[] = [];
+      const snap = await getDocs(q);
+      const list: Movimiento[] = [];
 
-        snap.forEach(d => {
-          const data = d.data();
-          // STRICT RULE: Exclude voided movements
-          if (data.estado === "anulado") return;
+      snap.forEach(d => {
+        const data = d.data();
+        if (data.estado === "anulado") return;
 
-          list.push({
-            id: d.id,
-            folio: data.folio,
-            sku: data.sku,
-            almacen_id: data.almacen_id,
-            tipo: "salida",
-            cantidad: Number(data.cantidad) || 0,
-            referencia: data.referencia,
-            usuario: data.usuario,
-            fecha: data.fecha ? (data.fecha as Timestamp).toDate() : new Date(),
-            estado: data.estado || "activo"
-          });
+        list.push({
+          id: d.id,
+          folio: data.folio,
+          sku: data.sku,
+          almacen_id: data.almacen_id,
+          tipo: "salida",
+          cantidad: Number(data.cantidad) || 0,
+          referencia: data.referencia,
+          usuario: data.usuario,
+          fecha: data.fecha ? (data.fecha as Timestamp).toDate() : new Date(),
+          estado: data.estado || "activo"
         });
+      });
 
-        return list;
-      } catch (err) {
-        console.warn("Firestore getVentasByDateRange failed, falling back to local filter:", err);
-      }
+      return list;
     }
 
-    // Local Storage sales query
-    let movs = getLocalStorageItem<Movimiento[]>("movimientos", []);
+    const movs = getLocalStorageItem<Movimiento[]>("movimientos", []);
     return movs.filter(m => {
-      if (m.tipo !== "salida") return false;
-      if (m.estado === "anulado") return false; // Ignored voided sales
-
+      if (m.tipo !== "salida" || m.estado === "anulado") return false;
       const mDate = m.fecha instanceof Date ? m.fecha : new Date(typeof m.fecha === "string" ? m.fecha : (m.fecha as any).seconds * 1000);
       const time = mDate.getTime();
       return time >= startMs && time <= endMs;
@@ -1516,10 +1484,7 @@ export const firestoreService = {
     }));
   },
 
-  // ==========================================
-  // --- GESTIÓN DE CATÁLOGOS DINÁMICOS ---
-  // ==========================================
-
+  // --- CATÁLOGOS DINÁMICOS ---
   seedAndImportCatalogos: async (): Promise<{ categorias: CategoriaCatalogo[]; unidades: UnidadMedidaCatalogo[] }> => {
     const defaultCategorias: CategoriaCatalogo[] = [
       { id: "cat_tec", nombre: "Tecnología", activa: true },
@@ -1541,6 +1506,36 @@ export const firestoreService = {
       { id: "uni_rll", nombre: "Rollo", abreviatura: "rll", activa: true }
     ];
 
+    if (isConfigured && realDb) {
+      const catsSnap = await getDocs(collection(realDb, "catalogo_categorias"));
+      const unitsSnap = await getDocs(collection(realDb, "catalogo_unidades"));
+
+      if (catsSnap.empty) {
+        for (const cat of defaultCategorias) {
+          await setDoc(doc(realDb, "catalogo_categorias", cat.id), {
+            nombre: cat.nombre,
+            activa: cat.activa,
+            creado: Timestamp.now()
+          });
+        }
+      }
+
+      if (unitsSnap.empty) {
+        for (const unit of defaultUnidades) {
+          await setDoc(doc(realDb, "catalogo_unidades", unit.id), {
+            nombre: unit.nombre,
+            abreviatura: unit.abreviatura,
+            activa: unit.activa,
+            creado: Timestamp.now()
+          });
+        }
+      }
+
+      const freshCats = await firestoreService.getCategorias();
+      const freshUnits = await firestoreService.getUnidades();
+      return { categorias: freshCats, unidades: freshUnits };
+    }
+
     let currentCats = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
     let currentUnits = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
 
@@ -1551,63 +1546,19 @@ export const firestoreService = {
       currentUnits = [...defaultUnidades];
     }
 
-    const productos = getLocalStorageItem<Producto[]>("productos", []);
-    
-    productos.forEach(p => {
-      if (p.categoria && p.categoria.trim()) {
-        const cleanCat = p.categoria.trim();
-        const exists = currentCats.some(c => c.nombre.trim().toLowerCase() === cleanCat.toLowerCase());
-        if (!exists) {
-          currentCats.push({
-            id: "cat_" + Math.random().toString(36).substr(2, 9),
-            nombre: cleanCat,
-            activa: true
-          });
-        }
-      }
-
-      if (p.unidad && p.unidad.trim()) {
-        const cleanUnit = p.unidad.trim();
-        const exists = currentUnits.some(u => 
-          u.abreviatura.trim().toLowerCase() === cleanUnit.toLowerCase() ||
-          u.nombre.trim().toLowerCase() === cleanUnit.toLowerCase()
-        );
-        if (!exists) {
-          const capitalizedName = cleanUnit.charAt(0).toUpperCase() + cleanUnit.slice(1);
-          currentUnits.push({
-            id: "uni_" + Math.random().toString(36).substr(2, 9),
-            nombre: capitalizedName,
-            abreviatura: cleanUnit.toLowerCase(),
-            activa: true
-          });
-        }
-      }
-    });
-
     setLocalStorageItem("categorias", currentCats);
     setLocalStorageItem("unidades", currentUnits);
-
-    notifyListeners("categorias", currentCats);
-    notifyListeners("unidades", currentUnits);
-
     return { categorias: currentCats, unidades: currentUnits };
   },
 
   getCategorias: async (): Promise<CategoriaCatalogo[]> => {
     if (isConfigured && realDb) {
-      try {
-        const snap = await getDocs(collection(realDb, "catalogo_categorias"));
-        const list: CategoriaCatalogo[] = [];
-        snap.forEach(d => {
-          list.push({ id: d.id, ...d.data() } as CategoriaCatalogo);
-        });
-        if (list.length > 0) {
-          setLocalStorageItem("categorias", list);
-          return list;
-        }
-      } catch (err) {
-        console.warn("Firestore getCategorias failed, using local storage:", err);
-      }
+      const snap = await getDocs(collection(realDb, "catalogo_categorias"));
+      const list: CategoriaCatalogo[] = [];
+      snap.forEach(d => {
+        list.push({ id: d.id, ...d.data() } as CategoriaCatalogo);
+      });
+      return list;
     }
     const local = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
     if (local.length === 0) {
@@ -1619,41 +1570,24 @@ export const firestoreService = {
 
   getCategoriasRealtime: (onUpdate: (cats: CategoriaCatalogo[]) => void): (() => void) => {
     if (isConfigured && realDb) {
-      try {
-        const unsubscribe = onSnapshot(
-          collection(realDb, "catalogo_categorias"),
-          (snap) => {
-            const list: CategoriaCatalogo[] = [];
-            snap.forEach(d => {
-              list.push({ id: d.id, ...d.data() } as CategoriaCatalogo);
-            });
-            if (list.length > 0) {
-              setLocalStorageItem("categorias", list);
-              onUpdate(list);
-            } else {
-              const localList = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
-              onUpdate(localList);
-            }
-          },
-          (error) => {
-            console.warn("Firestore onSnapshot (categorias) error:", error.message);
-            const localList = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
-            onUpdate(localList);
-          }
-        );
-        return unsubscribe;
-      } catch (err) {
-        console.warn("Could not attach onSnapshot to catalogo_categorias:", err);
-      }
+      return onSnapshot(
+        collection(realDb, "catalogo_categorias"),
+        (snap) => {
+          const list: CategoriaCatalogo[] = [];
+          snap.forEach(d => {
+            list.push({ id: d.id, ...d.data() } as CategoriaCatalogo);
+          });
+          onUpdate(list);
+        },
+        (error) => {
+          console.error("Error en listener de categorías:", error);
+        }
+      );
     }
 
     const update = () => {
       const list = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
-      if (list.length === 0) {
-        firestoreService.seedAndImportCatalogos().then(res => onUpdate(res.categorias));
-      } else {
-        onUpdate(list);
-      }
+      onUpdate(list);
     };
     update();
     listeners.categorias.push(update);
@@ -1681,16 +1615,13 @@ export const firestoreService = {
     };
 
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "catalogo_categorias", newId);
-        await setDoc(docRef, {
-          nombre: cleanNombre,
-          activa: true,
-          creado: Timestamp.now()
-        });
-      } catch (err) {
-        console.warn("Firestore addCategoria failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "catalogo_categorias", newId);
+      await setDoc(docRef, {
+        nombre: cleanNombre,
+        activa: true,
+        creado: Timestamp.now()
+      });
+      return newId;
     }
 
     list.push(newCat);
@@ -1701,12 +1632,9 @@ export const firestoreService = {
 
   updateCategoria: async (id: string, data: Partial<Omit<CategoriaCatalogo, "id">>): Promise<void> => {
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "catalogo_categorias", id);
-        await setDoc(docRef, data, { merge: true });
-      } catch (err) {
-        console.warn("Firestore updateCategoria failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "catalogo_categorias", id);
+      await setDoc(docRef, data, { merge: true });
+      return;
     }
     const list = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
     const index = list.findIndex(c => c.id === id);
@@ -1730,6 +1658,17 @@ export const firestoreService = {
 
     await firestoreService.updateCategoria(id, { nombre: cleanNew });
 
+    if (isConfigured && realDb) {
+      const prodsSnap = await getDocs(collection(realDb, "productos"));
+      for (const d of prodsSnap.docs) {
+        const p = d.data();
+        if (p.categoria && p.categoria.trim().toLowerCase() === cleanOld.toLowerCase()) {
+          await setDoc(doc(realDb, "productos", d.id), { categoria: cleanNew }, { merge: true });
+        }
+      }
+      return;
+    }
+
     const productos = getLocalStorageItem<Producto[]>("productos", []);
     let modifiedAny = false;
 
@@ -1737,14 +1676,6 @@ export const firestoreService = {
       if (p.categoria && p.categoria.trim().toLowerCase() === cleanOld.toLowerCase()) {
         p.categoria = cleanNew;
         modifiedAny = true;
-        if (isConfigured && realDb) {
-          try {
-            const prodDoc = doc(realDb, "productos", p.sku);
-            setDoc(prodDoc, { categoria: cleanNew }, { merge: true });
-          } catch (e) {
-            console.warn("Error updating product category in Firestore:", e);
-          }
-        }
       }
     });
 
@@ -1760,12 +1691,9 @@ export const firestoreService = {
 
   deleteCategoria: async (id: string): Promise<void> => {
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "catalogo_categorias", id);
-        await deleteDoc(docRef);
-      } catch (err) {
-        console.warn("Firestore deleteCategoria failed, updating local storage:", err);
-      }
+      const docRef = doc(realDb, "catalogo_categorias", id);
+      await deleteDoc(docRef);
+      return;
     }
     const list = getLocalStorageItem<CategoriaCatalogo[]>("categorias", []);
     const updated = list.filter(c => c.id !== id);
@@ -1776,19 +1704,12 @@ export const firestoreService = {
   // --- UNIDADES DE MEDIDA ---
   getUnidades: async (): Promise<UnidadMedidaCatalogo[]> => {
     if (isConfigured && realDb) {
-      try {
-        const snap = await getDocs(collection(realDb, "catalogo_unidades"));
-        const list: UnidadMedidaCatalogo[] = [];
-        snap.forEach(d => {
-          list.push({ id: d.id, ...d.data() } as UnidadMedidaCatalogo);
-        });
-        if (list.length > 0) {
-          setLocalStorageItem("unidades", list);
-          return list;
-        }
-      } catch (err) {
-        console.warn("Firestore getUnidades failed, using local storage:", err);
-      }
+      const snap = await getDocs(collection(realDb, "catalogo_unidades"));
+      const list: UnidadMedidaCatalogo[] = [];
+      snap.forEach(d => {
+        list.push({ id: d.id, ...d.data() } as UnidadMedidaCatalogo);
+      });
+      return list;
     }
     const local = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
     if (local.length === 0) {
@@ -1800,41 +1721,24 @@ export const firestoreService = {
 
   getUnidadesRealtime: (onUpdate: (units: UnidadMedidaCatalogo[]) => void): (() => void) => {
     if (isConfigured && realDb) {
-      try {
-        const unsubscribe = onSnapshot(
-          collection(realDb, "catalogo_unidades"),
-          (snap) => {
-            const list: UnidadMedidaCatalogo[] = [];
-            snap.forEach(d => {
-              list.push({ id: d.id, ...d.data() } as UnidadMedidaCatalogo);
-            });
-            if (list.length > 0) {
-              setLocalStorageItem("unidades", list);
-              onUpdate(list);
-            } else {
-              const localList = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
-              onUpdate(localList);
-            }
-          },
-          (error) => {
-            console.warn("Firestore onSnapshot (unidades) error:", error.message);
-            const localList = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
-            onUpdate(localList);
-          }
-        );
-        return unsubscribe;
-      } catch (err) {
-        console.warn("Could not attach onSnapshot to catalogo_unidades:", err);
-      }
+      return onSnapshot(
+        collection(realDb, "catalogo_unidades"),
+        (snap) => {
+          const list: UnidadMedidaCatalogo[] = [];
+          snap.forEach(d => {
+            list.push({ id: d.id, ...d.data() } as UnidadMedidaCatalogo);
+          });
+          onUpdate(list);
+        },
+        (error) => {
+          console.error("Error en listener de unidades:", error);
+        }
+      );
     }
 
     const update = () => {
       const list = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
-      if (list.length === 0) {
-        firestoreService.seedAndImportCatalogos().then(res => onUpdate(res.unidades));
-      } else {
-        onUpdate(list);
-      }
+      onUpdate(list);
     };
     update();
     listeners.unidades.push(update);
@@ -1870,17 +1774,14 @@ export const firestoreService = {
     };
 
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "catalogo_unidades", newId);
-        await setDoc(docRef, {
-          nombre: cleanNombre,
-          abreviatura: cleanAbrev,
-          activa: true,
-          creado: Timestamp.now()
-        });
-      } catch (err) {
-        console.warn("Firestore addUnidad failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "catalogo_unidades", newId);
+      await setDoc(docRef, {
+        nombre: cleanNombre,
+        abreviatura: cleanAbrev,
+        activa: true,
+        creado: Timestamp.now()
+      });
+      return newId;
     }
 
     list.push(newUnit);
@@ -1891,12 +1792,9 @@ export const firestoreService = {
 
   updateUnidad: async (id: string, data: Partial<Omit<UnidadMedidaCatalogo, "id">>): Promise<void> => {
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "catalogo_unidades", id);
-        await setDoc(docRef, data, { merge: true });
-      } catch (err) {
-        console.warn("Firestore updateUnidad failed, using local storage:", err);
-      }
+      const docRef = doc(realDb, "catalogo_unidades", id);
+      await setDoc(docRef, data, { merge: true });
+      return;
     }
     const list = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
     const index = list.findIndex(u => u.id === id);
@@ -1928,6 +1826,17 @@ export const firestoreService = {
 
     await firestoreService.updateUnidad(id, { nombre: cleanNewNombre, abreviatura: cleanNewAbrev });
 
+    if (isConfigured && realDb) {
+      const prodsSnap = await getDocs(collection(realDb, "productos"));
+      for (const d of prodsSnap.docs) {
+        const p = d.data();
+        if ((p.unidad || "").trim().toLowerCase() === cleanOldAbrev) {
+          await setDoc(doc(realDb, "productos", d.id), { unidad: cleanNewAbrev }, { merge: true });
+        }
+      }
+      return;
+    }
+
     const productos = getLocalStorageItem<Producto[]>("productos", []);
     let modifiedAny = false;
 
@@ -1936,14 +1845,6 @@ export const firestoreService = {
       if (prodUnitLower === cleanOldAbrev) {
         p.unidad = cleanNewAbrev;
         modifiedAny = true;
-        if (isConfigured && realDb) {
-          try {
-            const prodDoc = doc(realDb, "productos", p.sku);
-            setDoc(prodDoc, { unidad: cleanNewAbrev }, { merge: true });
-          } catch (e) {
-            console.warn("Error updating product unit in Firestore:", e);
-          }
-        }
       }
     });
 
@@ -1959,12 +1860,9 @@ export const firestoreService = {
 
   deleteUnidad: async (id: string): Promise<void> => {
     if (isConfigured && realDb) {
-      try {
-        const docRef = doc(realDb, "catalogo_unidades", id);
-        await deleteDoc(docRef);
-      } catch (err) {
-        console.warn("Firestore deleteUnidad failed, updating local storage:", err);
-      }
+      const docRef = doc(realDb, "catalogo_unidades", id);
+      await deleteDoc(docRef);
+      return;
     }
     const list = getLocalStorageItem<UnidadMedidaCatalogo[]>("unidades", []);
     const updated = list.filter(u => u.id !== id);

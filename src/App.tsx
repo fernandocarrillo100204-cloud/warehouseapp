@@ -5,7 +5,7 @@
 
 import React, { useState, useEffect } from "react";
 import { authService, firestoreService } from "./lib/firebase";
-import { Usuario, Almacen, Producto, NavigationTab } from "./types";
+import { Usuario, Almacen, Producto, StockItem, NavigationTab } from "./types";
 import Sidebar from "./components/Sidebar";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
@@ -26,6 +26,7 @@ export default function App() {
 
   const [almacenes, setAlmacenes] = useState<Almacen[]>([]);
   const [productos, setProductos] = useState<Producto[]>([]);
+  const [stockList, setStockList] = useState<StockItem[]>([]);
 
   // Monitor Auth State Changes
   useEffect(() => {
@@ -36,7 +37,20 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Subscribe to real-time warehouses and products updates globally
+  // Run initial migrations (idempotent, executed once)
+  useEffect(() => {
+    if (!user) return;
+    
+    // Execute idempotent migrations for existing folios and sales summaries
+    firestoreService.runFolioMigrationIfNeeded().catch(err => {
+      console.error("Error en migración de folios:", err);
+    });
+    firestoreService.runResumenVentasMigrationIfNeeded().catch(err => {
+      console.error("Error en migración de resumen de ventas:", err);
+    });
+  }, [user?.uid]);
+
+  // Subscribe to real-time warehouses, products, and stock updates globally
   useEffect(() => {
     const uid = user?.uid;
     if (!uid) return;
@@ -51,9 +65,15 @@ export default function App() {
       setProductos(prodList);
     });
 
+    // Subscribe to stock
+    const unsubscribeStock = firestoreService.getStockRealtime((stkList) => {
+      setStockList(stkList);
+    });
+
     return () => {
       unsubscribeAlmacenes();
       unsubscribeProductos();
+      unsubscribeStock();
     };
   }, [user?.uid]);
 
@@ -170,7 +190,9 @@ export default function App() {
                   transition={{ duration: 0.25, ease: "easeInOut" }}
                 >
                   <GestionAlmacenes 
+                    almacenes={almacenes}
                     productos={productos} 
+                    stockList={stockList}
                   />
                 </motion.div>
               )}
@@ -185,6 +207,8 @@ export default function App() {
                 >
                   <GestionProductos 
                     almacenes={almacenes}
+                    productos={productos}
+                    stockList={stockList}
                     onNavigateToMovimiento={(sku) => {
                       setPreselectedSku(sku);
                       setActiveTab("movimientos");

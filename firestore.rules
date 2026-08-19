@@ -1,0 +1,109 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Global Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() > 0 && id.size() <= 128;
+    }
+
+    // Almacenes Collection
+    match /almacenes/{almacenId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn() 
+        && isValidId(almacenId)
+        && incoming().nombre is string && incoming().nombre.size() > 0 && incoming().nombre.size() <= 100
+        && incoming().ubicacion is string && incoming().ubicacion.size() <= 200;
+      allow delete: if isSignedIn();
+    }
+
+    // Productos Collection
+    match /productos/{sku} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && isValidId(sku)
+        && incoming().nombre is string && incoming().nombre.size() > 0 && incoming().nombre.size() <= 120
+        && incoming().sku is string && incoming().sku.size() > 0 && incoming().sku.size() <= 50
+        && incoming().stock_minimo is number && incoming().stock_minimo >= 0;
+      allow delete: if isSignedIn();
+    }
+
+    // Stock Collection
+    match /stock/{stockId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && isValidId(stockId)
+        && incoming().sku is string && incoming().sku.size() > 0
+        && incoming().almacen_id is string && incoming().almacen_id.size() > 0
+        && incoming().cantidad is number && incoming().cantidad >= 0;
+      allow delete: if isSignedIn();
+    }
+
+    // Movimientos Collection
+    match /movimientos/{movimientoId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn()
+        && isValidId(movimientoId)
+        && incoming().sku is string
+        && incoming().tipo in ['Entrada', 'Salida', 'Transferencia']
+        && incoming().cantidad is number && incoming().cantidad > 0;
+      allow update: if isSignedIn()
+        && (incoming().diff(existing()).affectedKeys().hasOnly(['anulado', 'anulado_at', 'anulado_by', 'anulado_motivo']));
+      allow delete: if false; // Audit trail: movements cannot be deleted, only marked as 'anulado'
+    }
+
+    // Contadores Collection (used for atomic folio generation)
+    match /contadores/{contadorId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && isValidId(contadorId)
+        && incoming().current is number && incoming().current >= 0;
+      allow delete: if false;
+    }
+
+    // Resumen de Ventas Collection (incremental daily sales aggregations)
+    match /resumen_ventas/{resumenId} {
+      allow read: if isSignedIn();
+      allow create, update: if isSignedIn()
+        && isValidId(resumenId)
+        && incoming().sku is string
+        && incoming().almacen_id is string
+        && incoming().fecha_str is string
+        && incoming().cantidad is number;
+      allow delete: if isSignedIn();
+    }
+
+    // Catalogs & System Configuration
+    match /categorias/{catId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /unidades/{unitId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+
+    match /configuracion/{configId} {
+      allow read: if isSignedIn();
+      allow write: if isSignedIn();
+    }
+  }
+}
