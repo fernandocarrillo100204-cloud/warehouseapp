@@ -165,48 +165,39 @@ const notifyListeners = (key: keyof typeof listeners, data: any) => {
   });
 };
 
-// Clear legacy localStorage cache on startup
-try {
-  const keysToRemove: string[] = [];
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (key && (key.startsWith(STORAGE_PREFIX) || key.startsWith("inventario_mvp_"))) {
-      if (key !== STORAGE_PREFIX + "currentUser" && key !== "currentUser") {
-        keysToRemove.push(key);
-      }
-    }
-  }
-  keysToRemove.forEach(k => localStorage.removeItem(k));
-} catch (e) {
-  // Ignore in SSR/non-browser
-}
-
-// Ensure warehouse collection exists for local emulator without demo products or stock
+// Initialize empty keys in local emulator mode only if they do not already exist
 const initializeLocalEmulator = () => {
   if (isConfigured) return;
 
-  const almacenes = getLocalStorageItem<Almacen[]>("almacenes", []);
-  if (almacenes.length === 0) {
-    const initialAlmacenes: Almacen[] = [
-      { id: "alm_principal", nombre: "Almacén Central (CDMX)", ubicacion: "Parque Industrial Norte, Bodega 4" },
-      { id: "alm_secundario", nombre: "Sucursal Guadalajara", ubicacion: "Av. Vallarta Poniente #4520" },
-      { id: "alm_norte", nombre: "Cedis Monterrey", ubicacion: "Carretera a Laredo Km 14" },
-      { id: "alm_sur", nombre: "Sucursal Mérida (Sureste)", ubicacion: "Calle 60 Norte #298, Parque Industrial" }
-    ];
-    setLocalStorageItem("almacenes", initialAlmacenes);
+  if (localStorage.getItem(STORAGE_PREFIX + "almacenes") === null) {
+    setLocalStorageItem("almacenes", []);
   }
-
-  // Ensure products, stock, movements and counters are clean
-  setLocalStorageItem("productos", []);
-  setLocalStorageItem("stock", {});
-  setLocalStorageItem("movimientos", []);
-  setLocalStorageItem("resumen_ventas", {});
-  setLocalStorageItem("contadores_movimientos", {
-    entrada: 0,
-    salida: 0,
-    transferencia: 0,
-    ajuste: 0
-  });
+  if (localStorage.getItem(STORAGE_PREFIX + "productos") === null) {
+    setLocalStorageItem("productos", []);
+  }
+  if (localStorage.getItem(STORAGE_PREFIX + "stock") === null) {
+    setLocalStorageItem("stock", {});
+  }
+  if (localStorage.getItem(STORAGE_PREFIX + "movimientos") === null) {
+    setLocalStorageItem("movimientos", []);
+  }
+  if (localStorage.getItem(STORAGE_PREFIX + "resumen_ventas") === null) {
+    setLocalStorageItem("resumen_ventas", {});
+  }
+  if (localStorage.getItem(STORAGE_PREFIX + "contadores_movimientos") === null) {
+    setLocalStorageItem("contadores_movimientos", {
+      entrada: 0,
+      salida: 0,
+      transferencia: 0,
+      ajuste: 0
+    });
+  }
+  if (localStorage.getItem(STORAGE_PREFIX + "categorias") === null) {
+    setLocalStorageItem("categorias", []);
+  }
+  if (localStorage.getItem(STORAGE_PREFIX + "unidades") === null) {
+    setLocalStorageItem("unidades", []);
+  }
 };
 
 initializeLocalEmulator();
@@ -613,75 +604,6 @@ export const firestoreService = {
 
     return `${prefix}${nextNumber}`;
   },
-
-  // --- REINICIO TOTAL DE INVENTARIO EN FIRESTORE Y LOCAL STORAGE ---
-  runCompleteInventoryReset: async (): Promise<void> => {
-    // 1. Eliminar datos antiguos de localStorage cuyo nombre comience con inventario_mvp_
-    try {
-      const keysToRemove: string[] = [];
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i);
-        if (key && (key.startsWith(STORAGE_PREFIX) || key.startsWith("inventario_mvp_"))) {
-          if (key !== STORAGE_PREFIX + "currentUser" && key !== "currentUser") {
-            keysToRemove.push(key);
-          }
-        }
-      }
-      keysToRemove.forEach(k => localStorage.removeItem(k));
-    } catch (e) {
-      console.error("Error al limpiar localStorage:", e);
-    }
-
-    if (isConfigured && realDb) {
-      console.log("Iniciando reinicio total de inventario en Firestore...");
-      const collectionsToWipe = [
-        "productos",
-        "stock",
-        "movimientos",
-        "resumen_ventas",
-        "contadores",
-        "migraciones"
-      ];
-
-      for (const colName of collectionsToWipe) {
-        try {
-          const snap = await getDocs(collection(realDb, colName));
-          console.log(`Borrando ${snap.size} documentos de la colección '${colName}'...`);
-          for (const docSnap of snap.docs) {
-            try {
-              await deleteDoc(doc(realDb, colName, docSnap.id));
-            } catch (err) {
-              console.error(`Error borrando ${colName}/${docSnap.id}:`, err);
-            }
-          }
-        } catch (err) {
-          console.error(`Error accediendo a colección '${colName}':`, err);
-        }
-      }
-
-      console.log("Reinicio total de colecciones en Firestore completado con éxito.");
-    } else {
-      // Limpieza en modo local emulator
-      setLocalStorageItem("productos", []);
-      setLocalStorageItem("stock", {});
-      setLocalStorageItem("movimientos", []);
-      setLocalStorageItem("resumen_ventas", {});
-      setLocalStorageItem("contadores_movimientos", {
-        entrada: 0,
-        salida: 0,
-        transferencia: 0,
-        ajuste: 0
-      });
-      notifyListeners("productos", []);
-      notifyListeners("stock", []);
-      notifyListeners("movimientos", []);
-    }
-  },
-
-  // Compatibility aliases
-  runFolioMigrationIfNeeded: async (): Promise<void> => {},
-  runResumenVentasMigrationIfNeeded: async (): Promise<void> => {},
-  runCleanupTestSkusIfNeeded: async (): Promise<void> => {},
 
   // --- REGISTRO ATÓMICO DE MOVIMIENTO VÍA RUNTRANSACTION ---
   registerMovimientoTransaction: async (mov: Omit<Movimiento, "fecha" | "usuario">): Promise<{ id: string; folio: string }> => {

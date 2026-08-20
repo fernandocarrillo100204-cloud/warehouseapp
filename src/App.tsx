@@ -37,15 +37,6 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Run complete inventory reset once on login
-  useEffect(() => {
-    if (!user) return;
-    
-    firestoreService.runCompleteInventoryReset().catch(err => {
-      console.error("Error en reinicio de inventario:", err);
-    });
-  }, [user?.uid]);
-
   // Subscribe to real-time warehouses, products, and stock updates globally
   useEffect(() => {
     const uid = user?.uid;

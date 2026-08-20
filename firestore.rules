@@ -40,7 +40,6 @@ service cloud.firestore {
       allow create, update: if isSignedIn()
         && isValidId(sku)
         && incoming().nombre is string && incoming().nombre.size() > 0 && incoming().nombre.size() <= 120
-        && incoming().sku is string && incoming().sku.size() > 0 && incoming().sku.size() <= 50
         && incoming().stock_minimo is number && incoming().stock_minimo >= 0;
       allow delete: if isSignedIn();
     }
@@ -62,23 +61,25 @@ service cloud.firestore {
       allow create: if isSignedIn()
         && isValidId(movimientoId)
         && incoming().sku is string
-        && incoming().tipo in ['Entrada', 'Salida', 'Transferencia']
+        && incoming().tipo in ['entrada', 'salida', 'transferencia', 'ajuste']
         && incoming().cantidad is number && incoming().cantidad > 0;
       allow update: if isSignedIn()
-        && (incoming().diff(existing()).affectedKeys().hasOnly(['anulado', 'anulado_at', 'anulado_by', 'anulado_motivo']));
-      allow delete: if isSignedIn();
+        && (incoming().diff(existing()).affectedKeys().hasOnly(['estado', 'anulado_at', 'anulado_por', 'motivo_anulacion']));
+      allow delete: if false;
     }
 
     // Migraciones Collection (one-time migration trackers)
     match /migraciones/{migracionId} {
-      allow read, write: if isSignedIn();
+      allow read, create, update: if isSignedIn();
+      allow delete: if false;
     }
 
     // Contadores Collection (used for atomic folio generation)
     match /contadores/{contadorId} {
       allow read: if isSignedIn();
-      allow create, update, delete: if isSignedIn()
+      allow create, update: if isSignedIn()
         && isValidId(contadorId);
+      allow delete: if false;
     }
 
     // Resumen de Ventas Collection (incremental daily sales aggregations)
@@ -90,7 +91,7 @@ service cloud.firestore {
         && incoming().almacen_id is string
         && incoming().fecha_str is string
         && incoming().cantidad is number;
-      allow delete: if isSignedIn();
+      allow delete: if false;
     }
 
     // Catalogs & System Configuration
