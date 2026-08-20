@@ -1,4 +1,4 @@
-import { initializeApp, getApps } from 'firebase-admin/app';
+import { initializeApp, getApps, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 
 const EXPECTED_PROJECT_ID = 'warehouse-96318';
@@ -16,7 +16,12 @@ if (!confirmReset || confirmReset !== EXPECTED_PROJECT_ID) {
   process.exit(1);
 }
 
-const app = getApps().length === 0 ? initializeApp({ projectId }) : getApps()[0];
+const app = getApps().length === 0 
+  ? initializeApp({ 
+      credential: applicationDefault(),
+      projectId 
+    }) 
+  : getApps()[0];
 const db = getFirestore(app);
 
 const TARGET_COLLECTIONS = [

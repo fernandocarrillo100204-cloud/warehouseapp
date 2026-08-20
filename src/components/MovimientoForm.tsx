@@ -686,25 +686,6 @@ export default function MovimientoForm({
                     </p>
                   </div>
                 )}
-
-                {/* Demonstration placeholder values */}
-                <div className="mt-5 pt-4 border-t border-[#E2E8F0] dark:border-[#263449] w-full">
-                  <h4 className="text-[11px] font-semibold text-[#64748B] dark:text-[#94A3B8] uppercase tracking-wider mb-2">
-                    Códigos de prueba (Demos)
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {["SKU-1001", "SKU-1002", "SKU-1003", "SKU-NUEVO"].map((demoCode) => (
-                      <button
-                        key={demoCode}
-                        type="button"
-                        onClick={() => handleScanSuccess(demoCode)}
-                        className="bg-[#F8FAFC] dark:bg-[#182235] hover:bg-[#F1F5F9] dark:hover:bg-[#1E293B] text-[#172033] dark:text-[#F8FAFC] border border-[#E2E8F0] dark:border-[#263449] px-2.5 py-1 rounded-lg text-xs font-mono transition-colors cursor-pointer"
-                      >
-                        {demoCode}
-                      </button>
-                    ))}
-                  </div>
-                </div>
               </div>
             </motion.div>
           </div>

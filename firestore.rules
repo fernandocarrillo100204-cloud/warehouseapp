@@ -64,7 +64,12 @@ service cloud.firestore {
         && incoming().tipo in ['entrada', 'salida', 'transferencia', 'ajuste']
         && incoming().cantidad is number && incoming().cantidad > 0;
       allow update: if isSignedIn()
-        && (incoming().diff(existing()).affectedKeys().hasOnly(['estado', 'anulado_at', 'anulado_por', 'motivo_anulacion']));
+        && (!('estado' in existing()) || existing().estado != 'anulado')
+        && incoming().estado == 'anulado'
+        && incoming().diff(existing()).affectedKeys().hasOnly(['estado', 'anulado_at', 'anulado_por', 'motivo_anulacion'])
+        && incoming().anulado_at is timestamp
+        && incoming().anulado_por is string && incoming().anulado_por.size() > 0 && incoming().anulado_por.size() <= 200
+        && incoming().motivo_anulacion is string && incoming().motivo_anulacion.size() > 0 && incoming().motivo_anulacion.size() <= 500;
       allow delete: if false;
     }
 
@@ -95,19 +100,16 @@ service cloud.firestore {
     }
 
     // Catalogs & System Configuration
-    match /categorias/{catId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+    match /catalogo_categorias/{catId} {
+      allow read, write: if isSignedIn();
     }
 
-    match /unidades/{unitId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+    match /catalogo_unidades/{unitId} {
+      allow read, write: if isSignedIn();
     }
 
     match /configuracion/{configId} {
-      allow read: if isSignedIn();
-      allow write: if isSignedIn();
+      allow read, write: if isSignedIn();
     }
   }
 }
