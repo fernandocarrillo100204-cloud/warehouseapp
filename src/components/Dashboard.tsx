@@ -74,38 +74,22 @@ export default function Dashboard({
       .reduce((acc, curr) => acc + Math.max(0, curr.cantidad), 0);
   };
 
-  // Combine catalog products with any SKUs present in stockList so that no inventory is ever omitted
+  // Strictly use registered catalog products (no automatic creation from orphan stock)
   const effectiveProductos = useMemo(() => {
     const map = new Map<string, Producto>();
 
-    // 1. Add all registered catalog products
     productos.forEach(p => {
       if (p.sku) {
-        map.set(p.sku.trim().toUpperCase(), {
+        const cleanSku = p.sku.trim().toUpperCase();
+        map.set(cleanSku, {
           ...p,
-          sku: p.sku.trim().toUpperCase()
+          sku: cleanSku
         });
       }
     });
 
-    // 2. Auto-include any SKU in stockList that wasn't in catalog
-    stockList.forEach(s => {
-      if (s.sku) {
-        const cleanSku = s.sku.trim().toUpperCase();
-        if (!map.has(cleanSku)) {
-          map.set(cleanSku, {
-            sku: cleanSku,
-            nombre: `Artículo ${cleanSku}`,
-            categoria: "General",
-            stock_minimo: 5,
-            unidad: "uds"
-          });
-        }
-      }
-    });
-
     return Array.from(map.values());
-  }, [productos, stockList]);
+  }, [productos]);
 
   // Get distinct categories from effective products
   const categorias = useMemo(() => {

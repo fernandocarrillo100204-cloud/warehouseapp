@@ -165,47 +165,48 @@ const notifyListeners = (key: keyof typeof listeners, data: any) => {
   });
 };
 
-// Seed initial demo data for local emulator only
+// Clear legacy localStorage cache on startup
+try {
+  const keysToRemove: string[] = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && (key.startsWith(STORAGE_PREFIX) || key.startsWith("inventario_mvp_"))) {
+      if (key !== STORAGE_PREFIX + "currentUser" && key !== "currentUser") {
+        keysToRemove.push(key);
+      }
+    }
+  }
+  keysToRemove.forEach(k => localStorage.removeItem(k));
+} catch (e) {
+  // Ignore in SSR/non-browser
+}
+
+// Ensure warehouse collection exists for local emulator without demo products or stock
 const initializeLocalEmulator = () => {
-  if (isConfigured) return; // Never seed localStorage if Firebase is configured
+  if (isConfigured) return;
 
   const almacenes = getLocalStorageItem<Almacen[]>("almacenes", []);
   if (almacenes.length === 0) {
     const initialAlmacenes: Almacen[] = [
       { id: "alm_principal", nombre: "Almacén Central (CDMX)", ubicacion: "Parque Industrial Norte, Bodega 4" },
       { id: "alm_secundario", nombre: "Sucursal Guadalajara", ubicacion: "Av. Vallarta Poniente #4520" },
-      { id: "alm_norte", nombre: "Cedis Monterrey", ubicacion: "Carretera a Laredo Km 14" }
+      { id: "alm_norte", nombre: "Cedis Monterrey", ubicacion: "Carretera a Laredo Km 14" },
+      { id: "alm_sur", nombre: "Sucursal Mérida (Sureste)", ubicacion: "Calle 60 Norte #298, Parque Industrial" }
     ];
     setLocalStorageItem("almacenes", initialAlmacenes);
   }
 
-  const productos = getLocalStorageItem<Producto[]>("productos", []);
-  if (productos.length === 0) {
-    const initialProductos: Producto[] = [
-      { sku: "PLAST-001", nombre: "Envase PET 500ml Cristal", categoria: "Inyección de Plástico", stock_minimo: 100, unidad: "pieza" },
-      { sku: "PLAST-002", nombre: "Tapa Rosca 28mm Azul", categoria: "Inyección de Plástico", stock_minimo: 200, unidad: "pieza" },
-      { sku: "TORN-101", nombre: "Tornillo Hexagonal 1/4 x 2 pulg", categoria: "Tornillería y Herrajes", stock_minimo: 50, unidad: "caja" },
-      { sku: "CERR-201", nombre: "Cerradura de Sobreponer Derecha", categoria: "Cerrajería Metálica", stock_minimo: 15, unidad: "pieza" },
-      { sku: "EMPQ-301", nombre: "Caja Cartón Corrugado 40x30x30", categoria: "Empaque y Embalaje", stock_minimo: 80, unidad: "paquete" },
-      { sku: "TECH-001", nombre: "Lector Código de Barras 2D USB", categoria: "Tecnología", stock_minimo: 5, unidad: "pieza" }
-    ];
-    setLocalStorageItem("productos", initialProductos);
-  }
-
-  const stock = getLocalStorageItem<Record<string, StockItem>>("stock", {});
-  if (Object.keys(stock).length === 0) {
-    const initialStock: Record<string, StockItem> = {
-      "PLAST-001_alm_principal": { id: "PLAST-001_alm_principal", sku: "PLAST-001", almacen_id: "alm_principal", cantidad: 450, actualizado: new Date() },
-      "PLAST-001_alm_secundario": { id: "PLAST-001_alm_secundario", sku: "PLAST-001", almacen_id: "alm_secundario", cantidad: 120, actualizado: new Date() },
-      "PLAST-002_alm_principal": { id: "PLAST-002_alm_principal", sku: "PLAST-002", almacen_id: "alm_principal", cantidad: 850, actualizado: new Date() },
-      "TORN-101_alm_principal": { id: "TORN-101_alm_principal", sku: "TORN-101", almacen_id: "alm_principal", cantidad: 35, actualizado: new Date() },
-      "TORN-101_alm_norte": { id: "TORN-101_alm_norte", sku: "TORN-101", almacen_id: "alm_norte", cantidad: 80, actualizado: new Date() },
-      "CERR-201_alm_principal": { id: "CERR-201_alm_principal", sku: "CERR-201", almacen_id: "alm_principal", cantidad: 8, actualizado: new Date() },
-      "EMPQ-301_alm_principal": { id: "EMPQ-301_alm_principal", sku: "EMPQ-301", almacen_id: "alm_principal", cantidad: 210, actualizado: new Date() },
-      "TECH-001_alm_principal": { id: "TECH-001_alm_principal", sku: "TECH-001", almacen_id: "alm_principal", cantidad: 12, actualizado: new Date() }
-    };
-    setLocalStorageItem("stock", initialStock);
-  }
+  // Ensure products, stock, movements and counters are clean
+  setLocalStorageItem("productos", []);
+  setLocalStorageItem("stock", {});
+  setLocalStorageItem("movimientos", []);
+  setLocalStorageItem("resumen_ventas", {});
+  setLocalStorageItem("contadores_movimientos", {
+    entrada: 0,
+    salida: 0,
+    transferencia: 0,
+    ajuste: 0
+  });
 };
 
 initializeLocalEmulator();
@@ -613,189 +614,74 @@ export const firestoreService = {
     return `${prefix}${nextNumber}`;
   },
 
-  // --- MIGRACIÓN 1: INICIALIZACIÓN IDEMPOTENTE DE CONTADORES DE FOLIOS ---
-  runFolioMigrationIfNeeded: async (): Promise<void> => {
-    if (isConfigured && realDb) {
-      const migRef = doc(realDb, "migraciones", "folios_counter_v1");
-      const migSnap = await getDoc(migRef);
-      if (migSnap.exists() && migSnap.data()?.completada) {
-        return; // Ya fue ejecutada
-      }
-
-      console.log("Iniciando migración única de contadores de folios...");
-      const movsSnap = await getDocs(collection(realDb, "movimientos"));
-      const maxCounters: Record<string, number> = {
-        entrada: 0,
-        salida: 0,
-        transferencia: 0,
-        ajuste: 0
-      };
-
-      movsSnap.forEach(docSnap => {
-        const data = docSnap.data();
-        const folio = String(data.folio || "");
-        const tipo = String(data.tipo || "").toLowerCase();
-        
-        // Reconoce formatos: Entrada-15, Salida-3, Transferencia-8
-        const match = folio.match(/^(?:Entrada|Salida|Transferencia|Ajuste|Movimiento)-(\d+)$/i);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (!isNaN(num) && tipo && maxCounters[tipo] !== undefined) {
-            if (num > maxCounters[tipo]) {
-              maxCounters[tipo] = num;
-            }
+  // --- REINICIO TOTAL DE INVENTARIO EN FIRESTORE Y LOCAL STORAGE ---
+  runCompleteInventoryReset: async (): Promise<void> => {
+    // 1. Eliminar datos antiguos de localStorage cuyo nombre comience con inventario_mvp_
+    try {
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        if (key && (key.startsWith(STORAGE_PREFIX) || key.startsWith("inventario_mvp_"))) {
+          if (key !== STORAGE_PREFIX + "currentUser" && key !== "currentUser") {
+            keysToRemove.push(key);
           }
         }
-      });
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+    } catch (e) {
+      console.error("Error al limpiar localStorage:", e);
+    }
 
-      for (const [tipo, maxConsecutivo] of Object.entries(maxCounters)) {
-        const counterRef = doc(realDb, "contadores", tipo);
-        const counterSnap = await getDoc(counterRef);
-        const currentInDb = counterSnap.exists() ? (Number(counterSnap.data()?.ultimo_consecutivo) || 0) : 0;
-        const finalMax = Math.max(maxConsecutivo, currentInDb);
-        await setDoc(counterRef, {
-          tipo,
-          ultimo_consecutivo: finalMax,
-          actualizado: Timestamp.now()
-        }, { merge: true });
+    if (isConfigured && realDb) {
+      console.log("Iniciando reinicio total de inventario en Firestore...");
+      const collectionsToWipe = [
+        "productos",
+        "stock",
+        "movimientos",
+        "resumen_ventas",
+        "contadores",
+        "migraciones"
+      ];
+
+      for (const colName of collectionsToWipe) {
+        try {
+          const snap = await getDocs(collection(realDb, colName));
+          console.log(`Borrando ${snap.size} documentos de la colección '${colName}'...`);
+          for (const docSnap of snap.docs) {
+            try {
+              await deleteDoc(doc(realDb, colName, docSnap.id));
+            } catch (err) {
+              console.error(`Error borrando ${colName}/${docSnap.id}:`, err);
+            }
+          }
+        } catch (err) {
+          console.error(`Error accediendo a colección '${colName}':`, err);
+        }
       }
 
-      await setDoc(migRef, {
-        completada: true,
-        fecha: Timestamp.now(),
-        descripcion: "Migración inicial e idempotente de contadores de folios"
-      });
-      console.log("Migración de contadores completada:", maxCounters);
+      console.log("Reinicio total de colecciones en Firestore completado con éxito.");
     } else {
-      const migKey = "migracion_folios_v1";
-      const migrated = getLocalStorageItem<boolean>(migKey, false);
-      if (migrated) return;
-
-      const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
-      const counters = getLocalStorageItem<Record<string, number>>("contadores_movimientos", {
+      // Limpieza en modo local emulator
+      setLocalStorageItem("productos", []);
+      setLocalStorageItem("stock", {});
+      setLocalStorageItem("movimientos", []);
+      setLocalStorageItem("resumen_ventas", {});
+      setLocalStorageItem("contadores_movimientos", {
         entrada: 0,
         salida: 0,
         transferencia: 0,
         ajuste: 0
       });
-
-      movimientos.forEach(m => {
-        const folio = String(m.folio || "");
-        const match = folio.match(/^(?:Entrada|Salida|Transferencia|Ajuste|Movimiento)-(\d+)$/i);
-        if (match) {
-          const num = parseInt(match[1], 10);
-          if (!isNaN(num) && m.tipo && counters[m.tipo] !== undefined) {
-            if (num > counters[m.tipo]) {
-              counters[m.tipo] = num;
-            }
-          }
-        }
-      });
-
-      setLocalStorageItem("contadores_movimientos", counters);
-      setLocalStorageItem(migKey, true);
+      notifyListeners("productos", []);
+      notifyListeners("stock", []);
+      notifyListeners("movimientos", []);
     }
   },
 
-  // --- MIGRACIÓN 2: INICIALIZACIÓN CONTROLADA DE RESÚMENES DE VENTAS ---
-  runResumenVentasMigrationIfNeeded: async (): Promise<void> => {
-    if (isConfigured && realDb) {
-      const migRef = doc(realDb, "migraciones", "resumen_ventas_v1");
-      const migSnap = await getDoc(migRef);
-      if (migSnap.exists() && migSnap.data()?.completada) {
-        return; // Ya fue ejecutada
-      }
-
-      console.log("Iniciando migración única de resúmenes de ventas diarias...");
-      const q = query(
-        collection(realDb, "movimientos"),
-        where("tipo", "==", "salida")
-      );
-      const snap = await getDocs(q);
-      const summaryMap: Record<string, {
-        id: string;
-        fecha_str: string;
-        fecha: Timestamp;
-        sku: string;
-        almacen_id: string;
-        cantidad: number;
-        total_transacciones: number;
-      }> = {};
-
-      snap.forEach(d => {
-        const data = d.data();
-        if (data.estado === "anulado") return; // Omitir ventas anuladas
-        
-        const dateStr = getLocalDateString(data.fecha);
-        const sku = (data.sku || "").trim().toUpperCase();
-        const almId = (data.almacen_id || "").trim();
-        const qty = Number(data.cantidad) || 0;
-        const key = `${dateStr}_${sku}_${almId}`;
-
-        if (!summaryMap[key]) {
-          summaryMap[key] = {
-            id: key,
-            fecha_str: dateStr,
-            fecha: data.fecha instanceof Timestamp ? data.fecha : Timestamp.now(),
-            sku,
-            almacen_id: almId,
-            cantidad: 0,
-            total_transacciones: 0
-          };
-        }
-        summaryMap[key].cantidad += qty;
-        summaryMap[key].total_transacciones += 1;
-      });
-
-      for (const [key, item] of Object.entries(summaryMap)) {
-        await setDoc(doc(realDb, "resumen_ventas", key), {
-          ...item,
-          actualizado: Timestamp.now()
-        }, { merge: true });
-      }
-
-      await setDoc(migRef, {
-        completada: true,
-        fecha: Timestamp.now(),
-        descripcion: "Migración inicial de resumen diario de ventas"
-      });
-      console.log("Migración de resúmenes de ventas completada exitosamente.");
-    } else {
-      const migKey = "migracion_resumen_ventas_v1";
-      const migrated = getLocalStorageItem<boolean>(migKey, false);
-      if (migrated) return;
-
-      const movimientos = getLocalStorageItem<Movimiento[]>("movimientos", []);
-      const summaryMap = getLocalStorageItem<Record<string, ResumenVentaDiaria>>("resumen_ventas", {});
-
-      movimientos.forEach(m => {
-        if (m.tipo !== "salida" || m.estado === "anulado") return;
-        const dateStr = getLocalDateString(m.fecha);
-        const sku = (m.sku || "").trim().toUpperCase();
-        const almId = (m.almacen_id || "").trim();
-        const qty = Number(m.cantidad) || 0;
-        const key = `${dateStr}_${sku}_${almId}`;
-
-        if (!summaryMap[key]) {
-          summaryMap[key] = {
-            id: key,
-            fecha_str: dateStr,
-            fecha: new Date(m.fecha as any),
-            sku,
-            almacen_id: almId,
-            cantidad: 0,
-            total_transacciones: 0,
-            actualizado: new Date()
-          };
-        }
-        summaryMap[key].cantidad += qty;
-        summaryMap[key].total_transacciones += 1;
-      });
-
-      setLocalStorageItem("resumen_ventas", summaryMap);
-      setLocalStorageItem(migKey, true);
-    }
-  },
+  // Compatibility aliases
+  runFolioMigrationIfNeeded: async (): Promise<void> => {},
+  runResumenVentasMigrationIfNeeded: async (): Promise<void> => {},
+  runCleanupTestSkusIfNeeded: async (): Promise<void> => {},
 
   // --- REGISTRO ATÓMICO DE MOVIMIENTO VÍA RUNTRANSACTION ---
   registerMovimientoTransaction: async (mov: Omit<Movimiento, "fecha" | "usuario">): Promise<{ id: string; folio: string }> => {

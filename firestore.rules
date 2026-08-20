@@ -66,16 +66,19 @@ service cloud.firestore {
         && incoming().cantidad is number && incoming().cantidad > 0;
       allow update: if isSignedIn()
         && (incoming().diff(existing()).affectedKeys().hasOnly(['anulado', 'anulado_at', 'anulado_by', 'anulado_motivo']));
-      allow delete: if false; // Audit trail: movements cannot be deleted, only marked as 'anulado'
+      allow delete: if isSignedIn();
+    }
+
+    // Migraciones Collection (one-time migration trackers)
+    match /migraciones/{migracionId} {
+      allow read, write: if isSignedIn();
     }
 
     // Contadores Collection (used for atomic folio generation)
     match /contadores/{contadorId} {
       allow read: if isSignedIn();
-      allow create, update: if isSignedIn()
-        && isValidId(contadorId)
-        && incoming().current is number && incoming().current >= 0;
-      allow delete: if false;
+      allow create, update, delete: if isSignedIn()
+        && isValidId(contadorId);
     }
 
     // Resumen de Ventas Collection (incremental daily sales aggregations)

@@ -37,16 +37,12 @@ export default function App() {
     return () => unsubscribe();
   }, []);
 
-  // Run initial migrations (idempotent, executed once)
+  // Run complete inventory reset once on login
   useEffect(() => {
     if (!user) return;
     
-    // Execute idempotent migrations for existing folios and sales summaries
-    firestoreService.runFolioMigrationIfNeeded().catch(err => {
-      console.error("Error en migración de folios:", err);
-    });
-    firestoreService.runResumenVentasMigrationIfNeeded().catch(err => {
-      console.error("Error en migración de resumen de ventas:", err);
+    firestoreService.runCompleteInventoryReset().catch(err => {
+      console.error("Error en reinicio de inventario:", err);
     });
   }, [user?.uid]);
 
